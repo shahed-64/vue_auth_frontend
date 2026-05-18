@@ -109,10 +109,8 @@
 </template>
 <script setup>
 import { reactive } from 'vue'
-import axios from 'axios'
 import { useRouter } from 'vue-router'
-
-const api = 'http://127.0.0.1:8000/api/register'
+import api from '@/services/api'
 
 const router = useRouter()
 
@@ -128,15 +126,27 @@ const form = reactive({
 
 const register = async () => {
   try {
-    await axios.post(api, form)
-    alert('Registered সফল হয়েছে')
+    const res = await api.post('/register', form)
+
+    alert(res.data.message || 'Registered successfully')
+
     router.push('/dashboard')
   } catch (error) {
-    console.log('STATUS:', error.response?.status)
-    console.log('DATA:', error.response?.data)
-    console.log('FULL:', error)
+    // 🔥 SAFE ERROR HANDLING
+    if (error.response) {
+      console.log('ERROR DATA:', error.response.data)
 
-    alert(JSON.stringify(error.response?.data))
+      const msg =
+        error.response.data.message ||
+        Object.values(error.response.data.errors || {})
+          .flat()
+          .join('\n')
+
+      alert(msg)
+    } else {
+      console.log('NETWORK ERROR:', error)
+      alert('Network / Server error')
+    }
   }
 }
 </script>

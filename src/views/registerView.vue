@@ -5,8 +5,8 @@
         <!-- Left -->
         <div class="col-lg-5 left-side d-none d-lg-flex">
           <div>
-            <h1>Create Account</h1>
-            <p>Modern and professional Bootstrap registration form design.</p>
+            <h1>B@tchPoint</h1>
+            <p>Simplify your learning</p>
 
             <div class="icons mt-4">
               <i class="bi bi-shield-check"></i>

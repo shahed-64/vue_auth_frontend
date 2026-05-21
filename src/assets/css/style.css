@@ -288,3 +288,168 @@ li.dropdown-item:hover {
 .next-div {
   margin-left: 288px;
 }
+
+body {
+  background: #f3f6fb;
+  font-family: Arial, sans-serif;
+}
+
+.receipt-box {
+  max-width: 850px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+}
+
+.receipt-header {
+  background: linear-gradient(135deg, #0d6efd, #0a58ca);
+  color: #fff;
+  padding: 30px;
+}
+
+.receipt-title {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.receipt-body {
+  padding: 35px;
+}
+
+.info-box {
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 25px;
+  background: #fafafa;
+}
+
+.table th {
+  background: #f1f5ff;
+}
+
+.signature-box {
+  margin-top: 60px;
+}
+
+.signature-line {
+  border-top: 2px solid #000;
+  width: 220px;
+  padding-top: 8px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.amount-box {
+  background: #eaf4ff;
+  border-left: 5px solid #0d6efd;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.print-btn {
+  border-radius: 8px;
+  padding: 10px 25px;
+  font-weight: 600;
+}
+
+@media print {
+  .no-print {
+    display: none;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .receipt-box {
+    box-shadow: none;
+    margin: 0;
+  }
+}
+
+/* পেমেন্ট সেকশন ডিজাইন */
+
+.receipt-box {
+  max-width: 850px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+}
+
+.receipt-header {
+  background: linear-gradient(135deg, #0d6efd, #0a58ca);
+  color: #fff;
+  padding: 30px;
+}
+
+.receipt-title {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.receipt-body {
+  padding: 35px;
+}
+
+.info-box {
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 25px;
+  background: #fafafa;
+}
+
+.table th {
+  background: #f1f5ff;
+}
+
+.signature-box {
+  margin-top: 60px;
+}
+
+.signature-line {
+  border-top: 2px solid #000;
+  width: 220px;
+  padding-top: 8px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.amount-box {
+  background: #eaf4ff;
+  border-left: 5px solid #0d6efd;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.print-btn {
+  border-radius: 8px;
+  padding: 10px 25px;
+  font-weight: 600;
+}
+
+@media print {
+  .no-print {
+    display: none;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .receipt-box {
+    box-shadow: none;
+    margin: 0;
+  }
+}
+
+/*  ইন্ডিভিজুয়াল পেমেন্ট */

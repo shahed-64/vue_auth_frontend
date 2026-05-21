@@ -17,12 +17,6 @@ const router = createRouter({
     },
 
     {
-      path: '/about',
-      name: 'about',
-      component: () => import('../views/AboutView.vue'),
-    },
-
-    {
       path: '/register',
       name: 'registerView',
       component: () => import('../views/registerView.vue'),
@@ -55,16 +49,31 @@ const router = createRouter({
       name: 'AccountDashboard',
       component: () => import('@/views/account/AccountDeshboardView.vue'),
     },
+
     {
       path: '/payment/history',
       name: 'PaymentHistory',
       component: () => import('@/views/account/PaymentHistoryView.vue'),
     },
+
+    {
+      path: '/paymentPDF/:id',
+      name: 'paymentPDF',
+      component: () => import('@/views/account/PaymentPdfView.vue'),
+    },
+
+    {
+      path: '/singlePayment/:id',
+      name: 'singlePayment',
+      component: () => import('@/views/account/SinglePaymentPdfView.vue'),
+    },
+
     {
       path: '/student/payment',
       name: 'StudentPayment',
       component: () => import('@/views/account/StudentPaymentView.vue'),
     },
+
     {
       path: '/dash-page',
       name: 'dashPageView',
@@ -74,21 +83,21 @@ const router = createRouter({
   ],
 })
 
-// Route Guard
-router.beforeEach((to, from, next) => {
+/* 🔥 CLEAN GLOBAL GUARD */
+router.beforeEach((to, from) => {
   const token = localStorage.getItem('token')
 
-  // Login ছাড়া protected route block
+  // auth required route
   if (to.meta.requiresAuth && !token) {
-    return next('/login')
+    return '/login'
   }
 
-  // Login থাকলে login/register block
+  // guest route (login/register)
   if (to.meta.guest && token) {
-    return next('/dashboard')
+    return '/dashboard'
   }
 
-  next()
+  return true
 })
 
 export default router

@@ -17,7 +17,7 @@
       <!-- Table -->
       <div class="table-responsive">
         <table class="table table-bordered align-middle bg-white">
-          <thead class="table-dark">
+          <thead class="table-dark dard">
             <tr>
               <th>#</th>
               <th>Student Id</th>
@@ -30,8 +30,8 @@
           </thead>
 
           <tbody>
-            <tr v-for="s in students" :key="s.id">
-              <td>{{ s.id }}</td>
+            <tr v-for="(s, index) in students" :key="s.id">
+              <td><td>{{ index + 1 }}</td></td>
               <td>{{ s.student_id }}</td>
               <td>{{ s.full_name }}</td>
               <td>{{ s.email }}</td>
@@ -47,8 +47,12 @@
               </td>
 
               <td>
-                <button class="btn btn-sm btn-info me-2">View</button>
-
+                <router-link
+                  to="/paymentPDF"
+                  class="btn btn-sm btn-info me-2"
+                  active-class="active-menu"
+                  >View</router-link
+                >
                 <button
                   class="btn btn-sm btn-warning me-2"
                   data-bs-toggle="modal"
@@ -200,5 +204,8 @@ onMounted(() => {
 .bgc {
   background-color: #e9e9e9;
   min-height: 100vh;
+}
+.dard th {
+  background-color: #212529 !important;
 }
 </style>

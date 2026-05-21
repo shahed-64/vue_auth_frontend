@@ -12,6 +12,7 @@
       <router-link to="/payment/history" class="text-white d-block ph">
         Payment History
       </router-link>
+      <router-link to="/dashboard" class="text-white d-block ph">Main Dashboard </router-link>
       <br />
       <button @click="logout" class="btn btn-danger">Logout</button>
     </div>

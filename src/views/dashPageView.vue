@@ -11,6 +11,10 @@
     >
       Staff
     </router-link>
+    <router-link to="/account/dashboard" class="text-white d-block ph"
+      >Account Dashboard
+    </router-link>
+
     <div class="dropdown" style="background-color: transparent !important">
       <button
         class="btn btn-secondary sss dropdown-toggle"
@@ -37,7 +41,6 @@
         </li>
       </ul>
     </div>
-
     <a href="#">Settings</a>
     <button @click="logout" class="btn btn-danger">Logout</button>
   </div>

@@ -4,8 +4,8 @@
       <!-- HEADER -->
       <div class="d-flex justify-content-between mb-4">
         <div>
-          <h4>MONEY RECEIPT</h4>
-          <h5>B@tchPoint</h5>
+          <h4>B@tchPoint</h4>
+          <h5>MONEY RECEIPT</h5>
         </div>
 
         <div class="text-end">
@@ -21,6 +21,7 @@
         <div class="col-md-6">
           <h6>Student Info</h6>
           <p>Name: {{ payment.student?.full_name }}</p>
+          <p>Class: {{ payment.student?.batch_name }}</p>
           <p>ID: {{ payment.student?.student_id }}</p>
         </div>
 

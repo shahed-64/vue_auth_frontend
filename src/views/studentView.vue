@@ -1,8 +1,10 @@
 <template>
   <dashPageView />
+
   <div class="content">
     <div class="topbar d-flex justify-content-between align-items-center">
       <h5 class="mb-0">Student Management</h5>
+
       <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
         Add Student
       </button>
@@ -39,7 +41,6 @@
               </td>
               <td>
                 <button class="btn btn-sm btn-info">View</button>
-
                 <button
                   class="btn btn-sm btn-warning"
                   data-bs-toggle="modal"
@@ -47,7 +48,6 @@
                 >
                   Edit
                 </button>
-
                 <button class="btn btn-sm btn-danger">Delete</button>
               </td>
             </tr>
@@ -56,6 +56,8 @@
       </div>
     </div>
   </div>
+
+  <!-- ADD MODAL -->
   <form @submit.prevent="student_create">
     <div class="modal fade" id="addModal">
       <div class="modal-dialog">
@@ -68,29 +70,37 @@
           <div class="modal-body">
             <div class="mb-3">
               <label>Full Name</label>
-              <input v-model="form.full_name" type="text" class="form-control" />
+              <input v-model="form.full_name" class="form-control" />
             </div>
+
             <div class="mb-3">
               <label>Student Id</label>
-              <input v-model="form.student_id" type="text" class="form-control" />
+              <input v-model="form.student_id" class="form-control" />
             </div>
+
             <div class="mb-3">
               <label>Phone</label>
-              <input v-model="form.phone" type="text" class="form-control" />
+              <input v-model="form.phone" class="form-control" />
             </div>
 
             <div class="mb-3">
               <label>Email</label>
               <input v-model="form.email" type="email" class="form-control" />
             </div>
+
             <div class="mb-3">
               <label>Course</label>
-              <input v-model="form.course_name" type="text" class="form-control" />
+              <input v-model="form.course_name" class="form-control" />
             </div>
+
             <div class="mb-3">
-              <label>Batch</label>
-              <input v-model="form.batch_name" type="text" class="form-control" />
+              <label>Class</label>
+              <select v-model="form.batch_name" class="form-control">
+                <option value="">---Select---</option>
+                <option v-for="n in 12" :key="n" :value="n">{{ n }}</option>
+              </select>
             </div>
+
             <div class="mb-3">
               <label>Admission Date</label>
               <input v-model="form.admission_date" type="date" class="form-control" />
@@ -99,20 +109,23 @@
             <div class="mb-3">
               <label>Status</label>
               <select v-model="form.status" class="form-select">
-                <option>Active</option>
-                <option>Inactive</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
               </select>
             </div>
           </div>
 
           <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button class="btn btn-primary">Save</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+            <button type="submit" class="btn btn-primary">Save</button>
           </div>
         </div>
       </div>
     </div>
   </form>
+
+  <!-- EDIT MODAL -->
   <div class="modal fade" id="editModal">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -122,15 +135,8 @@
         </div>
 
         <div class="modal-body">
-          <div class="mb-3">
-            <label>Name</label>
-            <input type="text" class="form-control" value="John Doe" />
-          </div>
-
-          <div class="mb-3">
-            <label>Email</label>
-            <input type="email" class="form-control" value="john@example.com" />
-          </div>
+          <input class="form-control mb-2" value="John Doe" />
+          <input class="form-control" value="john@example.com" />
         </div>
 
         <div class="modal-footer">
@@ -144,12 +150,13 @@
 
 <script setup>
 import dashPageView from './dashPageView.vue'
-
-import { ref, onMounted, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, onMounted } from 'vue'
 import api from '@/services/api'
 
-const router = useRouter()
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap'
+
+const students = ref([])
 
 const form = reactive({
   full_name: '',
@@ -162,53 +169,55 @@ const form = reactive({
   status: '',
 })
 
+const resetForm = () => {
+  Object.keys(form).forEach((key) => (form[key] = ''))
+}
+
+const closeModal = () => {
+  const modalEl = document.getElementById('addModal')
+  const modal = bootstrap.Modal.getOrCreateInstance(modalEl)
+  modal.hide()
+}
+
 const student_create = async () => {
+  if (!form.full_name || !form.email) {
+    alert('Field must not be empty')
+    return
+  }
+
   try {
     const res = await api.post('/student_create', form)
 
-    alert(res.data.message || 'student create successfully')
+    alert('Created successfully')
 
-    router.push('/student')
+    // ✅ এখানে modal close কোড দিবা
+    const modalEl = document.getElementById('addModal')
+    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl)
+
+    modal.hide()
+
+    resetForm()
+    getstudent()
   } catch (error) {
-    // 🔥 SAFE ERROR HANDLING
-    if (error.response) {
-      console.log('ERROR DATA:', error.response.data)
-
-      const msg =
-        error.response.data.message ||
-        Object.values(error.response.data.errors || {})
-          .flat()
-          .join('\n')
-
-      alert(msg)
-    } else {
-      console.log('NETWORK ERROR:', error)
-      alert('Network / Server error')
-    }
+    alert('Something went wrong')
   }
 }
-
-const students = ref([])
 
 const getstudent = async () => {
   try {
     const res = await api.get('/students')
-
     students.value = res.data.students
-
-    console.log(students.value)
   } catch (error) {
-    console.log(error.response?.data || error)
+    console.log(error)
   }
 }
+
 onMounted(() => {
   getstudent()
 })
 </script>
+
 <style>
-.sps {
-  margin-left: 0px;
-}
 .sps table tr {
   background-color: red !important;
 }

@@ -9,7 +9,9 @@ import router from './router'
 
 import './assets/js/script.js'
 
-
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap'
+import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 const app = createApp(App)
 
 app.use(createPinia())

@@ -15,7 +15,7 @@
       >Account Dashboard
     </router-link>
 
-    <div class="dropdown" style="background-color: transparent !important">
+    <div class="dropdown bgc">
       <button
         class="btn btn-secondary sss dropdown-toggle"
         style="background-color: transparent !important; border: none"
@@ -25,7 +25,7 @@
         Students
       </button>
 
-      <ul class="dropdown-menu">
+      <ul class="dropdown-menu" style="background-color: #1e293b !important">
         <li class="dropdown-item text-white">
           <router-link to="/student" active-class="active-menu">All students </router-link>
         </li>
@@ -58,3 +58,8 @@ const logout = () => {
   router.push('/login')
 }
 </script>
+<style>
+.bgc {
+  background-color: #bgc;
+}
+</style>

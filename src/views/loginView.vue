@@ -24,6 +24,9 @@
             <p class="mt-3 text-center">
               No account? <router-link to="/register">Register</router-link>
             </p>
+            <p v-if="errorMsg" class="text-danger text-center">
+              {{ errorMsg }}
+            </p>
           </form>
         </div>
       </div>
@@ -40,20 +43,34 @@ const router = useRouter()
 
 const email = ref('')
 const password = ref('')
+const errorMsg = ref('')
 
 const login = async () => {
   try {
+    errorMsg.value = ''
+
     const res = await api.post('/login', {
       email: email.value,
       password: password.value,
     })
 
-    const token = res.data.token
-    const role = res.data.staff.role
+    console.log('LOGIN RESPONSE:', res.data)
 
-    // save token
+    const token = res.data.token
+    const staff = res.data.staff
+    const role = staff?.role || 'user'
+
+    if (!token) {
+      errorMsg.value = 'Token not received from server'
+      return
+    }
+
+    // ✅ SAVE TOKEN
     localStorage.setItem('token', token)
     localStorage.setItem('role', role)
+
+    // ✅ IMPORTANT: attach token to axios
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`
 
     // redirect
     if (role === 'Accountant') {
@@ -62,7 +79,8 @@ const login = async () => {
       router.push('/dashboard')
     }
   } catch (error) {
-    console.log(error.response?.data)
+    console.log('LOGIN ERROR:', error.response?.data || error.message)
+    errorMsg.value = error.response?.data?.message || 'Login failed'
   }
 }
 </script>

@@ -100,13 +100,12 @@
 </template>
 <script setup>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
-
+import api from '@/services/api'
 const students = ref([])
 
 const getStudents = async () => {
   try {
-    const res = await axios.get('http://127.0.0.1:8000/api/students')
+    const res = await api.get('/students')
 
     students.value = res.data.students || [] // 🔥 FIX
   } catch (err) {

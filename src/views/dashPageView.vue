@@ -25,7 +25,7 @@
         Students
       </button>
 
-      <ul class="dropdown-menu" style="background-color: #1e293b !important">
+      <ul class="dropdown-menu">
         <li class="dropdown-item text-white">
           <router-link to="/student" active-class="active-menu">All students </router-link>
         </li>
@@ -60,6 +60,9 @@ const logout = () => {
 </script>
 <style>
 .bgc {
-  background-color: #bgc;
+  background-color: transparent !important;
+}
+.show {
+  background-color: transparent !important;
 }
 </style>

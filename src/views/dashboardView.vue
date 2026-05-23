@@ -158,3 +158,8 @@ const toggleMenu = () => {
   isOpen.value = !isOpen.value
 }
 </script>
+<style>
+.card-box {
+  color: #333;
+}
+</style>

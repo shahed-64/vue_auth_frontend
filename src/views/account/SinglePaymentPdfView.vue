@@ -82,11 +82,12 @@ import axios from 'axios'
 const route = useRoute()
 const payment = ref(null)
 
+import api from '@/services/api'
 /* LOAD PAYMENT */
 const getPayment = async (id) => {
   console.log('REQUEST ID:', id)
 
-  const res = await axios.get(`http://127.0.0.1:8000/api/payments/${id}`)
+  const res = await api.get(`/payments/${id}`)
 
   console.log('API RESPONSE:', res.data)
 

@@ -30,8 +30,8 @@
 import AccountMenuView from './AccountMenuView.vue'
 </script>
 <style>
-.bgc {
-  background-color: #e9e9e9 !important;
+.flex-grow-1 {
+  margin-left: 240px !important;
 }
 .ph {
   background-color: transparent !important;

@@ -81,6 +81,7 @@ import axios from 'axios'
 
 const route = useRoute()
 const payment = ref(null)
+const API = 'https://laravel-auth-backend-65.onrender.com'
 
 import api from '@/services/api'
 /* LOAD PAYMENT */
@@ -106,7 +107,7 @@ const sendWhatsApp = async () => {
 
     const id = payment.value.id
 
-    const res = await axios.get(`http://127.0.0.1:8000/api/payments/${id}/receipt`)
+    const res = await axios.get(`${API}/payments/${id}/receipt`)
 
     const pdfUrl = res.data.url
     const p = payment.value

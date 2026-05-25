@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: 'https://vue-auth-frontend-5.onrender.com/api',
+  baseURL: 'https://laravel-auth-backend-65.onrender.com/api',
 })
 
 const token = localStorage.getItem('token')

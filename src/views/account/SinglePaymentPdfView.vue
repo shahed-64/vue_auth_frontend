@@ -77,7 +77,6 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import axios from 'axios'
 
 const route = useRoute()
 const payment = ref(null)
@@ -102,36 +101,23 @@ const printPage = () => {
 /* WHATSAPP */
 const sendWhatsApp = async () => {
   try {
-    if (!payment.value) return
-
     const id = payment.value.id
 
-    const res = await axios.get(`http://127.0.0.1:8000/api/payments/${id}/receipt`)
+    const res = await api.get(`/payments/${id}/whatsapp`)
 
-    const pdfUrl = res.data.url
-    const p = payment.value
+    let phone = res.data.phone
+    const message = res.data.message
 
-    const phone = p.student?.phone?.replace(/^0/, '88')
+    phone = phone.replace(/^0/, '')
 
-    if (!phone) {
-      alert('Phone missing')
-      return
-    }
+    phone = '880' + phone
 
-    const message = `Your payment receipt is ready:
-Receipt ID: ${p.id}
-Name: ${p.student.full_name}
-Month: ${p.month}
-Paid: ৳${p.paid_amount}
-Status: ${p.status}
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
 
-Download Receipt:
-${pdfUrl}`
-
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank')
+    window.open(url, '_blank')
   } catch (err) {
-    console.log('WHATSAPP ERROR:', err)
-    alert('WhatsApp send failed')
+    console.log(err)
+    alert('WhatsApp failed')
   }
 }
 

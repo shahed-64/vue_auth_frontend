@@ -1,30 +1,35 @@
 <template>
-  <div class="d-flex bgc">
+  <div class="layout bgc">
+    <!-- Sidebar -->
     <AccountMenuView />
 
-    <div class="content flex-grow-1">
-      <!-- Header -->
-      <div class="topbar">
-        <h3>Student Management</h3>
+    <!-- Content -->
+    <div class="content">
+      <div class="card-box">
+        <!-- TOPBAR -->
+        <div class="topbar">
+          <h3>Student Management</h3>
 
-        <select v-model="selectedClass" class="form-control search-box">
-          <option value="">---Select a Class---</option>
+          <div class="filters">
+            <select v-model="selectedClass" class="form-control search-box">
+              <option value="">---Select a Class---</option>
+              <option v-for="cls in uniqueClasses" :key="cls" :value="cls">
+                {{ cls }}
+              </option>
+            </select>
 
-          <option v-for="cls in uniqueClasses" :key="cls" :value="cls">
-            {{ cls }}
-          </option>
-        </select>
+            <input
+              v-model="search"
+              type="text"
+              class="form-control search-box"
+              placeholder="Search student ID, name, email..."
+            />
+          </div>
+        </div>
 
-        <input
-          v-model="search"
-          type="text"
-          class="form-control search-box"
-          placeholder="Search student ID, name, email..."
-        />
-      </div>
+        <hr />
 
-      <!-- Table Card -->
-      <div class="card-box mt-3">
+        <!-- TABLE -->
         <div class="table-responsive">
           <table class="table table-hover align-middle">
             <thead>
@@ -42,10 +47,7 @@
 
             <tbody>
               <tr v-for="(s, index) in paginatedStudents" :key="s.id">
-                <td>
-                  {{ (currentPage - 1) * perPage + index + 1 }}
-                </td>
-
+                <td>{{ (currentPage - 1) * perPage + index + 1 }}</td>
                 <td>{{ s.student_id }}</td>
                 <td>{{ s.full_name }}</td>
                 <td>{{ s.batch_name }}</td>
@@ -55,8 +57,7 @@
                   <span v-if="s.due_months?.length">
                     {{ s.due_months.join(', ') }}
                   </span>
-
-                  <span v-else class="badge bg-success"> Paid </span>
+                  <span v-else class="badge bg-success">Paid</span>
                 </td>
 
                 <td>
@@ -80,33 +81,17 @@
           </table>
         </div>
 
-        <!-- Empty -->
+        <!-- EMPTY -->
         <div v-if="filteredStudents.length === 0" class="text-center py-4 text-muted">
           No student found 😢
         </div>
 
-        <!-- Pagination -->
+        <!-- PAGINATION -->
         <div v-if="filteredStudents.length > 0" class="pagination-wrapper mt-4">
           <div class="pagination-info">
-            Showing
-
-            <strong>
-              {{ (currentPage - 1) * perPage + 1 }}
-            </strong>
-
-            -
-
-            <strong>
-              {{ Math.min(currentPage * perPage, filteredStudents.length) }}
-            </strong>
-
-            of
-
-            <strong>
-              {{ filteredStudents.length }}
-            </strong>
-
-            students
+            Showing {{ (currentPage - 1) * perPage + 1 }} -
+            {{ Math.min(currentPage * perPage, filteredStudents.length) }}
+            of {{ filteredStudents.length }} students
           </div>
 
           <div class="d-flex align-items-center gap-2">
@@ -133,77 +118,43 @@
           <div class="modal-content modal-custom">
             <div class="modal-header border-0">
               <h5 class="modal-title">Student Payment</h5>
-
               <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body">
-              <!-- Student -->
               <div class="mb-3">
-                <label class="form-label"> Student </label>
-
+                <label>Student</label>
                 <div class="form-control bg-light">
-                  {{ selectedStudent.student_id }}
-                  -
-                  {{ selectedStudent.full_name }}
+                  {{ selectedStudent.student_id }} - {{ selectedStudent.full_name }}
                 </div>
               </div>
 
-              <!-- Amount -->
-              <div class="mb-3">
-                <label>Amount</label>
+              <input v-model="form.amount" class="form-control mb-2" placeholder="Amount" />
+              <input v-model="form.paid_amount" class="form-control mb-2" placeholder="Paid" />
 
-                <input v-model="form.amount" type="number" class="form-control" />
-              </div>
+              <select v-model="form.month" class="form-select mb-2">
+                <option disabled value="">Month</option>
+                <option>January</option>
+                <option>February</option>
+                <option>March</option>
+                <option>April</option>
+                <option>May</option>
+                <option>June</option>
+                <option>July</option>
+                <option>August</option>
+                <option>September</option>
+                <option>October</option>
+                <option>November</option>
+                <option>December</option>
+              </select>
 
-              <!-- Paid -->
-              <div class="mb-3">
-                <label>Paid Amount</label>
-
-                <input v-model="form.paid_amount" type="number" class="form-control" />
-              </div>
-
-              <!-- Month -->
-              <div class="mb-3">
-                <label>Month</label>
-
-                <select v-model="form.month" class="form-select">
-                  <option disabled value="">Select Month</option>
-
-                  <option>January</option>
-                  <option>February</option>
-                  <option>March</option>
-                  <option>April</option>
-                  <option>May</option>
-                  <option>June</option>
-                  <option>July</option>
-                  <option>August</option>
-                  <option>September</option>
-                  <option>October</option>
-                  <option>November</option>
-                  <option>December</option>
-                </select>
-              </div>
-
-              <!-- Method -->
-              <div class="mb-3">
-                <label>Payment Method</label>
-
-                <input v-model="form.payment_method" class="form-control" />
-              </div>
-
-              <!-- Date -->
-              <div class="mb-3">
-                <label>Payment Date</label>
-
-                <input v-model="form.payment_date" type="date" class="form-control" />
-              </div>
+              <input v-model="form.payment_method" class="form-control mb-2" placeholder="Method" />
+              <input v-model="form.payment_date" type="date" class="form-control" />
             </div>
 
             <div class="modal-footer border-0">
               <button class="btn btn-light" data-bs-dismiss="modal">Close</button>
-
-              <button class="btn btn-success px-4" @click="savePayment">Save Payment</button>
+              <button class="btn btn-success" @click="savePayment">Save Payment</button>
             </div>
           </div>
         </div>
@@ -302,25 +253,22 @@ const openPaymentModal = (student) => {
 }
 
 /* Save Payment */
+
 const savePayment = async () => {
   try {
     const res = await api.post('/payments', form)
-
     const paymentId = res.data.payment.id
 
     const modalEl = document.getElementById('paymentModal')
-
     const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl)
-
     modalInstance.hide()
 
-    // ✅ IMPORTANT: DOM CLEANUP (এটাই আসল fix)
+    // ✅ CRITICAL FIX (layout break + blur + stuck backdrop fix)
     setTimeout(() => {
       document.querySelectorAll('.modal-backdrop').forEach((el) => el.remove())
       document.body.classList.remove('modal-open')
       document.body.style.overflow = ''
-      document.body.style.paddingRight = ''
-    }, 300)
+    }, 200)
 
     router.push(`/singlePayment/${paymentId}`)
   } catch (err) {
@@ -349,7 +297,6 @@ onMounted(() => {
   getStudents()
 })
 </script>
-
 <style>
 .bgc {
   background: #f4f6f9;
@@ -357,29 +304,26 @@ onMounted(() => {
   width: 100%;
 }
 
-/* CONTENT */
-.content {
-  padding: 24px;
-  margin-left: 250px;
-  width: calc(100% - 250px);
-  transition: 0.3s;
-}
-
-/* TOPBAR */
-.topbar {
+/* =========================
+   LAYOUT FIX
+========================= */
+.layout {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  width: 100%;
+  min-height: 100vh;
 }
 
-.search-box {
-  width: 300px;
-  border-radius: 12px;
+.content {
+  flex: 1;
+  margin-left: 250px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  width: calc(100% - 250px);
 }
 
-/* CARD */
+/* =========================
+   CARD
+========================= */
 .card-box {
   background: #fff;
   border-radius: 18px;
@@ -388,7 +332,31 @@ onMounted(() => {
   overflow: hidden;
 }
 
-/* TABLE */
+/* =========================
+   TOPBAR + SEARCH FIX
+========================= */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filters {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.search-box {
+  width: 280px;
+  border-radius: 10px;
+}
+
+/* =========================
+   TABLE FIX (NO BREAK)
+========================= */
 .table-responsive {
   width: 100%;
   overflow-x: auto;
@@ -413,7 +381,9 @@ onMounted(() => {
   background: #f8fbff;
 }
 
-/* PAGINATION */
+/* =========================
+   PAGINATION
+========================= */
 .pagination-wrapper {
   display: flex;
   justify-content: space-between;
@@ -429,24 +399,26 @@ onMounted(() => {
 
 .active-btn {
   background: #0d6efd;
-  color: white;
+  color: #fff;
 }
 
 .page-badge {
   background: #fff;
   border: 1px solid #ddd;
-  padding: 8px 16px;
+  padding: 8px 14px;
   border-radius: 10px;
-  font-weight: bold;
+  font-weight: 600;
 }
 
-/* MODAL */
+/* =========================
+   MODAL FIX
+========================= */
 .modal-custom {
   border-radius: 18px;
 }
 
 /* =========================
-   MOBILE RESPONSIVE
+   MOBILE RESPONSIVE FIX
 ========================= */
 @media (max-width: 768px) {
   .content {
@@ -460,12 +432,13 @@ onMounted(() => {
     align-items: stretch;
   }
 
-  .topbar h3 {
-    margin-bottom: 8px;
+  .filters {
+    flex-direction: column;
+    width: 100%;
   }
 
   .search-box {
-    width: 100%;
+    width: 100% !important;
   }
 
   .card-box {
@@ -478,12 +451,80 @@ onMounted(() => {
     align-items: flex-start;
   }
 
-  .pagination-info {
-    font-size: 14px;
+  .table {
+    min-width: 800px;
+  }
+}
+@media (max-width: 768px) {
+  .topbar {
+    flex-direction: column;
+    align-items: center; /* ✅ center horizontally */
+    text-align: center;
   }
 
-  .modal-dialog {
-    margin: 10px;
+  .filters {
+    flex-direction: column;
+    width: 100%;
+    align-items: center; /* ✅ center inputs */
+  }
+
+  .search-box {
+    width: 100% !important;
+    max-width: 320px; /* ✅ keeps nice centered size */
+    margin: 0 auto; /* ✅ center */
+  }
+}
+/* =========================
+   TOPBAR FIX (FINAL STABLE)
+========================= */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* filters container */
+.filters {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+}
+
+/* search + select */
+.search-box {
+  width: 280px;
+  border-radius: 10px;
+}
+
+/* =========================
+   MOBILE FIX (TOPBAR ROOT FIX)
+========================= */
+@media (max-width: 768px) {
+  .topbar {
+    flex-direction: column;
+    align-items: center; /* center whole topbar */
+    text-align: center;
+    gap: 10px;
+  }
+
+  .filters {
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .search-box {
+    width: 100% !important;
+    max-width: 320px;
+  }
+
+  .topbar h3 {
+    width: 100%;
   }
 }
 </style>

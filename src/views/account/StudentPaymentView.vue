@@ -442,4 +442,40 @@ onMounted(() => {
     margin-left: -294px;
   }
 }
+/* =========================
+   PAGINATION FIX
+========================= */
+.pagination-btn {
+  border: 1px solid #0d6efd;
+  border-radius: 10px;
+  padding: 8px 14px;
+  background: #0d6efd;
+  color: #fff;
+  font-weight: 500;
+}
+
+.pagination-btn:hover {
+  opacity: 0.9;
+}
+
+.pagination-btn:disabled {
+  background: #cfcfcf;
+  border-color: #cfcfcf;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.page-badge {
+  background: #0d6efd;
+  color: #fff;
+  border: 1px solid #0d6efd;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-weight: 600;
+}
+
+.pagination-info {
+  color: #000;
+  font-weight: 500;
+}
 </style>

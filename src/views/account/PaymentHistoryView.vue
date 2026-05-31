@@ -132,10 +132,12 @@ watch(search, () => {
 
 <style>
 /* LAYOUT */
+/* LAYOUT */
 .layout {
   display: flex;
   min-height: 100vh;
   width: 100%;
+  background: #f4f6f9;
 }
 
 /* CONTENT */
@@ -159,10 +161,12 @@ watch(search, () => {
   justify-content: space-between;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .search {
   width: 300px;
+  border-radius: 10px;
 }
 
 /* TABLE */
@@ -175,14 +179,29 @@ table {
   min-width: 900px;
 }
 
-/* PAGINATION */
+/* EMPTY */
+.empty {
+  text-align: center;
+  padding: 20px;
+  color: gray;
+}
+
+/* =========================
+   PAGINATION FIX
+========================= */
 .pagination-wrapper {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 20px;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
+}
+
+.info {
+  font-size: 15px;
+  color: #000;
+  font-weight: 500;
 }
 
 .controls {
@@ -191,17 +210,31 @@ table {
   gap: 10px;
 }
 
-.badge {
-  background: #f1f1f1;
-  padding: 6px 12px;
-  border-radius: 8px;
+.controls .btn {
+  background: #0d6efd;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-weight: 500;
 }
 
-/* EMPTY */
-.empty {
-  text-align: center;
-  padding: 20px;
-  color: gray;
+.controls .btn:hover {
+  opacity: 0.9;
+}
+
+.controls .btn:disabled {
+  background: #cfcfcf;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.badge {
+  background: #0d6efd !important;
+  color: #fff !important;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-weight: 600;
 }
 
 /* MOBILE */
@@ -214,16 +247,23 @@ table {
 
   .header {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
+    text-align: center;
   }
 
   .search {
     width: 100%;
+    max-width: 320px;
   }
 
   .pagination-wrapper {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    text-align: center;
+  }
+
+  table {
+    min-width: 800px;
   }
 }
 </style>

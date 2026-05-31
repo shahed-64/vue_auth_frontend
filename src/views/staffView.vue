@@ -40,7 +40,7 @@
 
               <td class="action-buttons">
                 <!-- VIEW -->
-                <button class="btn btn-sm btn-info" @click="viewStaff(item)">View</button>
+                <button class="btn btn-sm btn-info" @click="openView(item)">View</button>
 
                 <!-- EDIT -->
                 <button
@@ -60,12 +60,12 @@
                 <!-- DELETE -->
                 <button
                   class="btn btn-sm btn-danger"
+                  @click="deleteStaff(item.id)"
                   v-if="
                     currentRole === 'Manager' ||
                     currentRole === 'Accountant' ||
                     (currentRole === 'Admin' && item.role !== 'Manager')
                   "
-                  @click="deleteStaff(item.id)"
                 >
                   Delete
                 </button>
@@ -74,33 +74,28 @@
           </tbody>
         </table>
 
-        <!-- EMPTY -->
         <div v-if="staff.length === 0" class="text-center py-3 text-muted">No staff found</div>
       </div>
     </div>
   </div>
 
   <!-- EDIT MODAL -->
-  <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+  <div class="modal fade" id="editModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Edit Staff</h5>
-
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 
         <div class="modal-body">
           <input v-model="selectedStaff.name" class="form-control mb-2" placeholder="Name" />
-
           <input
             v-model="selectedStaff.user_name"
             class="form-control mb-2"
             placeholder="User Name"
           />
-
           <input v-model="selectedStaff.skill" class="form-control mb-2" placeholder="Skill" />
-
           <input v-model="selectedStaff.email" class="form-control mb-2" placeholder="Email" />
 
           <select v-model="selectedStaff.role" class="form-control mb-2">
@@ -116,7 +111,6 @@
             class="form-control mb-2"
             placeholder="New Password (Optional)"
           />
-
           <input
             v-model="selectedStaff.password_confirmation"
             type="password"
@@ -126,9 +120,38 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           <button class="btn btn-primary" @click="updateStaff">Update</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW MODAL -->
+  <div class="modal fade" id="viewModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Staff Details</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="text-center mb-3">
+            <img src="https://i.pravatar.cc/120" class="rounded-circle border" width="90" />
+          </div>
+
+          <div class="list-group">
+            <div class="list-group-item"><strong>Name:</strong> {{ viewData.name }}</div>
+            <div class="list-group-item"><strong>User Name:</strong> {{ viewData.user_name }}</div>
+            <div class="list-group-item"><strong>Email:</strong> {{ viewData.email }}</div>
+            <div class="list-group-item"><strong>Skill:</strong> {{ viewData.skill }}</div>
+            <div class="list-group-item"><strong>Role:</strong> {{ viewData.role }}</div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
@@ -141,10 +164,30 @@ import { ref, onMounted } from 'vue'
 import api from '@/services/api'
 
 const staff = ref([])
-
 const currentRole = localStorage.getItem('role')
 const token = localStorage.getItem('token')
 
+/* VIEW */
+const viewData = ref({
+  name: '',
+  user_name: '',
+  email: '',
+  skill: '',
+  role: '',
+})
+
+const openView = (item) => {
+  viewData.value = { ...item }
+
+  // SAFE Bootstrap modal open
+  const modalEl = document.getElementById('viewModal')
+  if (modalEl) {
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl)
+    modal.show()
+  }
+}
+
+/* EDIT */
 const selectedStaff = ref({
   id: null,
   name: '',
@@ -156,9 +199,16 @@ const selectedStaff = ref({
   password_confirmation: '',
 })
 
+const openEdit = (item) => {
+  selectedStaff.value = { ...item, password: '', password_confirmation: '' }
+}
+
+/* GET */
 const getStaff = async () => {
   try {
-    const res = await api.get('/staff')
+    const res = await api.get('/staff', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
 
     staff.value = res.data.staff
   } catch (error) {
@@ -166,103 +216,37 @@ const getStaff = async () => {
   }
 }
 
-const openEdit = (item) => {
-  selectedStaff.value = {
-    ...item,
-    password: '',
-    password_confirmation: '',
-  }
-}
-
+/* UPDATE */
 const updateStaff = async () => {
   try {
-    const res = await api.put(`/staff/${selectedStaff.value.id}`, selectedStaff.value, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const payload = { ...selectedStaff.value }
+
+    const res = await api.put(`/staff/${selectedStaff.value.id}`, payload, {
+      headers: { Authorization: `Bearer ${token}` },
     })
 
-    console.log(res.data)
-
     alert('Updated successfully')
-
-    // staff list refresh
     await getStaff()
 
-    // modal close
     document.querySelector('#editModal .btn-close')?.click()
   } catch (error) {
     console.log(error.response?.data)
-
-    alert(JSON.stringify(error.response?.data))
   }
 }
+
+/* DELETE */
 const deleteStaff = async (id) => {
-  if (!confirm('Are you sure to delete this staff?')) return
+  if (!confirm('Are you sure?')) return
 
-  try {
-    await api.delete(`/staff/${id}`)
+  await api.delete(`/staff/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
 
-    staff.value = staff.value.filter((item) => item.id !== id)
-
-    alert('Deleted successfully')
-  } catch (error) {
-    console.log(error.response?.data)
-  }
+  staff.value = staff.value.filter((i) => i.id !== id)
 }
 
-const viewStaff = (item) => {
-  alert(
-    `Name: ${item.name}
-Email: ${item.email}
-Role: ${item.role}
-Skill: ${item.skill}`,
-  )
-}
-
+/* INIT */
 onMounted(() => {
   getStaff()
 })
 </script>
-
-<style scoped>
-.content {
-  margin-left: 250px;
-  padding: 20px;
-}
-
-.staff-search {
-  width: 25%;
-}
-
-.table-responsive {
-  overflow-x: auto;
-}
-
-.action-buttons .btn {
-  margin: 2px;
-}
-
-@media (max-width: 768px) {
-  .content {
-    margin-left: 0;
-    padding: 15px;
-  }
-
-  .staff-search {
-    width: 100%;
-  }
-
-  table {
-    min-width: 850px;
-  }
-
-  .action-buttons {
-    white-space: nowrap;
-  }
-
-  .btn-sm {
-    margin-bottom: 5px;
-  }
-}
-</style>

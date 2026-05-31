@@ -12,11 +12,7 @@
 
     <div class="card-box sps">
       <!-- FILTER SECTION -->
-      <div
-          class="d-flex flex-column flex-md-row
-          justify-content-between
-          mb-3 gap-2"
-        >
+      <div class="d-flex flex-column flex-md-row justify-content-between mb-3 gap-2">
         <!-- Class Filter -->
         <select v-model="selectedClass" class="form-control filter-input">
           <option value="">---Select Class---</option>
@@ -225,6 +221,8 @@ const getstudent = async () => {
 }
 
 /* CREATE STUDENT */
+
+/* CREATE STUDENT */
 const student_create = async () => {
   if (!form.full_name || !form.email) {
     alert('Field must not be empty')
@@ -237,16 +235,27 @@ const student_create = async () => {
     alert('Created successfully')
 
     const modalEl = document.getElementById('addModal')
+
     const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl)
+
     modal.hide()
 
+    // ✅ BLUR + SCROLL + LAYOUT FIX
+    setTimeout(() => {
+      document.querySelectorAll('.modal-backdrop').forEach((el) => el.remove())
+
+      document.body.classList.remove('modal-open')
+      document.body.style.overflow = ''
+      document.body.style.paddingRight = ''
+    }, 200)
+
     resetForm()
-    getstudent()
+    await getstudent()
   } catch (error) {
+    console.log(error)
     alert('Something went wrong')
   }
 }
-
 /* UNIQUE CLASS */
 const uniqueClasses = computed(() => {
   const classes = students.value.map((s) => s.batch_name).filter(Boolean)

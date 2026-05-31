@@ -310,18 +310,17 @@ const savePayment = async () => {
 
     const modalEl = document.getElementById('paymentModal')
 
-    // Bootstrap instance handle safely
     const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl)
 
     modalInstance.hide()
 
-    // backdrop force remove (important fix)
-    document.querySelectorAll('.modal-backdrop').forEach((el) => {
-      el.remove()
-    })
-
-    document.body.classList.remove('modal-open')
-    document.body.style.removeProperty('padding-right')
+    // ✅ IMPORTANT: DOM CLEANUP (এটাই আসল fix)
+    setTimeout(() => {
+      document.querySelectorAll('.modal-backdrop').forEach((el) => el.remove())
+      document.body.classList.remove('modal-open')
+      document.body.style.overflow = ''
+      document.body.style.paddingRight = ''
+    }, 300)
 
     router.push(`/singlePayment/${paymentId}`)
   } catch (err) {

@@ -39,12 +39,15 @@
               <td>{{ item.role }}</td>
 
               <td class="action-buttons">
-                <button class="btn btn-sm btn-info">View</button>
+                <!-- VIEW -->
+                <button class="btn btn-sm btn-info" @click="viewStaff(item)">View</button>
 
+                <!-- EDIT -->
                 <button
                   class="btn btn-sm btn-warning"
                   data-bs-toggle="modal"
                   data-bs-target="#editModal"
+                  @click="openEdit(item)"
                   v-if="
                     currentRole === 'Manager' ||
                     currentRole === 'Accountant' ||
@@ -54,15 +57,15 @@
                   Edit
                 </button>
 
+                <!-- DELETE -->
                 <button
                   class="btn btn-sm btn-danger"
-                  data-bs-toggle="modal"
-                  data-bs-target="#editModal"
                   v-if="
                     currentRole === 'Manager' ||
                     currentRole === 'Accountant' ||
                     (currentRole === 'Admin' && item.role !== 'Manager')
                   "
+                  @click="deleteStaff(item.id)"
                 >
                   Delete
                 </button>
@@ -76,21 +79,104 @@
       </div>
     </div>
   </div>
+
+  <!-- EDIT MODAL -->
+  <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Staff</h5>
+
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <input v-model="selectedStaff.name" class="form-control mb-2" placeholder="Name" />
+
+          <input
+            v-model="selectedStaff.user_name"
+            class="form-control mb-2"
+            placeholder="User Name"
+          />
+
+          <input v-model="selectedStaff.skill" class="form-control mb-2" placeholder="Skill" />
+
+          <input v-model="selectedStaff.email" class="form-control mb-2" placeholder="Email" />
+
+          <select v-model="selectedStaff.role" class="form-control mb-2">
+            <option value="Admin">Admin</option>
+            <option value="Manager">Manager</option>
+            <option value="Accountant">Accountant</option>
+            <option value="Staff">Staff</option>
+          </select>
+
+          <input
+            v-model="selectedStaff.password"
+            type="password"
+            class="form-control mb-2"
+            placeholder="New Password (Optional)"
+          />
+
+          <input
+            v-model="selectedStaff.password_confirmation"
+            type="password"
+            class="form-control"
+            placeholder="Confirm Password"
+          />
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+          <button class="btn btn-primary" @click="updateStaff">Update</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import dashPageView from './dashPageView.vue'
-
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
 import api from '@/services/api'
+
 const staff = ref([])
+
 const currentRole = localStorage.getItem('role')
 const token = localStorage.getItem('token')
 
+const selectedStaff = ref({
+  id: null,
+  name: '',
+  user_name: '',
+  skill: '',
+  email: '',
+  role: '',
+  password: '',
+  password_confirmation: '',
+})
+
 const getStaff = async () => {
   try {
-    const res = await api.get('/staff', {
+    const res = await api.get('/staff')
+
+    staff.value = res.data.staff
+  } catch (error) {
+    console.log(error.response?.data)
+  }
+}
+
+const openEdit = (item) => {
+  selectedStaff.value = {
+    ...item,
+    password: '',
+    password_confirmation: '',
+  }
+}
+
+const updateStaff = async () => {
+  try {
+    const res = await api.put(`/staff/${selectedStaff.value.id}`, selectedStaff.value, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -98,15 +184,47 @@ const getStaff = async () => {
 
     console.log(res.data)
 
-    staff.value = res.data.staff
+    alert('Updated successfully')
+
+    // staff list refresh
+    await getStaff()
+
+    // modal close
+    document.querySelector('#editModal .btn-close')?.click()
+  } catch (error) {
+    console.log(error.response?.data)
+
+    alert(JSON.stringify(error.response?.data))
+  }
+}
+const deleteStaff = async (id) => {
+  if (!confirm('Are you sure to delete this staff?')) return
+
+  try {
+    await api.delete(`/staff/${id}`)
+
+    staff.value = staff.value.filter((item) => item.id !== id)
+
+    alert('Deleted successfully')
   } catch (error) {
     console.log(error.response?.data)
   }
 }
+
+const viewStaff = (item) => {
+  alert(
+    `Name: ${item.name}
+Email: ${item.email}
+Role: ${item.role}
+Skill: ${item.skill}`,
+  )
+}
+
 onMounted(() => {
   getStaff()
 })
 </script>
+
 <style scoped>
 .content {
   margin-left: 250px;

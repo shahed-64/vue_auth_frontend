@@ -298,15 +298,15 @@ onMounted(() => {
 })
 </script>
 <style>
+/* =========================
+   LAYOUT
+========================= */
 .bgc {
   background: #f4f6f9;
   min-height: 100vh;
   width: 100%;
 }
 
-/* =========================
-   LAYOUT FIX
-========================= */
 .layout {
   display: flex;
   width: 100%;
@@ -317,7 +317,6 @@ onMounted(() => {
   flex: 1;
   margin-left: 250px;
   padding: 20px;
-  transition: all 0.3s ease;
   width: calc(100% - 250px);
 }
 
@@ -329,11 +328,10 @@ onMounted(() => {
   border-radius: 18px;
   padding: 22px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
 }
 
 /* =========================
-   TOPBAR + SEARCH FIX
+   TOPBAR (FIXED)
 ========================= */
 .topbar {
   display: flex;
@@ -350,20 +348,16 @@ onMounted(() => {
 }
 
 .search-box {
-  width: 280px;
+  width: 260px;
   border-radius: 10px;
 }
 
 /* =========================
-   TABLE FIX (NO BREAK)
+   TABLE
 ========================= */
 .table-responsive {
   width: 100%;
   overflow-x: auto;
-}
-
-.table {
-  min-width: 900px;
 }
 
 .table thead th {
@@ -377,10 +371,6 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.table tbody tr:hover {
-  background: #f8fbff;
-}
-
 /* =========================
    PAGINATION
 ========================= */
@@ -392,38 +382,13 @@ onMounted(() => {
   gap: 15px;
 }
 
-.pagination-btn {
-  border: 1px solid #ddd;
-  border-radius: 10px;
-}
-
-.active-btn {
-  background: #0d6efd;
-  color: #fff;
-}
-
-.page-badge {
-  background: #fff;
-  border: 1px solid #ddd;
-  padding: 8px 14px;
-  border-radius: 10px;
-  font-weight: 600;
-}
-
 /* =========================
-   MODAL FIX
-========================= */
-.modal-custom {
-  border-radius: 18px;
-}
-
-/* =========================
-   MOBILE RESPONSIVE FIX
+   MOBILE FIX (IMPORTANT)
 ========================= */
 @media (max-width: 768px) {
   .content {
-    margin-left: 0 !important;
-    width: 100% !important;
+    margin-left: 0;
+    width: 100%;
     padding: 12px;
   }
 
@@ -439,92 +404,6 @@ onMounted(() => {
 
   .search-box {
     width: 100% !important;
-  }
-
-  .card-box {
-    padding: 14px;
-    border-radius: 14px;
-  }
-
-  .pagination-wrapper {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .table {
-    min-width: 800px;
-  }
-}
-@media (max-width: 768px) {
-  .topbar {
-    flex-direction: column;
-    align-items: center; /* ✅ center horizontally */
-    text-align: center;
-  }
-
-  .filters {
-    flex-direction: column;
-    width: 100%;
-    align-items: center; /* ✅ center inputs */
-  }
-
-  .search-box {
-    width: 100% !important;
-    max-width: 320px; /* ✅ keeps nice centered size */
-    margin: 0 auto; /* ✅ center */
-  }
-}
-/* =========================
-   TOPBAR FIX (FINAL STABLE)
-========================= */
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-/* filters container */
-.filters {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  justify-content: flex-end;
-  flex: 1;
-}
-
-/* search + select */
-.search-box {
-  width: 280px;
-  border-radius: 10px;
-}
-
-/* =========================
-   MOBILE FIX (TOPBAR ROOT FIX)
-========================= */
-@media (max-width: 768px) {
-  .topbar {
-    flex-direction: column;
-    align-items: center; /* center whole topbar */
-    text-align: center;
-    gap: 10px;
-  }
-
-  .filters {
-    flex-direction: column;
-    width: 100%;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .search-box {
-    width: 100% !important;
-    max-width: 320px;
-  }
-
-  .topbar h3 {
-    width: 100%;
   }
 }
 </style>

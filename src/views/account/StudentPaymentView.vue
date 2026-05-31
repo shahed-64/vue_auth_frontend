@@ -406,4 +406,40 @@ onMounted(() => {
     width: 100% !important;
   }
 }
+@media (max-width: 768px) {
+  .topbar {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .filters {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .search-box {
+    width: 100% !important;
+    max-width: 320px;
+    margin: 0 auto;
+    margin-left: 50px !important;
+  }
+
+  /* optional: nice spacing */
+  .filters select,
+  .filters input {
+    text-align: center;
+  }
+}
+@media (max-width: 768px) {
+  .filters {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-left: -294px;
+  }
+}
 </style>

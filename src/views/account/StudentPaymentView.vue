@@ -308,11 +308,20 @@ const savePayment = async () => {
 
     const paymentId = res.data.payment.id
 
-    const modal = document.getElementById('paymentModal')
+    const modalEl = document.getElementById('paymentModal')
 
-    const modalInstance = bootstrap.Modal.getInstance(modal)
+    // Bootstrap instance handle safely
+    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl)
 
     modalInstance.hide()
+
+    // backdrop force remove (important fix)
+    document.querySelectorAll('.modal-backdrop').forEach((el) => {
+      el.remove()
+    })
+
+    document.body.classList.remove('modal-open')
+    document.body.style.removeProperty('padding-right')
 
     router.push(`/singlePayment/${paymentId}`)
   } catch (err) {
@@ -320,7 +329,6 @@ const savePayment = async () => {
     alert('Payment save failed')
   }
 }
-
 /* Get Students */
 const getStudents = async () => {
   try {

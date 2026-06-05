@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: 'https://laravel-auth-backend-65.onrender.com/api',
+  baseURL: 'https://laravel-api-for-student-payment.onrender.com/api',
 })
 
 const token = localStorage.getItem('token')

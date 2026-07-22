@@ -2,79 +2,197 @@
   <dashPageView />
 
   <div class="content">
-    <div class="card-box">
-      <!-- SEARCH -->
-      <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
-        <input type="text" class="form-control staff-search" placeholder="Search staff..." />
+    <div class="staff-container">
+      <!-- HEADER -->
+
+      <div class="staff-header">
+        <div>
+          <h2>Staff Management</h2>
+
+          <p>Manage your coaching team members and permissions</p>
+        </div>
+
+        <div class="staff-summary">
+          <div class="summary-icon">
+            <i class="fa-solid fa-users"></i>
+          </div>
+
+          <div>
+            <h4>
+              {{ staff.length }}
+            </h4>
+
+            <span> Total Staff </span>
+          </div>
+        </div>
       </div>
 
-      <!-- TABLE -->
-      <div class="table-responsive">
-        <table class="table table-bordered align-middle">
-          <thead class="table-dark">
-            <tr>
-              <th>#</th>
-              <th>Photo</th>
-              <th>Name</th>
-              <th>User Name</th>
-              <th>Skill</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th width="220">Action</th>
-            </tr>
-          </thead>
+      <!-- SEARCH + ACTION -->
 
-          <tbody>
-            <tr v-for="(item, index) in staff" :key="item.id">
-              <td>{{ index + 1 }}</td>
+      <div class="staff-toolbar">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
 
-              <td>
-                <img src="https://i.pravatar.cc/100?img=1" width="45" class="rounded-circle" />
-              </td>
+          <input type="text" v-model="search" placeholder="Search staff..." />
+        </div>
 
-              <td>{{ item.name }}</td>
-              <td>{{ item.user_name }}</td>
-              <td>{{ item.skill }}</td>
-              <td>{{ item.email }}</td>
-              <td>{{ item.role }}</td>
+        <button class="btn btn-primary add-btn">
+          <i class="fa-solid fa-user-plus"></i>
 
-              <td class="action-buttons">
-                <!-- VIEW -->
-                <button class="btn btn-sm btn-info" @click="openView(item)">View</button>
+          Add Staff
+        </button>
+      </div>
 
-                <!-- EDIT -->
-                <button
-                  class="btn btn-sm btn-warning"
-                  data-bs-toggle="modal"
-                  data-bs-target="#editModal"
-                  @click="openEdit(item)"
-                  v-if="
-                    currentRole === 'Manager' ||
-                    currentRole === 'Accountant' ||
-                    (currentRole === 'Admin' && item.role !== 'Manager')
-                  "
-                >
-                  Edit
-                </button>
+      <!-- TABLE CARD -->
 
-                <!-- DELETE -->
-                <button
-                  class="btn btn-sm btn-danger"
-                  @click="deleteStaff(item.id)"
-                  v-if="
-                    currentRole === 'Manager' ||
-                    currentRole === 'Accountant' ||
-                    (currentRole === 'Admin' && item.role !== 'Manager')
-                  "
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="staff-table-card">
+        <div class="table-responsive">
+          <table class="table staff-table align-middle">
+            <thead>
+              <tr>
+                <th>#</th>
 
-        <div v-if="staff.length === 0" class="text-center py-3 text-muted">No staff found</div>
+                <th>Photo</th>
+
+                <th>Name</th>
+
+                <th>User Name</th>
+
+                <th>Skill</th>
+
+                <th>Email</th>
+
+                <th>Role</th>
+
+                <th width="220">Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <!-- Loading -->
+
+              <tr v-if="loading">
+                <td colspan="8" class="text-center py-5">
+                  <div class="spinner-border text-primary"></div>
+
+                  <p class="mt-2 mb-0">Loading staff...</p>
+                </td>
+              </tr>
+
+              <!-- Data -->
+
+              <tr v-for="(item, index) in paginatedStaff" :key="item.id">
+                <td>
+                  {{ index + 1 }}
+                </td>
+
+                <td>
+                  <img src="https://i.pravatar.cc/100?img=1" class="staff-avatar" />
+                </td>
+
+                <td>
+                  <div class="staff-name">
+                    <strong>
+                      {{ item.name }}
+                    </strong>
+                  </div>
+                </td>
+
+                <td>
+                  {{ item.user_name }}
+                </td>
+
+                <td>
+                  <span class="skill-badge">
+                    {{ item.skill }}
+                  </span>
+                </td>
+
+                <td>
+                  {{ item.email }}
+                </td>
+
+                <td>
+                  <span class="role-badge" :class="item.role.toLowerCase()">
+                    {{ item.role }}
+                  </span>
+                </td>
+
+                <td class="action-buttons">
+                  <!-- VIEW -->
+
+                  <button class="action-btn view" @click="openView(item)">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+
+                  <!-- EDIT -->
+
+                  <button
+                    class="action-btn edit"
+                    data-bs-toggle="modal"
+                    data-bs-target="#editModal"
+                    @click="openEdit(item)"
+                    v-if="
+                      currentRole === 'Manager' ||
+                      currentRole === 'Accountant' ||
+                      (currentRole === 'Admin' && item.role !== 'Manager')
+                    "
+                  >
+                    <i class="fa-solid fa-pen"></i>
+                  </button>
+
+                  <!-- DELETE -->
+
+                  <button
+                    class="action-btn delete"
+                    @click="deleteStaff(item.id)"
+                    v-if="
+                      currentRole === 'Manager' ||
+                      currentRole === 'Accountant' ||
+                      (currentRole === 'Admin' && item.role !== 'Manager')
+                    "
+                  >
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Empty -->
+
+              <tr v-if="!loading && paginatedStaff.length === 0">
+                <td colspan="8">
+                  <div class="empty-state">
+                    <i class="fa-solid fa-users-slash"></i>
+
+                    <h5>No Staff Found</h5>
+
+                    <p>Try changing your search keyword</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- PAGINATION -->
+
+        <div class="pagination-box">
+          <button class="page-btn" @click="previousPage">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+
+          <span>
+            Page {{ currentPage }}
+
+            of
+
+            {{ totalPages }}
+          </span>
+
+          <button class="page-btn" @click="nextPage">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -160,14 +278,33 @@
 
 <script setup>
 import dashPageView from './dashPageView.vue'
-import { ref, onMounted } from 'vue'
+
+import { ref, computed, onMounted } from 'vue'
+
 import api from '@/services/api'
 
+// =======================
+// STATES
+// =======================
+
 const staff = ref([])
+
+const search = ref('')
+
+const loading = ref(false)
+
+const currentPage = ref(1)
+
+const perPage = 10
+
 const currentRole = localStorage.getItem('role')
+
 const token = localStorage.getItem('token')
 
-/* VIEW */
+// =======================
+// VIEW DATA
+// =======================
+
 const viewData = ref({
   name: '',
   user_name: '',
@@ -179,74 +316,656 @@ const viewData = ref({
 const openView = (item) => {
   viewData.value = { ...item }
 
-  // SAFE Bootstrap modal open
   const modalEl = document.getElementById('viewModal')
+
   if (modalEl) {
     const modal = bootstrap.Modal.getOrCreateInstance(modalEl)
+
     modal.show()
   }
 }
 
-/* EDIT */
+// =======================
+// EDIT DATA
+// =======================
+
 const selectedStaff = ref({
   id: null,
+
   name: '',
+
   user_name: '',
+
   skill: '',
+
   email: '',
+
   role: '',
+
   password: '',
+
   password_confirmation: '',
 })
 
 const openEdit = (item) => {
-  selectedStaff.value = { ...item, password: '', password_confirmation: '' }
+  selectedStaff.value = {
+    ...item,
+
+    password: '',
+
+    password_confirmation: '',
+  }
 }
 
-/* GET */
+// =======================
+// GET STAFF
+// =======================
+
 const getStaff = async () => {
   try {
+    loading.value = true
+
     const res = await api.get('/staff', {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     })
 
-    staff.value = res.data.staff
+    staff.value = res.data.staff || []
   } catch (error) {
     console.log(error.response?.data)
+  } finally {
+    loading.value = false
   }
 }
 
-/* UPDATE */
+// =======================
+// SEARCH FILTER
+// =======================
+
+const filteredStaff = computed(() => {
+  if (!search.value) {
+    return staff.value
+  }
+
+  const keyword = search.value.toLowerCase()
+
+  return staff.value.filter((item) => {
+    return (
+      item.name?.toLowerCase().includes(keyword) ||
+      item.user_name?.toLowerCase().includes(keyword) ||
+      item.email?.toLowerCase().includes(keyword) ||
+      item.skill?.toLowerCase().includes(keyword) ||
+      item.role?.toLowerCase().includes(keyword)
+    )
+  })
+})
+
+// =======================
+// PAGINATION
+// =======================
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredStaff.value.length / perPage)
+})
+
+const paginatedStaff = computed(() => {
+  const start = (currentPage.value - 1) * perPage
+
+  return filteredStaff.value.slice(
+    start,
+
+    start + perPage,
+  )
+})
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+  }
+}
+
+const previousPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
+}
+
+// Search করলে page 1 এ চলে যাবে
+
+import { watch } from 'vue'
+
+watch(search, () => {
+  currentPage.value = 1
+})
+
+// =======================
+// UPDATE STAFF
+// =======================
+
 const updateStaff = async () => {
   try {
-    const payload = { ...selectedStaff.value }
+    const payload = {
+      ...selectedStaff.value,
+    }
 
-    const res = await api.put(`/staff/${selectedStaff.value.id}`, payload, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    await api.put(
+      `/staff/${selectedStaff.value.id}`,
+
+      payload,
+
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
 
     alert('Updated successfully')
+
     await getStaff()
 
-    document.querySelector('#editModal .btn-close')?.click()
+    document
+
+      .querySelector('#editModal .btn-close')
+
+      ?.click()
   } catch (error) {
     console.log(error.response?.data)
   }
 }
 
-/* DELETE */
+// =======================
+// DELETE STAFF
+// =======================
+
 const deleteStaff = async (id) => {
   if (!confirm('Are you sure?')) return
 
-  await api.delete(`/staff/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
+  try {
+    await api.delete(
+      `/staff/${id}`,
 
-  staff.value = staff.value.filter((i) => i.id !== id)
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+
+    staff.value = staff.value.filter((item) => item.id !== id)
+  } catch (error) {
+    console.log(error.response?.data)
+  }
 }
 
-/* INIT */
+// =======================
+// INIT
+// =======================
+
 onMounted(() => {
   getStaff()
 })
 </script>
+<style scoped>
+/* =========================
+   MAIN CONTENT
+========================= */
+
+.content {
+  margin-left: 250px;
+
+  width: calc(100% - 250px);
+
+  padding: 30px;
+
+  background: #f8fafc;
+
+  min-height: 100vh;
+}
+
+.staff-container {
+  width: 100%;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.staff-header {
+  background: linear-gradient(135deg, #0f766e, #2563eb);
+
+  padding: 30px 35px;
+
+  border-radius: 24px;
+
+  color: white;
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 25px;
+
+  box-shadow: 0 15px 35px rgba(37, 99, 235, 0.2);
+}
+
+.staff-header h2 {
+  font-weight: 700;
+
+  margin-bottom: 8px;
+}
+
+.staff-header p {
+  margin: 0;
+
+  color: #dbeafe;
+}
+
+.staff-summary {
+  background: rgba(255, 255, 255, 0.15);
+
+  padding: 15px 22px;
+
+  border-radius: 18px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 15px;
+
+  backdrop-filter: blur(10px);
+}
+
+.summary-icon {
+  width: 55px;
+
+  height: 55px;
+
+  border-radius: 15px;
+
+  background: rgba(255, 255, 255, 0.2);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-size: 25px;
+}
+
+.staff-summary h4 {
+  margin: 0;
+
+  font-size: 28px;
+
+  font-weight: 700;
+}
+
+.staff-summary span {
+  color: #e0f2fe;
+
+  font-size: 14px;
+}
+
+/* =========================
+ TOOLBAR
+========================= */
+
+.staff-toolbar {
+  background: white;
+
+  padding: 20px;
+
+  border-radius: 20px;
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 25px;
+
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.search-box {
+  position: relative;
+
+  width: 350px;
+}
+
+.search-box i {
+  position: absolute;
+
+  left: 18px;
+
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  color: #94a3b8;
+}
+
+.search-box input {
+  width: 100%;
+
+  padding: 12px 20px 12px 45px;
+
+  border-radius: 14px;
+
+  border: 1px solid #e2e8f0;
+
+  outline: none;
+
+  transition: 0.3s;
+}
+
+.search-box input:focus {
+  border-color: #2563eb;
+
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.add-btn {
+  border-radius: 14px;
+
+  padding: 12px 22px;
+}
+
+/* =========================
+ TABLE CARD
+========================= */
+
+.staff-table-card {
+  background: white;
+
+  border-radius: 18px;
+
+  padding: 20px;
+
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.staff-table {
+  margin: 0;
+}
+
+.staff-table thead th {
+  background: #f8fafc;
+
+  color: #64748b;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  border: none;
+
+  padding: 14px 16px;
+}
+
+.staff-table tbody td {
+  padding: 16px;
+
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.staff-table tbody tr {
+  transition: 0.25s;
+}
+
+.staff-table tbody tr:hover {
+  background: #f1f5ff;
+}
+
+.staff-table tbody tr:hover {
+  background: #f8fafc;
+
+  transform: scale(1.005);
+}
+
+/* =========================
+ AVATAR
+========================= */
+
+.staff-avatar {
+  width: 45px;
+
+  height: 45px;
+
+  border-radius: 50%;
+
+  object-fit: cover;
+
+  border: 3px solid #dbeafe;
+}
+
+.staff-name strong {
+  color: #111827;
+}
+
+/* =========================
+ BADGES
+========================= */
+
+.skill-badge {
+  background: #eff6ff;
+
+  color: #2563eb;
+
+  padding: 6px 12px;
+
+  border-radius: 20px;
+
+  font-size: 12px;
+
+  font-weight: 600;
+}
+
+.role-badge {
+  padding: 7px 14px;
+
+  border-radius: 20px;
+
+  font-size: 12px;
+
+  font-weight: 600;
+}
+
+.role-badge.admin {
+  background: #dbeafe;
+
+  color: #2563eb;
+}
+
+.role-badge.manager {
+  background: #ede9fe;
+
+  color: #7c3aed;
+}
+
+.role-badge.accountant {
+  background: #dcfce7;
+
+  color: #16a34a;
+}
+
+.role-badge.staff {
+  background: #fef3c7;
+
+  color: #d97706;
+}
+
+/* =========================
+ ACTION BUTTON
+========================= */
+
+.action-buttons {
+  display: flex;
+
+  gap: 8px;
+}
+
+.action-btn {
+  width: 38px;
+
+  height: 38px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  transition: 0.3s;
+}
+
+.action-btn:hover {
+  transform: translateY(-3px);
+}
+
+.action-btn.view {
+  background: #dbeafe;
+
+  color: #2563eb;
+}
+
+.action-btn.edit {
+  background: #fef3c7;
+
+  color: #d97706;
+}
+
+.action-btn.delete {
+  background: #fee2e2;
+
+  color: #dc2626;
+}
+
+/* =========================
+ EMPTY STATE
+========================= */
+
+.empty-state {
+  padding: 50px;
+
+  text-align: center;
+
+  color: #94a3b8;
+}
+
+.empty-state i {
+  font-size: 45px;
+
+  margin-bottom: 15px;
+}
+
+/* =========================
+ PAGINATION
+========================= */
+
+.pagination-box {
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  gap: 20px;
+
+  margin-top: 25px;
+}
+
+.page-btn {
+  width: 40px;
+
+  height: 40px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background: #2563eb;
+
+  color: white;
+
+  transition: 0.3s;
+}
+
+.page-btn:hover {
+  background: #1d4ed8;
+
+  transform: translateY(-3px);
+}
+
+.pagination-box span {
+  font-weight: 600;
+
+  color: #475569;
+}
+
+/* =========================
+ MOBILE
+========================= */
+
+@media (max-width: 991px) {
+  .content {
+    margin-left: 0;
+
+    width: 100%;
+
+    padding: 20px;
+  }
+
+  .staff-header {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 20px;
+  }
+
+  .staff-toolbar {
+    flex-direction: column;
+
+    gap: 15px;
+
+    align-items: stretch;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .staff-table-card {
+    padding: 15px;
+  }
+
+  .action-buttons {
+    flex-wrap: wrap;
+  }
+}
+.staff-header {
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+
+  padding: 30px 35px;
+  border-radius: 20px;
+}
+.staff-summary {
+  background: rgba(255, 255, 255, 0.18);
+
+  border-radius: 14px;
+}
+</style>

@@ -37,11 +37,11 @@
       </div>
 
       <!-- TABLE -->
-      <table class="table table-bordered">
+      <table class="table table-bordered payment-table">
         <thead>
           <tr>
             <th>Description</th>
-            <th>Amount</th>
+            <th width="35%">Amount</th>
           </tr>
         </thead>
 
@@ -52,8 +52,22 @@
           </tr>
 
           <tr>
-            <td>Paid Amount</td>
-            <td>৳ {{ payment.paid_amount }}</td>
+            <td>
+              <strong>Paid Amount</strong>
+            </td>
+
+            <td>
+              <strong> ৳ {{ payment.paid_amount }} </strong>
+            </td>
+          </tr>
+          <tr v-if="payment.admission_fee">
+            <td>Admission Fee</td>
+            <td>৳ {{ payment.admission_fee }}</td>
+          </tr>
+
+          <tr v-if="payment.exam_fee">
+            <td>Exam Fee</td>
+            <td>৳ {{ payment.exam_fee }}</td>
           </tr>
         </tbody>
       </table>
@@ -61,7 +75,15 @@
       <!-- TOTAL -->
       <div class="d-flex justify-content-between mt-3">
         <h5>Total Paid</h5>
-        <h4 class="text-primary">৳ {{ payment.paid_amount }}</h4>
+
+        <h4 class="text-primary">
+          ৳
+          {{
+            Number(payment.paid_amount || 0) +
+            Number(payment.admission_fee || 0) +
+            Number(payment.exam_fee || 0)
+          }}
+        </h4>
       </div>
 
       <!-- ACTION -->

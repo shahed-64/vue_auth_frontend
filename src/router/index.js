@@ -67,7 +67,11 @@ const router = createRouter({
       name: 'singlePayment',
       component: () => import('@/views/account/SinglePaymentPdfView.vue'),
     },
-
+    {
+      path: '/payment/single',
+      name: 'singleStudentPayment',
+      component: () => import('@/views/account/SingleStudentPaymentView.vue'),
+    },
     {
       path: '/student/payment',
       name: 'StudentPayment',
@@ -78,6 +82,19 @@ const router = createRouter({
       path: '/dash-page',
       name: 'dashPageView',
       component: () => import('../views/dashPageView.vue'),
+      meta: { requiresAuth: true },
+    },
+
+    {
+      path: '/others-payment',
+      name: 'othersPayment',
+      component: () => import('@/views/account/OthersPaymentView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/expense',
+      name: 'expense',
+      component: () => import('@/views/account/ExpenseDashboardView.vue'),
       meta: { requiresAuth: true },
     },
   ],

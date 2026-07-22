@@ -475,3 +475,6 @@ body {
   }
 }
 /*  ইন্ডিভিজুয়াল পেমেন্ট */
+.bgc {
+  background-color: transparent !important;
+}

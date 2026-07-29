@@ -1,14 +1,14 @@
 <template>
+  <LoadingSpinner v-if="isLoading" />
+  <RouterView />
   <dashPageView />
 
   <div class="content">
     <div class="staff-container">
       <!-- HEADER -->
-
       <div class="staff-header">
         <div>
           <h2>Staff Management</h2>
-
           <p>Manage your coaching team members and permissions</p>
         </div>
 
@@ -18,139 +18,106 @@
           </div>
 
           <div>
-            <h4>
-              {{ staff.length }}
-            </h4>
-
+            <h4>{{ staff.length }}</h4>
             <span> Total Staff </span>
           </div>
         </div>
       </div>
 
       <!-- SEARCH + ACTION -->
-
       <div class="staff-toolbar">
         <div class="search-box">
           <i class="fa-solid fa-magnifying-glass"></i>
-
           <input type="text" v-model="search" placeholder="Search staff..." />
         </div>
 
-        <button class="btn btn-primary add-btn">
-          <i class="fa-solid fa-user-plus"></i>
-
+        <!-- ADD STAFF BUTTON (Disabled if not Manager) -->
+        <button
+          class="btn btn-primary add-btn"
+          data-bs-toggle="modal"
+          data-bs-target="#addModal"
+          @click="openAddModal"
+          :disabled="!isManager"
+          :title="!isManager ? 'Only Super Manager can add staff' : ''"
+        >
+          <i class="fa-solid fa-user-plus me-1"></i>
           Add Staff
         </button>
       </div>
 
       <!-- TABLE CARD -->
-
       <div class="staff-table-card">
         <div class="table-responsive">
           <table class="table staff-table align-middle">
             <thead>
               <tr>
                 <th>#</th>
-
                 <th>Photo</th>
-
                 <th>Name</th>
-
                 <th>User Name</th>
-
                 <th>Skill</th>
-
                 <th>Email</th>
-
                 <th>Role</th>
-
                 <th width="220">Action</th>
               </tr>
             </thead>
 
             <tbody>
               <!-- Loading -->
-
               <tr v-if="loading">
                 <td colspan="8" class="text-center py-5">
                   <div class="spinner-border text-primary"></div>
-
                   <p class="mt-2 mb-0">Loading staff...</p>
                 </td>
               </tr>
 
               <!-- Data -->
-
               <tr v-for="(item, index) in paginatedStaff" :key="item.id">
+                <td>{{ (currentPage - 1) * perPage + index + 1 }}</td>
                 <td>
-                  {{ index + 1 }}
+                  <!-- Dynamic Staff Image -->
+                  <img :src="getImageUrl(item.image)" class="staff-avatar" alt="Staff Image" />
                 </td>
-
-                <td>
-                  <img src="https://i.pravatar.cc/100?img=1" class="staff-avatar" />
-                </td>
-
                 <td>
                   <div class="staff-name">
-                    <strong>
-                      {{ item.name }}
-                    </strong>
+                    <strong>{{ item.name }}</strong>
                   </div>
                 </td>
-
+                <td>{{ item.user_name }}</td>
                 <td>
-                  {{ item.user_name }}
+                  <span class="skill-badge">{{ item.skill || 'N/A' }}</span>
                 </td>
-
+                <td>{{ item.email }}</td>
                 <td>
-                  <span class="skill-badge">
-                    {{ item.skill }}
-                  </span>
-                </td>
-
-                <td>
-                  {{ item.email }}
-                </td>
-
-                <td>
-                  <span class="role-badge" :class="item.role.toLowerCase()">
+                  <span class="role-badge" :class="item.role?.toLowerCase()">
                     {{ item.role }}
                   </span>
                 </td>
 
                 <td class="action-buttons">
                   <!-- VIEW -->
-
-                  <button class="action-btn view" @click="openView(item)">
+                  <button class="action-btn view" @click="openView(item)" title="View Details">
                     <i class="fa-solid fa-eye"></i>
                   </button>
 
                   <!-- EDIT -->
-
                   <button
                     class="action-btn edit"
                     data-bs-toggle="modal"
                     data-bs-target="#editModal"
                     @click="openEdit(item)"
-                    v-if="
-                      currentRole === 'Manager' ||
-                      currentRole === 'Accountant' ||
-                      (currentRole === 'Admin' && item.role !== 'Manager')
-                    "
+                    :disabled="!isManager"
+                    :title="!isManager ? 'Only Super Manager can edit' : 'Edit Staff'"
                   >
                     <i class="fa-solid fa-pen"></i>
                   </button>
 
                   <!-- DELETE -->
-
                   <button
                     class="action-btn delete"
                     @click="deleteStaff(item.id)"
-                    v-if="
-                      currentRole === 'Manager' ||
-                      currentRole === 'Accountant' ||
-                      (currentRole === 'Admin' && item.role !== 'Manager')
-                    "
+                    :disabled="!isManager"
+                    :title="!isManager ? 'Only Super Manager can delete' : 'Delete Staff'"
                   >
                     <i class="fa-solid fa-trash"></i>
                   </button>
@@ -158,14 +125,11 @@
               </tr>
 
               <!-- Empty -->
-
               <tr v-if="!loading && paginatedStaff.length === 0">
                 <td colspan="8">
                   <div class="empty-state">
                     <i class="fa-solid fa-users-slash"></i>
-
                     <h5>No Staff Found</h5>
-
                     <p>Try changing your search keyword</p>
                   </div>
                 </td>
@@ -175,24 +139,132 @@
         </div>
 
         <!-- PAGINATION -->
-
-        <div class="pagination-box">
-          <button class="page-btn" @click="previousPage">
+        <!-- PAGINATION -->
+        <div class="pagination-box" v-if="filteredStaff.length > 0">
+          <button class="page-btn" @click="previousPage" :disabled="currentPage === 1">
             <i class="fa-solid fa-chevron-left"></i>
           </button>
 
-          <span>
-            Page {{ currentPage }}
+          <span>Page {{ currentPage }} of {{ totalPages }}</span>
 
-            of
-
-            {{ totalPages }}
-          </span>
-
-          <button class="page-btn" @click="nextPage">
+          <button class="page-btn" @click="nextPage" :disabled="currentPage === totalPages">
             <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD STAFF / REGISTRATION MODAL -->
+  <div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold">
+            <i class="fa-solid fa-user-plus me-2"></i>Registration Form
+          </h5>
+          <button
+            type="button"
+            class="btn-close btn-close-white"
+            id="addModalClose"
+            data-bs-dismiss="modal"
+          ></button>
+        </div>
+
+        <form @submit.prevent="addStaff">
+          <div class="modal-body p-4">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label font-semibold">Name</label>
+                <input
+                  v-model="form.name"
+                  type="text"
+                  class="form-control"
+                  placeholder="Enter name"
+                  required
+                />
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label font-semibold">User Name</label>
+                <input
+                  v-model="form.user_name"
+                  type="text"
+                  class="form-control"
+                  placeholder="Username"
+                  required
+                />
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label font-semibold">Skill</label>
+                <input v-model="form.skill" type="text" class="form-control" placeholder="Skill" />
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label font-semibold">Email</label>
+                <input
+                  v-model="form.email"
+                  type="email"
+                  class="form-control"
+                  placeholder="example@mail.com"
+                  required
+                />
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label font-semibold">Role</label>
+                <select v-model="form.role" class="form-select" required>
+                  <option value="" disabled>Select Role</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Accountant">Accountant</option>
+                  <option value="Editor">Editor</option>
+                  <option value="Staff">Staff</option>
+                </select>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label font-semibold">Profile Photo</label>
+                <input
+                  type="file"
+                  class="form-control"
+                  @change="handleFileChange($event, 'add')"
+                  accept="image/*"
+                />
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label font-semibold">Password</label>
+                <input
+                  v-model="form.password"
+                  type="password"
+                  class="form-control"
+                  placeholder="********"
+                  required
+                />
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label font-semibold">Confirm Password</label>
+                <input
+                  v-model="form.password_confirmation"
+                  type="password"
+                  class="form-control"
+                  placeholder="********"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer bg-light">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary px-4" :disabled="submitting">
+              <span v-if="submitting" class="spinner-border spinner-border-sm me-1"></span>
+              Create Account
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -203,7 +275,12 @@
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Edit Staff</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <button
+            type="button"
+            class="btn-close"
+            id="editModalClose"
+            data-bs-dismiss="modal"
+          ></button>
         </div>
 
         <div class="modal-body">
@@ -216,12 +293,24 @@
           <input v-model="selectedStaff.skill" class="form-control mb-2" placeholder="Skill" />
           <input v-model="selectedStaff.email" class="form-control mb-2" placeholder="Email" />
 
-          <select v-model="selectedStaff.role" class="form-control mb-2">
+          <select v-model="selectedStaff.role" class="form-select mb-2">
             <option value="Admin">Admin</option>
-            <option value="Manager">Manager</option>
+            <option value="Editor">Editor</option>
             <option value="Accountant">Accountant</option>
             <option value="Staff">Staff</option>
           </select>
+
+          <div class="mb-2">
+            <label class="form-label font-semibold text-muted small mb-1"
+              >Change Profile Photo</label
+            >
+            <input
+              type="file"
+              class="form-control"
+              @change="handleFileChange($event, 'edit')"
+              accept="image/*"
+            />
+          </div>
 
           <input
             v-model="selectedStaff.password"
@@ -239,7 +328,10 @@
 
         <div class="modal-footer">
           <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button class="btn btn-primary" @click="updateStaff">Update</button>
+          <button class="btn btn-primary" @click="updateStaff" :disabled="submitting">
+            <span v-if="submitting" class="spinner-border spinner-border-sm me-1"></span>
+            Update
+          </button>
         </div>
       </div>
     </div>
@@ -256,14 +348,21 @@
 
         <div class="modal-body">
           <div class="text-center mb-3">
-            <img src="https://i.pravatar.cc/120" class="rounded-circle border" width="90" />
+            <img
+              :src="getImageUrl(viewData.image)"
+              class="rounded-circle border"
+              width="90"
+              height="90"
+              style="object-fit: cover"
+              alt="Avatar"
+            />
           </div>
 
           <div class="list-group">
             <div class="list-group-item"><strong>Name:</strong> {{ viewData.name }}</div>
             <div class="list-group-item"><strong>User Name:</strong> {{ viewData.user_name }}</div>
             <div class="list-group-item"><strong>Email:</strong> {{ viewData.email }}</div>
-            <div class="list-group-item"><strong>Skill:</strong> {{ viewData.skill }}</div>
+            <div class="list-group-item"><strong>Skill:</strong> {{ viewData.skill || 'N/A' }}</div>
             <div class="list-group-item"><strong>Role:</strong> {{ viewData.role }}</div>
           </div>
         </div>
@@ -278,49 +377,144 @@
 
 <script setup>
 import dashPageView from './dashPageView.vue'
-
-import { ref, computed, onMounted } from 'vue'
-
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import api from '@/services/api'
 
+import LoadingSpinner from '../components/LoadingSpinner.vue'
+import { isLoading } from '../utils/loading'
 // =======================
 // STATES
 // =======================
-
 const staff = ref([])
-
 const search = ref('')
-
 const loading = ref(false)
-
+const submitting = ref(false)
 const currentPage = ref(1)
-
 const perPage = 10
 
 const currentRole = localStorage.getItem('role')
 
-const token = localStorage.getItem('token')
+// =======================
+// HELPER: GET IMAGE URL
+// =======================
+const getImageUrl = (imagePath) => {
+  if (imagePath) {
+    if (imagePath.startsWith('http')) return imagePath
+    // Axios base URL যদি না মেলে, তবে ম্যানুয়ালি স্টোরেজ লিংক দেওয়া হলো
+    const baseURL = api.defaults.baseURL
+      ? api.defaults.baseURL.replace('/api', '')
+      : 'http://localhost:8000'
+    return `${baseURL}/storage/${imagePath}`
+  }
+  return 'https://i.pravatar.cc/100?img=1'
+}
+
+// =======================
+// PERMISSIONS
+// =======================
+const isManager = computed(() => {
+  return currentRole?.toLowerCase() === 'manager'
+})
+
+// =======================
+// FORM DATA
+// =======================
+const form = reactive({
+  name: '',
+  user_name: '',
+  skill: '',
+  role: '',
+  email: '',
+  image: null,
+  password: '',
+  password_confirmation: '',
+})
+
+const handleFileChange = (event, type) => {
+  const file = event.target.files[0]
+  if (type === 'add') {
+    form.image = file
+  } else if (type === 'edit') {
+    selectedStaff.value.imageFile = file
+  }
+}
+
+const openAddModal = () => {
+  if (!isManager.value) return
+
+  form.name = ''
+  form.user_name = ''
+  form.skill = ''
+  form.role = ''
+  form.email = ''
+  form.image = null
+  form.password = ''
+  form.password_confirmation = ''
+}
+
+const addStaff = async () => {
+  if (!isManager.value) {
+    alert('Permission Denied!')
+    return
+  }
+
+  try {
+    submitting.value = true
+
+    const formData = new FormData()
+    formData.append('name', form.name)
+    formData.append('user_name', form.user_name)
+    formData.append('skill', form.skill || '')
+    formData.append('role', form.role)
+    formData.append('email', form.email)
+    formData.append('password', form.password)
+    formData.append('password_confirmation', form.password_confirmation)
+    if (form.image) {
+      formData.append('image', form.image)
+    }
+
+    const res = await api.post('/register', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+
+    alert(res.data.message || 'Registered successfully')
+    await getStaff()
+    document.querySelector('#addModalClose')?.click()
+  } catch (error) {
+    if (error.response) {
+      const msg =
+        error.response.data.message ||
+        Object.values(error.response.data.errors || {})
+          .flat()
+          .join('\n')
+      alert(msg)
+    } else {
+      alert('Network / Server error')
+    }
+  } finally {
+    submitting.value = false
+  }
+}
 
 // =======================
 // VIEW DATA
 // =======================
-
 const viewData = ref({
   name: '',
   user_name: '',
   email: '',
   skill: '',
   role: '',
+  image: '',
 })
 
 const openView = (item) => {
   viewData.value = { ...item }
-
   const modalEl = document.getElementById('viewModal')
-
-  if (modalEl) {
-    const modal = bootstrap.Modal.getOrCreateInstance(modalEl)
-
+  if (modalEl && window.bootstrap) {
+    const modal = window.bootstrap.Modal.getOrCreateInstance(modalEl)
     modal.show()
   }
 }
@@ -328,31 +522,26 @@ const openView = (item) => {
 // =======================
 // EDIT DATA
 // =======================
-
 const selectedStaff = ref({
   id: null,
-
   name: '',
-
   user_name: '',
-
   skill: '',
-
   email: '',
-
   role: '',
-
+  image: '',
+  imageFile: null,
   password: '',
-
   password_confirmation: '',
 })
 
 const openEdit = (item) => {
+  if (!isManager.value) return
+
   selectedStaff.value = {
     ...item,
-
+    imageFile: null,
     password: '',
-
     password_confirmation: '',
   }
 }
@@ -360,20 +549,13 @@ const openEdit = (item) => {
 // =======================
 // GET STAFF
 // =======================
-
 const getStaff = async () => {
   try {
     loading.value = true
-
-    const res = await api.get('/staff', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-
+    const res = await api.get('/staff')
     staff.value = res.data.staff || []
   } catch (error) {
-    console.log(error.response?.data)
+    console.error('Error fetching staff:', error.response?.data)
   } finally {
     loading.value = false
   }
@@ -382,14 +564,10 @@ const getStaff = async () => {
 // =======================
 // SEARCH FILTER
 // =======================
-
 const filteredStaff = computed(() => {
-  if (!search.value) {
-    return staff.value
-  }
+  if (!search.value) return staff.value
 
   const keyword = search.value.toLowerCase()
-
   return staff.value.filter((item) => {
     return (
       item.name?.toLowerCase().includes(keyword) ||
@@ -404,36 +582,22 @@ const filteredStaff = computed(() => {
 // =======================
 // PAGINATION
 // =======================
-
 const totalPages = computed(() => {
-  return Math.ceil(filteredStaff.value.length / perPage)
+  return Math.ceil(filteredStaff.value.length / perPage) || 1
 })
 
 const paginatedStaff = computed(() => {
   const start = (currentPage.value - 1) * perPage
-
-  return filteredStaff.value.slice(
-    start,
-
-    start + perPage,
-  )
+  return filteredStaff.value.slice(start, start + perPage)
 })
 
 const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++
-  }
+  if (currentPage.value < totalPages.value) currentPage.value++
 }
 
 const previousPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--
-  }
+  if (currentPage.value > 1) currentPage.value--
 }
-
-// Search করলে page 1 এ চলে যাবে
-
-import { watch } from 'vue'
 
 watch(search, () => {
   currentPage.value = 1
@@ -442,86 +606,80 @@ watch(search, () => {
 // =======================
 // UPDATE STAFF
 // =======================
-
 const updateStaff = async () => {
+  if (!isManager.value) return
+
   try {
-    const payload = {
-      ...selectedStaff.value,
+    submitting.value = true
+    const formData = new FormData()
+    formData.append('_method', 'PUT')
+    formData.append('name', selectedStaff.value.name)
+    formData.append('user_name', selectedStaff.value.user_name)
+    formData.append('skill', selectedStaff.value.skill || '')
+    formData.append('role', selectedStaff.value.role)
+    formData.append('email', selectedStaff.value.email)
+
+    if (selectedStaff.value.password) {
+      formData.append('password', selectedStaff.value.password)
+      formData.append('password_confirmation', selectedStaff.value.password_confirmation)
     }
 
-    await api.put(
-      `/staff/${selectedStaff.value.id}`,
+    if (selectedStaff.value.imageFile) {
+      formData.append('image', selectedStaff.value.imageFile)
+    }
 
-      payload,
-
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    await api.post(`/staff/${selectedStaff.value.id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
       },
-    )
+    })
 
     alert('Updated successfully')
-
     await getStaff()
-
-    document
-
-      .querySelector('#editModal .btn-close')
-
-      ?.click()
+    document.querySelector('#editModalClose')?.click()
   } catch (error) {
-    console.log(error.response?.data)
+    console.error(error.response?.data)
+    alert('Something went wrong!')
+  } finally {
+    submitting.value = false
   }
 }
 
 // =======================
 // DELETE STAFF
 // =======================
-
 const deleteStaff = async (id) => {
-  if (!confirm('Are you sure?')) return
+  if (!isManager.value) return
+  if (!confirm('Are you sure you want to delete this staff member?')) return
 
   try {
-    await api.delete(
-      `/staff/${id}`,
-
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    )
-
+    await api.delete(`/staff/${id}`)
     staff.value = staff.value.filter((item) => item.id !== id)
   } catch (error) {
-    console.log(error.response?.data)
+    console.error(error.response?.data)
+    alert('Failed to delete staff!')
   }
 }
 
 // =======================
 // INIT
 // =======================
-
 onMounted(() => {
   getStaff()
 })
 </script>
+
 <style scoped>
 /* =========================
    MAIN CONTENT
 ========================= */
-
 .content {
   margin-left: 250px;
-
   width: calc(100% - 250px);
-
   padding: 30px;
-
   background: #f8fafc;
-
   min-height: 100vh;
+  transition: all 0.3s ease;
 }
 
 .staff-container {
@@ -529,166 +687,145 @@ onMounted(() => {
 }
 
 /* =========================
-   HEADER
+   HEADER & ANIMATIONS
 ========================= */
-
 .staff-header {
-  background: linear-gradient(135deg, #0f766e, #2563eb);
-
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
   padding: 30px 35px;
-
-  border-radius: 24px;
-
+  border-radius: 20px;
   color: white;
-
   display: flex;
-
   justify-content: space-between;
-
   align-items: center;
-
   margin-bottom: 25px;
-
   box-shadow: 0 15px 35px rgba(37, 99, 235, 0.2);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.staff-header:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px rgba(37, 99, 235, 0.25);
 }
 
 .staff-header h2 {
   font-weight: 700;
-
   margin-bottom: 8px;
 }
 
 .staff-header p {
   margin: 0;
-
   color: #dbeafe;
 }
 
 .staff-summary {
-  background: rgba(255, 255, 255, 0.15);
-
+  background: rgba(255, 255, 255, 0.18);
   padding: 15px 22px;
-
-  border-radius: 18px;
-
+  border-radius: 14px;
   display: flex;
-
   align-items: center;
-
   gap: 15px;
-
   backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.staff-summary:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.03);
 }
 
 .summary-icon {
   width: 55px;
-
   height: 55px;
-
   border-radius: 15px;
-
   background: rgba(255, 255, 255, 0.2);
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
   font-size: 25px;
 }
 
 .staff-summary h4 {
   margin: 0;
-
   font-size: 28px;
-
   font-weight: 700;
 }
 
 .staff-summary span {
   color: #e0f2fe;
-
   font-size: 14px;
 }
 
 /* =========================
- TOOLBAR
+   TOOLBAR & SEARCH
 ========================= */
-
 .staff-toolbar {
   background: white;
-
   padding: 20px;
-
   border-radius: 20px;
-
   display: flex;
-
   justify-content: space-between;
-
   align-items: center;
-
   margin-bottom: 25px;
-
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
 }
 
 .search-box {
   position: relative;
-
   width: 350px;
 }
 
 .search-box i {
   position: absolute;
-
   left: 18px;
-
   top: 50%;
-
   transform: translateY(-50%);
-
   color: #94a3b8;
+  transition: color 0.3s ease;
 }
 
 .search-box input {
   width: 100%;
-
   padding: 12px 20px 12px 45px;
-
   border-radius: 14px;
-
   border: 1px solid #e2e8f0;
-
   outline: none;
-
-  transition: 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .search-box input:focus {
   border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
 
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+.search-box input:focus + i {
+  color: #2563eb;
 }
 
 .add-btn {
   border-radius: 14px;
-
   padding: 12px 22px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.add-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+}
+
+.add-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 /* =========================
- TABLE CARD
+   TABLE CARD & HOVER ANIMATION
 ========================= */
-
 .staff-table-card {
   background: white;
-
   border-radius: 18px;
-
   padding: 20px;
-
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
 }
 
@@ -698,52 +835,45 @@ onMounted(() => {
 
 .staff-table thead th {
   background: #f8fafc;
-
   color: #64748b;
-
   font-size: 13px;
-
   font-weight: 600;
-
   border: none;
-
   padding: 14px 16px;
 }
 
 .staff-table tbody td {
   padding: 16px;
-
   border-bottom: 1px solid #f1f5f9;
 }
 
 .staff-table tbody tr {
-  transition: 0.25s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .staff-table tbody tr:hover {
-  background: #f1f5ff;
-}
-
-.staff-table tbody tr:hover {
-  background: #f8fafc;
-
-  transform: scale(1.005);
+  background: #f1f5f9;
+  transform: translateY(-2px) scale(1.002);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 /* =========================
- AVATAR
+   AVATAR
 ========================= */
-
 .staff-avatar {
   width: 45px;
-
   height: 45px;
-
   border-radius: 50%;
-
   object-fit: cover;
-
   border: 3px solid #dbeafe;
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.staff-table tbody tr:hover .staff-avatar {
+  transform: scale(1.12);
+  border-color: #2563eb;
 }
 
 .staff-name strong {
@@ -751,195 +881,210 @@ onMounted(() => {
 }
 
 /* =========================
- BADGES
+   BADGES & HOVERS
 ========================= */
-
 .skill-badge {
   background: #eff6ff;
-
   color: #2563eb;
-
   padding: 6px 12px;
-
   border-radius: 20px;
-
   font-size: 12px;
-
   font-weight: 600;
+  display: inline-block;
+  transition: all 0.25s ease;
+}
+
+.staff-table tbody tr:hover .skill-badge {
+  background: #2563eb;
+  color: #ffffff;
+  transform: scale(1.05);
 }
 
 .role-badge {
   padding: 7px 14px;
-
   border-radius: 20px;
-
   font-size: 12px;
-
   font-weight: 600;
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+
+.role-badge:hover {
+  transform: scale(1.05);
 }
 
 .role-badge.admin {
   background: #dbeafe;
-
   color: #2563eb;
 }
 
 .role-badge.manager {
   background: #ede9fe;
-
   color: #7c3aed;
+}
+
+.role-badge.editor {
+  background: #e0e7ff;
+  color: #4338ca;
 }
 
 .role-badge.accountant {
   background: #dcfce7;
-
   color: #16a34a;
 }
 
 .role-badge.staff {
   background: #fef3c7;
-
   color: #d97706;
 }
 
 /* =========================
- ACTION BUTTON
+   ACTION BUTTONS
 ========================= */
-
 .action-buttons {
   display: flex;
-
   gap: 8px;
 }
 
 .action-btn {
   width: 38px;
-
   height: 38px;
-
   border: none;
-
   border-radius: 12px;
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
-  transition: 0.3s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
 
-.action-btn:hover {
-  transform: translateY(-3px);
+.action-btn:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.08);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+}
+
+.action-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.95);
+}
+
+.action-btn:disabled,
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .action-btn.view {
   background: #dbeafe;
-
   color: #2563eb;
+}
+
+.action-btn.view:hover:not(:disabled) {
+  background: #2563eb;
+  color: white;
 }
 
 .action-btn.edit {
   background: #fef3c7;
-
   color: #d97706;
+}
+
+.action-btn.edit:hover:not(:disabled) {
+  background: #d97706;
+  color: white;
 }
 
 .action-btn.delete {
   background: #fee2e2;
-
   color: #dc2626;
 }
 
-/* =========================
- EMPTY STATE
-========================= */
+.action-btn.delete:hover:not(:disabled) {
+  background: #dc2626;
+  color: white;
+}
 
+/* =========================
+   EMPTY STATE
+========================= */
 .empty-state {
   padding: 50px;
-
   text-align: center;
-
   color: #94a3b8;
 }
 
 .empty-state i {
   font-size: 45px;
-
   margin-bottom: 15px;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 /* =========================
- PAGINATION
+   PAGINATION
 ========================= */
-
 .pagination-box {
   display: flex;
-
   justify-content: center;
-
   align-items: center;
-
   gap: 20px;
-
   margin-top: 25px;
 }
 
 .page-btn {
   width: 40px;
-
   height: 40px;
-
   border: none;
-
   border-radius: 12px;
-
   background: #2563eb;
-
   color: white;
-
-  transition: 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.page-btn:hover {
+.page-btn:hover:not(:disabled) {
   background: #1d4ed8;
-
   transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.35);
+}
+
+.page-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .pagination-box span {
   font-weight: 600;
-
   color: #475569;
 }
 
 /* =========================
- MOBILE
+   RESPONSIVE
 ========================= */
-
 @media (max-width: 991px) {
   .content {
     margin-left: 0;
-
     width: 100%;
-
     padding: 20px;
   }
 
   .staff-header {
     flex-direction: column;
-
     align-items: flex-start;
-
     gap: 20px;
   }
 
   .staff-toolbar {
     flex-direction: column;
-
     gap: 15px;
-
     align-items: stretch;
   }
 
@@ -957,15 +1102,47 @@ onMounted(() => {
     flex-wrap: wrap;
   }
 }
-.staff-header {
-  background: linear-gradient(135deg, #2563eb, #4f46e5);
+/* =========================
+   SMOOTH HOVER & ANIMATIONS
+========================= */
 
-  padding: 30px 35px;
-  border-radius: 20px;
+/* ১. টেবিল রো ট্রানজিশন সেটআপ */
+.staff-table tbody tr {
+  transition:
+    transform 0.25s ease,
+    background-color 0.25s ease,
+    box-shadow 0.25s ease;
+  will-change: transform;
 }
-.staff-summary {
-  background: rgba(255, 255, 255, 0.18);
 
-  border-radius: 14px;
+/* ২. রো হোভার ইফেক্ট (স্কেল ছাড়া শুধু হালকা লিফট) */
+.staff-table tbody tr:hover {
+  background-color: #f8fafc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+/* ৩. প্রোফাইল ছবি/অ্যাভেটার ট্রানজিশন ও হোভার */
+.staff-avatar {
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.staff-table tbody tr:hover .staff-avatar {
+  transform: scale(1.05);
+  border-color: #2563eb;
+}
+
+/* ৪. স্কিল ব্যাজ ট্রানজিশন ও হোভার */
+.skill-badge {
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+.staff-table tbody tr:hover .skill-badge {
+  background-color: #2563eb;
+  color: #ffffff;
 }
 </style>

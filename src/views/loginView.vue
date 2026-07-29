@@ -21,9 +21,7 @@
               <input v-model="password" type="password" class="form-control" />
             </div>
             <button class="btn btn-custom w-100">Login</button>
-            <p class="mt-3 text-center">
-              No account? <router-link to="/register">Register</router-link>
-            </p>
+
             <p v-if="errorMsg" class="text-danger text-center">
               {{ errorMsg }}
             </p>

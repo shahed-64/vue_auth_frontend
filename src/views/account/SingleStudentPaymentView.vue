@@ -1,14 +1,37 @@
 <template>
+  <LoadingSpinner v-if="isLoading" />
+  <RouterView />
   <AccountMenuView />
 
   <div class="main-content">
-    <!-- ================= Header ================= -->
+    <!-- ================= Header with Staff Profile ================= -->
     <div class="d-flex justify-content-between align-items-center flex-wrap mb-4 gap-3">
       <div>
-        <h2 class="fw-bold mb-1 header-title">Student Payment Dashboard</h2>
-        <p class="text-muted mb-0">Manage class wise payment reports</p>
+        <h2 class="fw-bold mb-1 header-title">Account Dashboard</h2>
+        <p class="text-muted mb-0">Manage class wise payment reports and financial activities</p>
       </div>
 
+      <!-- Logged-in Staff/User Profile Info -->
+      <div class="d-flex align-items-center gap-3 bg-white px-3 py-2 rounded-pill shadow-sm border">
+        <div class="text-end">
+          <h6 class="fw-bold text-dark mb-0">{{ displayUser.name }}</h6>
+          <small class="text-muted text-capitalize">{{ displayUser.role }}</small>
+        </div>
+        <div class="profile-avatar-wrapper">
+          <img
+            :src="getImageUrl(displayUser.image)"
+            alt="Staff Avatar"
+            class="rounded-circle border border-2 border-primary object-fit-cover shadow-sm"
+            width="45"
+            height="45"
+            @error="onImageError"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= Search & Filters ================= -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap mb-4 gap-3">
       <div class="search-box">
         <div class="input-group">
           <span class="input-group-text">
@@ -120,7 +143,20 @@
           <tbody>
             <tr v-for="payment in paginatedStudents" :key="payment.id">
               <td class="fw-bold">{{ payment.student.student_id }}</td>
-              <td>{{ payment.student.full_name }}</td>
+
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <img
+                    :src="getStudentImageUrl(payment.student)"
+                    alt="Student Avatar"
+                    class="student-table-img rounded-circle object-fit-cover border"
+                    width="38"
+                    height="38"
+                  />
+                  <span class="fw-semibold text-dark">{{ payment.student.full_name }}</span>
+                </div>
+              </td>
+
               <td>
                 <span class="badge bg-light text-dark border">{{
                   payment.student.batch_name
@@ -146,7 +182,6 @@
               </td>
             </tr>
 
-            <!-- Empty State -->
             <tr v-if="filteredStudents.length === 0">
               <td colspan="8" class="text-center py-4 text-muted">No record found!</td>
             </tr>
@@ -154,38 +189,31 @@
         </table>
       </div>
 
-      <!-- ================= Prev - Page Numbers - Next Pagination ================= -->
+      <!-- Pagination Footer -->
       <div
         class="card-footer bg-white py-3 border-0 d-flex justify-content-between align-items-center flex-wrap gap-3"
       >
-        <!-- Showing Info -->
         <span class="text-muted fs-7">
           Showing {{ showingStart }} to {{ showingEnd }} of {{ filteredStudents.length }} entries
         </span>
 
-        <!-- Pagination Controls with Page Numbers -->
         <nav v-if="totalPages > 0">
           <ul class="pagination pagination-sm mb-0 align-items-center">
-            <!-- Prev Button -->
             <li class="page-item" :class="{ disabled: currentPage === 1 }">
               <button class="page-link px-3" @click="currentPage--" :disabled="currentPage === 1">
                 <i class="fa-solid fa-chevron-left me-1"></i> Prev
               </button>
             </li>
 
-            <!-- Page Numbers -->
             <li
               v-for="page in totalPages"
               :key="page"
               class="page-item"
               :class="{ active: currentPage === page }"
             >
-              <button class="page-link" @click="currentPage = page">
-                {{ page }}
-              </button>
+              <button class="page-link" @click="currentPage = page">{{ page }}</button>
             </li>
 
-            <!-- Next Button -->
             <li
               class="page-item"
               :class="{ disabled: currentPage === totalPages || filteredStudents.length === 0 }"
@@ -208,7 +236,6 @@
   <div class="modal fade" id="studentModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg">
-        <!-- Header -->
         <div class="modal-header border-0 pb-0">
           <h4 class="fw-bold mb-0">Student Profile</h4>
           <button class="btn-close" data-bs-dismiss="modal"></button>
@@ -216,25 +243,16 @@
 
         <div class="modal-body p-4">
           <div class="row g-4">
-            <!-- Left Profile Sidebar -->
             <div class="col-md-4">
               <div class="profile-card text-center">
                 <img
-                  :src="
-                    selectedStudent.image ||
-                    `https://ui-avatars.com/api/?name=${selectedStudent.full_name}`
-                  "
-                  class="profile-img mb-3"
+                  :src="getStudentImageUrl(selectedStudent)"
+                  class="profile-img mb-3 rounded-circle object-fit-cover"
                   alt="Profile Image"
                 />
 
-                <h5 class="fw-bold mb-1">
-                  {{ selectedStudent.full_name }}
-                </h5>
-
-                <p class="text-muted mb-2">
-                  {{ selectedStudent.student_id }}
-                </p>
+                <h5 class="fw-bold mb-1">{{ selectedStudent.full_name }}</h5>
+                <p class="text-muted mb-2">{{ selectedStudent.student_id }}</p>
 
                 <span
                   class="badge"
@@ -250,7 +268,6 @@
                     <small class="d-block">Batch</small>
                     <h6 class="mb-0">{{ selectedStudent.batch_name }}</h6>
                   </div>
-
                   <div class="mt-3">
                     <small class="d-block">Monthly Fee</small>
                     <h6 class="mb-0">
@@ -261,10 +278,8 @@
               </div>
             </div>
 
-            <!-- Right Summary Grid -->
             <div class="col-md-8">
               <h6 class="fw-bold mb-3">Payment Summary</h6>
-
               <div class="row g-3">
                 <div class="col-6 col-sm-6">
                   <div class="modal-summary-card">
@@ -287,9 +302,7 @@
                 <div class="col-6 col-sm-6">
                   <div class="modal-summary-card">
                     <small>Unpaid Month</small>
-                    <h4 style="color: brown">
-                      {{ selectedStudent.unpaid_months || 0 }}
-                    </h4>
+                    <h4 style="color: brown">{{ selectedStudent.unpaid_months || 0 }}</h4>
                   </div>
                 </div>
 
@@ -323,44 +336,78 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import axios from 'axios'
 import AccountMenuView from './AccountMenuView.vue'
+import api from '@/services/api'
 
-/* ============================= Search ============================= */
+import LoadingSpinner from '../../components/LoadingSpinner.vue'
+import { isLoading } from '../../utils/loading'
+const STORAGE_URL = 'http://127.0.0.1:8000/storage/'
+
+/* Search & State */
 const search = ref('')
-
-/* ============================= Summary Cards ============================= */
 const totalStudents = ref(0)
 const totalCollection = ref(0)
 const totalDue = ref(0)
 const totalUnpaidStudents = ref(0)
 
-/* ============================= Data ============================= */
 const payments = ref([])
 const students = ref([])
 const selectedStudent = ref({})
 
-/* ============================= Pagination State ============================= */
+/* Logged-in Staff User State */
+const apiUser = ref(null)
+const defaultAvatar = 'https://ui-avatars.com/api/?name=Staff&background=random'
+
+const displayUser = computed(() => {
+  const u = apiUser.value || {}
+  return {
+    name: u.name || 'Accountant / Staff',
+    role: u.role || 'Staff',
+    image: u.image || null,
+  }
+})
+
+/* Image Handlers */
+const getImageUrl = (path) => {
+  if (!path) return defaultAvatar
+  return path
+}
+
+const onImageError = (e) => {
+  e.target.onerror = null
+  e.target.src = defaultAvatar
+}
+
+const getStudentImageUrl = (student) => {
+  if (student && student.image) {
+    if (student.image.startsWith('http://') || student.image.startsWith('https://')) {
+      return student.image
+    }
+    return `${STORAGE_URL}${student.image}`
+  }
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(student?.full_name || 'Student')}&background=random`
+}
+
+/* Pagination */
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
 
-/* ============================= Batch Buttons ============================= */
+/* Batches */
 const batches = ref([
   'All',
-  'class-1',
-  'class-2',
-  'class-3',
-  'class-4',
-  'class-5',
-  'class-6',
-  'class-7',
-  'class-8',
-  'class-9',
-  'class-10',
-  'class-11',
-  'class-12',
+  'Class-1',
+  'Class-2',
+  'Class-3',
+  'Class-4',
+  'Class-5',
+  'Class-6',
+  'Class-7',
+  'Class-8',
+  'Class-9',
+  'Class-10',
+  'Class-11',
+  'Class-12',
 ])
-
 const selectedBatch = ref('All')
 
 const selectBatch = (batch) => {
@@ -368,30 +415,48 @@ const selectBatch = (batch) => {
   currentPage.value = 1
 }
 
-/* ============================= Load Data ============================= */
+/* Load Dashboard Data */
 onMounted(async () => {
   try {
-    const paymentRes = await axios.get('http://127.0.0.1:8000/api/payments')
+    const paymentRes = await api.get('/payments')
 
-    payments.value = paymentRes.data.payments
-    totalStudents.value = paymentRes.data.total_students
-    totalCollection.value = paymentRes.data.total_paid_amount
-    totalDue.value = paymentRes.data.total_due_amount
-    totalUnpaidStudents.value = paymentRes.data.total_unpaid_students
+    payments.value = paymentRes.data.payments || []
+    totalStudents.value = paymentRes.data.total_students || 0
+    totalCollection.value = paymentRes.data.total_paid_amount || 0
+    totalDue.value = paymentRes.data.total_due_amount || 0
+    totalUnpaidStudents.value = paymentRes.data.total_unpaid_students || 0
 
-    const reportRes = await axios.get('http://127.0.0.1:8000/api/student-payment-report')
-    students.value = reportRes.data.students
+    // ব্যাকএন্ডের ড্যাশবোর্ড থেকে স্টাফ/ইউজার ডেটা ফেচ করা
+    if (paymentRes.data.user) {
+      apiUser.value = paymentRes.data.user
+    } else {
+      // যদি payments API-তে user না থাকে, তবে আলাদা staff dashboard API কল করা
+      try {
+        const dashRes = await api.get('/staff/dashboard')
+        if (dashRes.data.user) {
+          apiUser.value = dashRes.data.user
+        }
+      } catch (e) {
+        console.log('Staff dashboard secondary fetch error:', e)
+      }
+    }
+
+    const reportRes = await api.get('/student-payment-report')
+    students.value = reportRes.data.students || []
   } catch (error) {
     console.error('API Error:', error)
   }
 })
 
-/* ============================= Modal ============================= */
+/* Modal Handler */
 const openSummary = (student) => {
   const reportStudent = students.value.find((s) => Number(s.id) === Number(student.id))
 
   if (reportStudent) {
-    selectedStudent.value = { ...reportStudent }
+    selectedStudent.value = {
+      ...reportStudent,
+      image: student.image || reportStudent.image,
+    }
   } else {
     selectedStudent.value = {
       ...student,
@@ -404,7 +469,7 @@ const openSummary = (student) => {
   }
 }
 
-/* ============================= Table Filter & Pagination ============================= */
+/* Computed Filters & Pagination */
 const filteredStudents = computed(() => {
   const uniqueStudents = []
 
@@ -417,9 +482,7 @@ const filteredStudents = computed(() => {
 
   return uniqueStudents.filter((payment) => {
     const student = payment.student
-
     const batchMatch = selectedBatch.value === 'All' || student.batch_name === selectedBatch.value
-
     const searchMatch =
       student.full_name.toLowerCase().includes(search.value.toLowerCase()) ||
       student.student_id.toLowerCase().includes(search.value.toLowerCase())
@@ -428,19 +491,16 @@ const filteredStudents = computed(() => {
   })
 })
 
-/* Computed for Paginated Data */
 const paginatedStudents = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
   return filteredStudents.value.slice(start, end)
 })
 
-/* Total Pages */
 const totalPages = computed(() => {
   return Math.ceil(filteredStudents.value.length / itemsPerPage.value) || 1
 })
 
-/* Helper Texts */
 const showingStart = computed(() => {
   if (filteredStudents.value.length === 0) return 0
   return (currentPage.value - 1) * itemsPerPage.value + 1
@@ -451,11 +511,7 @@ const showingEnd = computed(() => {
   return end > filteredStudents.value.length ? filteredStudents.value.length : end
 })
 </script>
-
 <style scoped>
-/* =========================
-   MAIN LAYOUT & CONTAINER
-========================= */
 .main-content {
   margin-left: 260px;
   width: calc(100% - 260px);
@@ -465,9 +521,6 @@ const showingEnd = computed(() => {
   transition: all 0.3s ease;
 }
 
-/* =========================
-   HEADER & SEARCH
-========================= */
 .search-box {
   width: 320px;
 }
@@ -488,9 +541,6 @@ const showingEnd = computed(() => {
   box-shadow: none;
 }
 
-/* =========================
-   DASHBOARD SUMMARY CARDS
-========================= */
 .dash-summary-card {
   border-radius: 18px;
   padding: 25px;
@@ -521,7 +571,6 @@ const showingEnd = computed(() => {
   margin-bottom: 0;
 }
 
-/* GRADIENTS */
 .blue {
   background: linear-gradient(135deg, #3b82f6, #2563eb);
 }
@@ -547,9 +596,6 @@ const showingEnd = computed(() => {
   flex-shrink: 0;
 }
 
-/* =========================
-   CARDS & BUTTONS
-========================= */
 .card {
   border: none;
   border-radius: 18px;
@@ -573,13 +619,6 @@ const showingEnd = computed(() => {
   border-radius: 10px;
 }
 
-/* =========================
-   TABLE STYLING
-========================= */
-.table {
-  margin-bottom: 0;
-}
-
 .table thead th {
   background: #f8fafc;
   font-weight: 700;
@@ -593,10 +632,6 @@ const showingEnd = computed(() => {
   white-space: nowrap;
 }
 
-.table tbody tr {
-  transition: all 0.25s ease;
-}
-
 .table tbody tr:hover {
   background: #f7fbff;
 }
@@ -607,18 +642,6 @@ const showingEnd = computed(() => {
   font-size: 13px;
 }
 
-.table-responsive::-webkit-scrollbar {
-  height: 8px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 20px;
-}
-
-/* =========================
-   PAGINATION STYLING
-========================= */
 .pagination .page-item .page-link {
   border: 1px solid #e5e7eb;
   padding: 6px 14px;
@@ -627,12 +650,6 @@ const showingEnd = computed(() => {
   color: #4b5563;
   font-weight: 600;
   box-shadow: none;
-  transition: all 0.2s ease;
-}
-
-.pagination .page-item .page-link:hover {
-  background-color: #f3f4f6;
-  color: #2563eb;
 }
 
 .pagination .page-item.active .page-link {
@@ -641,16 +658,6 @@ const showingEnd = computed(() => {
   color: #fff;
 }
 
-.pagination .page-item.disabled .page-link {
-  background-color: #f9fafb;
-  border-color: #e5e7eb;
-  color: #d1d5db;
-  cursor: not-allowed;
-}
-
-/* =========================
-   MODAL SPECIFIC STYLES
-========================= */
 .profile-card {
   background: #f8fafc;
   border: 1px solid #e9ecef;
@@ -669,15 +676,6 @@ const showingEnd = computed(() => {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
 }
 
-.profile-info small {
-  color: #6c757d;
-}
-
-.profile-info h6 {
-  margin-top: 5px;
-  font-weight: 600;
-}
-
 .modal-summary-card {
   background: white;
   border: 1px solid #ececec;
@@ -691,17 +689,6 @@ const showingEnd = computed(() => {
   transform: translateY(-2px);
 }
 
-.modal-summary-card small {
-  color: #6c757d;
-  font-size: 13px;
-}
-
-.modal-summary-card h4 {
-  margin-top: 8px;
-  margin-bottom: 0;
-  font-weight: 700;
-}
-
 .outstanding-card {
   background: #f8f9fa;
   border-radius: 16px;
@@ -709,50 +696,14 @@ const showingEnd = computed(() => {
   padding: 20px;
 }
 
-/* =========================
-   RESPONSIVE MEDIA QUERIES
-========================= */
 @media (max-width: 992px) {
   .main-content {
     margin-left: 0 !important;
     width: 100% !important;
     padding: 18px;
   }
-
   .search-box {
     width: 100%;
-  }
-
-  .dash-summary-card {
-    min-height: 105px;
-  }
-}
-
-@media (max-width: 768px) {
-  .header-title {
-    font-size: 1.5rem;
-  }
-
-  .dash-summary-card h2 {
-    font-size: 22px;
-  }
-
-  .summary-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 22px;
-  }
-
-  .table {
-    font-size: 14px;
-  }
-
-  .modal-summary-card {
-    padding: 12px;
-  }
-
-  .modal-summary-card h4 {
-    font-size: 1.1rem;
   }
 }
 </style>

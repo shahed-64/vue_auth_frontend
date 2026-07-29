@@ -1,7 +1,9 @@
 <template>
   <!-- MOBILE HEADER -->
   <div class="mobile-header d-md-none">
-    <button class="menu-btn" @click="toggleSidebar">☰</button>
+    <button class="menu-btn" @click="toggleSidebar">
+      <i class="fa-solid fa-bars"></i>
+    </button>
 
     <h5 class="mb-0 text-white">Admin Panel</h5>
   </div>
@@ -11,8 +13,7 @@
 
   <!-- SIDEBAR -->
   <div class="sidebar" :class="{ active: isSidebarOpen }">
-    <!-- Sidebar Logo -->
-    <!-- Sidebar Logo -->
+    <!-- Logo -->
     <div class="sidebar-logo">
       <div class="logo-icon">
         <i class="fa-solid fa-graduation-cap"></i>
@@ -23,28 +24,46 @@
         <span class="logo-subtitle">Management System</span>
       </div>
     </div>
+
+    <!-- Dashboard -->
     <router-link to="/dashboard" active-class="active-menu" @click="closeSidebar">
-      Dashboard
+      <i class="fa-solid fa-gauge-high"></i>
+      <span>Dashboard</span>
     </router-link>
 
+    <!-- Result -->
+    <router-link to="/result" active-class="active-menu" @click="closeSidebar">
+      <i class="fa-solid fa-square-poll-vertical"></i>
+      <span>Result</span>
+    </router-link>
+
+    <!-- Staff -->
     <router-link
       v-if="role === 'Manager' || role === 'Admin'"
       to="/staff"
       active-class="active-menu"
       @click="closeSidebar"
     >
-      Staff
+      <i class="fa-solid fa-users"></i>
+      <span>Staff</span>
     </router-link>
 
-    <router-link to="/account/dashboard" class="text-white d-block ph" @click="closeSidebar">
-      Account Dashboard
+    <!-- Account -->
+    <router-link
+      v-if="role === 'Manager'"
+      to="/account/dashboard"
+      active-class="active-menu"
+      @click="closeSidebar"
+    >
+      <i class="fa-solid fa-wallet"></i>
+      <span>Account Dashboard</span>
     </router-link>
 
-    <!-- STUDENT DROPDOWN -->
+    <!-- Student Dropdown -->
     <div class="dropdown w-100 mb-2">
       <button class="student-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
         <span>
-          <i class="fa-solid fa-user-graduate me-2"></i>
+          <i class="fa-solid fa-user-graduate"></i>
           Students
         </span>
       </button>
@@ -57,25 +76,33 @@
             active-class="active-menu"
             @click="closeSidebar"
           >
-            <i class="fa-solid fa-list me-2"></i>
+            <i class="fa-solid fa-list"></i>
             All Students
           </router-link>
         </li>
 
         <li>
           <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#addModal">
-            <i class="fa-solid fa-user-plus me-2"></i>
+            <i class="fa-solid fa-user-plus"></i>
             Add Student
           </button>
         </li>
       </ul>
     </div>
-    <a href="#">Settings</a>
 
-    <button @click="logout" class="btn btn-danger w-90 mt-4">Logout</button>
+    <!-- Settings -->
+    <router-link to="/settings" active-class="active-menu" @click="closeSidebar">
+      <i class="fa-solid fa-gear"></i>
+      <span>Settings</span>
+    </router-link>
+    <button @click="backupDatabase" class="btn btn-primary">Backup Database</button>
+    <!-- Logout -->
+    <button @click="logout" class="btn btn-danger logout-btn">
+      <i class="fa-solid fa-right-from-bracket me-2"></i>
+      Logout
+    </button>
   </div>
 </template>
-
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -98,6 +125,20 @@ const logout = () => {
   localStorage.removeItem('role')
 
   router.push('/login')
+}
+
+//database backup
+const backupDatabase = async () => {
+  const response = await api.get('/backup', {
+    responseType: 'blob',
+  })
+
+  const url = window.URL.createObjectURL(response.data)
+
+  const link = document.createElement('a')
+  link.href = url
+  link.download = 'database_backup.sql'
+  link.click()
 }
 </script>
 
@@ -494,5 +535,40 @@ const logout = () => {
 .sidebar a,
 .btn-danger {
   user-select: none;
+}
+.sidebar a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar a i {
+  width: 22px;
+  text-align: center;
+  font-size: 16px;
+}
+
+.student-btn span {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dropdown-item i {
+  width: 20px;
+  text-align: center;
+}
+
+.logout-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
 }
 </style>

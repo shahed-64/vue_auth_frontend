@@ -1,4 +1,6 @@
 <template>
+  <LoadingSpinner v-if="isLoading" />
+  <RouterView />
   <!-- Sidebar -->
   <AccountMenuView />
 
@@ -139,12 +141,10 @@
                     </span>
                   </td>
 
-                  <!-- STUDENT NAME -->
+                  <!-- STUDENT NAME WITH AVATAR IMAGE -->
                   <td>
                     <div class="student-info-inline">
-                      <div class="student-avatar-sm">
-                        {{ s.full_name?.charAt(0) }}
-                      </div>
+                      <img :src="getImageUrl(s)" alt="Student Avatar" class="student-table-img" />
                       <span class="student-name">{{ s.full_name }}</span>
                     </div>
                   </td>
@@ -186,7 +186,7 @@
                     </span>
                   </td>
 
-                  <!-- ACTION BUTTONS WITH ICONS -->
+                  <!-- ACTION BUTTON WITH ICON -->
                   <td class="text-center">
                     <div class="action-buttons-group">
                       <!-- Payment Button -->
@@ -212,55 +212,6 @@
                           <line x1="2" x2="22" y1="10" y2="10" />
                         </svg>
                         Payment
-                      </button>
-
-                      <!-- Edit Button -->
-                      <button
-                        class="btn-action btn-edit"
-                        data-bs-toggle="modal"
-                        data-bs-target="#editModal"
-                        @click="openEditModal(s)"
-                        title="Edit Student"
-                      >
-                        <svg
-                          width="15"
-                          height="15"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          class="me-1"
-                        >
-                          <path d="M12 20h9" />
-                          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                        </svg>
-                        Edit
-                      </button>
-
-                      <!-- Delete Button -->
-                      <button
-                        class="btn-action btn-delete"
-                        @click="deleteStudent(s)"
-                        title="Delete Student"
-                      >
-                        <svg
-                          width="15"
-                          height="15"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          class="me-1"
-                        >
-                          <path d="M3 6h18" />
-                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                        </svg>
-                        Delete
                       </button>
                     </div>
                   </td>
@@ -330,9 +281,11 @@
         <div class="modal-body p-4">
           <!-- STUDENT INFO CARD -->
           <div class="student-payment-card mb-4">
-            <div class="student-avatar-large">
-              {{ selectedStudent.full_name?.charAt(0) }}
-            </div>
+            <img
+              :src="getImageUrl(selectedStudent)"
+              alt="Student Avatar"
+              class="student-avatar-large-img"
+            />
             <div>
               <h6 class="mb-1 text-dark fw-bold">
                 {{ selectedStudent.full_name }}
@@ -430,87 +383,6 @@
       </div>
     </div>
   </div>
-
-  <!-- EDIT STUDENT MODAL -->
-  <div class="modal fade" id="editModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content payment-modal">
-        <!-- HEADER -->
-        <div class="modal-header payment-header bg-primary">
-          <div class="d-flex align-items-center gap-3">
-            <div class="modal-icon">
-              <i class="fa-solid fa-user-pen"></i>
-            </div>
-            <div>
-              <h5 class="modal-title text-white">Edit Student</h5>
-              <p class="mb-0 text-white-50">Update student information</p>
-            </div>
-          </div>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-
-        <!-- BODY -->
-        <div class="modal-body p-4">
-          <div class="form-group mb-3">
-            <label class="form-label fw-semibold text-secondary">Full Name</label>
-            <input
-              v-model="editForm.full_name"
-              type="text"
-              class="form-control custom-input"
-              placeholder="Enter full name"
-            />
-          </div>
-
-          <div class="form-group mb-3">
-            <label class="form-label fw-semibold text-secondary">Class / Batch</label>
-            <input
-              v-model="editForm.batch_name"
-              type="text"
-              class="form-control custom-input"
-              placeholder="Enter class name"
-            />
-          </div>
-
-          <div class="form-group mb-3">
-            <label class="form-label fw-semibold text-secondary">Email</label>
-            <input
-              v-model="editForm.email"
-              type="email"
-              class="form-control custom-input"
-              placeholder="Enter email address"
-            />
-          </div>
-
-          <div class="form-group mb-3">
-            <label class="form-label fw-semibold text-secondary">Monthly Fee</label>
-            <input
-              v-model="editForm.monthly_fee"
-              type="number"
-              class="form-control custom-input"
-              placeholder="Enter monthly fee"
-            />
-          </div>
-
-          <div class="form-group mb-2">
-            <label class="form-label fw-semibold text-secondary">Status</label>
-            <select v-model="editForm.status" class="form-select custom-select">
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- FOOTER -->
-        <div class="modal-footer payment-footer">
-          <button class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Close</button>
-          <button class="btn btn-primary rounded-3 px-4" @click="updateStudent">
-            <i class="fa-solid fa-floppy-disk me-1"></i>
-            Update Student
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
 </template>
 
 <script setup>
@@ -519,11 +391,26 @@ import AccountMenuView from './AccountMenuView.vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
 
+import LoadingSpinner from '../../components/LoadingSpinner.vue'
+import { isLoading } from '../../utils/loading'
 const router = useRouter()
 const availableMonths = ref([])
 const students = ref([])
 const search = ref('')
 const selectedClass = ref('')
+
+const STORAGE_URL = 'http://127.0.0.1:8000/storage/'
+
+/* Image Helper Function */
+const getImageUrl = (student) => {
+  if (student && student.image) {
+    if (student.image.startsWith('http')) {
+      return student.image
+    }
+    return `${STORAGE_URL}${student.image}`
+  }
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(student?.full_name || 'Student')}&background=random`
+}
 
 /* Pagination */
 const currentPage = ref(1)
@@ -534,6 +421,7 @@ const selectedStudent = reactive({
   student_id: '',
   full_name: '',
   monthly_fee: null,
+  image: null,
 })
 
 /* Payment Form */
@@ -542,20 +430,10 @@ const form = reactive({
   amount: '',
   paid_amount: '',
   payment_method: '',
-  payment_date: '',
+  payment_date: new Date().toISOString().slice(0, 10),
   month: '',
   admission_fee: null,
   exam_fee: null,
-})
-
-/* Edit Form */
-const editForm = reactive({
-  id: '',
-  full_name: '',
-  batch_name: '',
-  email: '',
-  monthly_fee: '',
-  status: 'Active',
 })
 
 /* Search */
@@ -604,73 +482,50 @@ const openPaymentModal = (student) => {
   selectedStudent.student_id = student.student_id
   selectedStudent.full_name = student.full_name
   selectedStudent.monthly_fee = student.monthly_fee
+  selectedStudent.image = student.image
   availableMonths.value = student.available_months || []
 
   form.student_id = student.id
   form.amount = student.monthly_fee ?? ''
   form.paid_amount = ''
   form.payment_method = ''
-  form.payment_date = ''
+  form.payment_date = new Date().toISOString().slice(0, 10)
   form.month = ''
+  form.admission_fee = null
+  form.exam_fee = null
 }
 
-/* Edit Modal */
-const openEditModal = (student) => {
-  editForm.id = student.id
-  editForm.full_name = student.full_name || ''
-  editForm.batch_name = student.batch_name || ''
-  editForm.email = student.email || ''
-  editForm.monthly_fee = student.monthly_fee || ''
-  editForm.status = student.status || 'Active'
-}
+/* API Calls */
 
-/* Update Student */
-const updateStudent = async () => {
+// Get Students List
+const getStudents = async () => {
   try {
-    await api.put(`/students/${editForm.id}`, editForm)
-
-    // Hide Modal
-    const modalEl = document.getElementById('editModal')
-    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl)
-    modalInstance.hide()
-
-    setTimeout(() => {
-      document.querySelectorAll('.modal-backdrop').forEach((el) => el.remove())
-      document.body.classList.remove('modal-open')
-      document.body.style.overflow = ''
-    }, 200)
-
-    alert('Student updated successfully!')
-    getStudents() // Refresh table list
-  } catch (err) {
-    console.log(err)
-    alert(err.response?.data?.message || 'Failed to update student')
-  }
-}
-
-/* Delete Student */
-const deleteStudent = async (student) => {
-  if (confirm(`Are you sure you want to delete ${student.full_name}?`)) {
-    try {
-      await api.delete(`/students/${student.id}`)
-      alert('Student deleted successfully!')
-      getStudents() // Refresh table list
-    } catch (err) {
-      console.log(err)
-      alert(err.response?.data?.message || 'Failed to delete student')
+    const res = await api.get('/students')
+    // backend data response handle (array or nested array)
+    if (Array.isArray(res.data)) {
+      students.value = res.data
+    } else if (res.data && Array.isArray(res.data.students)) {
+      students.value = res.data.students
+    } else {
+      students.value = []
     }
+  } catch (err) {
+    console.error('Error fetching students:', err)
   }
 }
 
-/* Save Payment */
+// Save Payment API
 const savePayment = async () => {
   try {
     const res = await api.post('/payments', form)
-    const paymentId = res.data.payment.id
+    const paymentId = res.data?.payment?.id || res.data?.id
 
     const modalEl = document.getElementById('paymentModal')
-    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl)
-    modalInstance.hide()
+    if (modalEl) {
+      const modalInstance =
+        bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl)
+      modalInstance.hide()
+    }
 
     setTimeout(() => {
       document.querySelectorAll('.modal-backdrop').forEach((el) => el.remove())
@@ -678,25 +533,19 @@ const savePayment = async () => {
       document.body.style.overflow = ''
     }, 200)
 
-    router.push(`/singlePayment/${paymentId}`)
+    if (paymentId) {
+      router.push(`/singlePayment/${paymentId}`)
+    } else {
+      await getStudents()
+    }
   } catch (err) {
-    console.log(err)
+    console.error('Payment error:', err)
 
     if (err.response?.data?.message) {
       alert(err.response.data.message)
     } else {
       alert('Payment save failed')
     }
-  }
-}
-
-/* Get Students */
-const getStudents = async () => {
-  try {
-    const res = await api.get('/students')
-    students.value = res.data.students || []
-  } catch (err) {
-    console.log(err)
   }
 }
 
@@ -859,23 +708,14 @@ onMounted(() => {
   gap: 10px;
 }
 
-.student-avatar-sm {
-  width: 32px;
-  height: 32px;
+/* Student Profile Image in Table */
+.student-table-img {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: #e2e8f0;
-  color: #334155;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 13px;
-  transition: all 0.2s ease;
-}
-
-.student-table tbody tr:hover .student-avatar-sm {
-  background: #2563eb;
-  color: #ffffff;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .student-name {
@@ -965,24 +805,6 @@ onMounted(() => {
 
 .btn-payment:hover {
   background: #15803d;
-}
-
-.btn-edit {
-  background: #2563eb;
-  color: white;
-}
-
-.btn-edit:hover {
-  background: #1d4ed8;
-}
-
-.btn-delete {
-  background: #ef4444;
-  color: white;
-}
-
-.btn-delete:hover {
-  background: #dc2626;
 }
 
 /* =========================
@@ -1106,17 +928,12 @@ onMounted(() => {
   border: 1px solid #f1f5f9;
 }
 
-.student-avatar-large {
-  width: 44px;
-  height: 44px;
+.student-avatar-large-img {
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
-  background: #2563eb;
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 18px;
-  font-weight: 700;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
 }
 
 .payment-footer {

@@ -1,4 +1,6 @@
 <template>
+  <LoadingSpinner v-if="isLoading" />
+  <RouterView />
   <AccountMenuView />
 
   <div class="mid">
@@ -11,7 +13,7 @@
         </div>
 
         <button
-          class="btn btn-primary px-4 py-2 fw-semibold rounded-3"
+          class="btn btn-primary px-4 py-2 fw-semibold rounded-3 btn-hover-effect"
           data-bs-toggle="modal"
           data-bs-target="#expenseModal"
           @click="resetForm"
@@ -21,10 +23,10 @@
         </button>
       </div>
 
-      <!-- Summary Cards (Image Style) -->
+      <!-- Summary Cards (With Hover Scale Animation) -->
       <div class="row g-3 mb-4">
         <div class="col-lg-3 col-md-6">
-          <div class="dash-summary-card card-blue">
+          <div class="dash-summary-card card-blue animated-card">
             <div>
               <small>Total Expense</small>
               <h2>৳ {{ totalExpense }}</h2>
@@ -36,7 +38,7 @@
         </div>
 
         <div class="col-lg-3 col-md-6">
-          <div class="dash-summary-card card-green">
+          <div class="dash-summary-card card-green animated-card">
             <div>
               <small>Monthly Expense</small>
               <h2>৳ {{ monthlyExpense }}</h2>
@@ -48,7 +50,7 @@
         </div>
 
         <div class="col-lg-3 col-md-6">
-          <div class="dash-summary-card card-orange">
+          <div class="dash-summary-card card-orange animated-card">
             <div>
               <small>Total Paid</small>
               <h2>৳ {{ totalPaid }}</h2>
@@ -60,7 +62,7 @@
         </div>
 
         <div class="col-lg-3 col-md-6">
-          <div class="dash-summary-card card-purple">
+          <div class="dash-summary-card card-purple animated-card">
             <div>
               <small>Pending Due</small>
               <h2>৳ {{ totalDue }}</h2>
@@ -80,7 +82,7 @@
             <div class="col-md-4 col-lg-3">
               <input
                 type="text"
-                class="form-control rounded-3"
+                class="form-control rounded-3 search-input"
                 placeholder="Search ID / Name / Method"
                 v-model="search"
                 @input="currentPage = 1"
@@ -89,7 +91,7 @@
           </div>
         </div>
 
-        <!-- Table with Blue Header -->
+        <!-- Table with Blue Header & Row Animations -->
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
             <thead class="custom-blue-header">
@@ -107,7 +109,7 @@
               </tr>
             </thead>
 
-            <tbody>
+            <TransitionGroup name="table-row" tag="tbody">
               <tr v-for="(expense, index) in paginatedExpenses" :key="expense.id">
                 <td class="fw-semibold text-muted">
                   {{ (currentPage - 1) * itemsPerPage + index + 1 }}
@@ -118,14 +120,16 @@
                 <td>
                   <span
                     class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"
-                    >৳ {{ expense.paid_amount }}</span
                   >
+                    ৳ {{ expense.paid_amount }}
+                  </span>
                 </td>
                 <td>
                   <span
                     class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"
-                    >৳ {{ expense.due_amount }}</span
                   >
+                    ৳ {{ expense.due_amount }}
+                  </span>
                 </td>
                 <td class="text-success fw-semibold">
                   {{ formatPaymentMonth(expense.payment_month) }}
@@ -133,10 +137,9 @@
                 <td>{{ expense.payment_method }}</td>
                 <td>{{ expense.payment_date }}</td>
                 <td>
-                  <!-- Fixed Action Buttons Alignment -->
                   <div class="d-flex justify-content-center gap-2">
                     <button
-                      class="btn btn-sm btn-warning fw-semibold px-3 text-white"
+                      class="btn btn-sm btn-warning fw-semibold px-3 text-white btn-action"
                       @click="editExpense(expense)"
                       data-bs-toggle="modal"
                       data-bs-target="#expenseModal"
@@ -145,7 +148,7 @@
                     </button>
 
                     <button
-                      class="btn btn-sm btn-danger fw-semibold px-3"
+                      class="btn btn-sm btn-danger fw-semibold px-3 btn-action"
                       @click="deleteExpense(expense.id)"
                     >
                       Delete
@@ -154,14 +157,14 @@
                 </td>
               </tr>
 
-              <tr v-if="filteredExpenses.length === 0">
+              <tr v-if="filteredExpenses.length === 0" key="no-data">
                 <td colspan="10" class="text-center py-5 text-muted">No Expense Record Found</td>
               </tr>
-            </tbody>
+            </TransitionGroup>
           </table>
         </div>
 
-        <!-- Pagination Controls (Matching Image Design) -->
+        <!-- Pagination Controls -->
         <div
           class="card-footer bg-white py-3 border-0 d-flex justify-content-between align-items-center flex-wrap gap-3"
         >
@@ -170,7 +173,6 @@
           </span>
 
           <div class="d-flex align-items-center gap-2" v-if="totalPages > 0">
-            <!-- Prev Button -->
             <button
               class="btn btn-light border px-3 fw-semibold text-muted"
               :class="{ disabled: currentPage === 1 }"
@@ -180,14 +182,12 @@
               Previous
             </button>
 
-            <!-- Page Number Display (1 / 1 Style) -->
             <span
               class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fs-6 fw-bold"
             >
               {{ currentPage }} / {{ totalPages }}
             </span>
 
-            <!-- Next Button -->
             <button
               class="btn btn-light border px-3 fw-semibold text-muted"
               :class="{ disabled: currentPage === totalPages || filteredExpenses.length === 0 }"
@@ -203,7 +203,7 @@
       <!-- Modal -->
       <div class="modal fade" id="expenseModal" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-          <div class="modal-content border-0 shadow-lg rounded-4">
+          <div class="modal-content border-0 shadow-lg rounded-4 modal-animated">
             <form @submit.prevent="saveExpense">
               <div class="modal-header border-bottom-0 pb-0">
                 <h5 class="modal-title fw-bold">
@@ -306,7 +306,7 @@
                 <button class="btn btn-light px-4 rounded-3" data-bs-dismiss="modal" type="button">
                   Cancel
                 </button>
-                <button class="btn btn-primary px-4 rounded-3" type="submit">
+                <button class="btn btn-primary px-4 rounded-3 btn-hover-effect" type="submit">
                   {{ isEditing ? 'Update Expense' : 'Save Expense' }}
                 </button>
               </div>
@@ -320,31 +320,22 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import axios from 'axios'
+import api from '@/services/api'
 import AccountMenuView from './AccountMenuView.vue'
 
-// ===============================
-// API URL
-// ===============================
-const API_URL = 'http://127.0.0.1:8000/api/expenses'
-
-// ===============================
+import LoadingSpinner from '../../components/LoadingSpinner.vue'
+import { isLoading } from '../../utils/loading'
 // State
-// ===============================
 const expenses = ref([])
 const search = ref('')
 const isEditing = ref(false)
 const editingId = ref(null)
 
-// ===============================
 // Pagination State
-// ===============================
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
 
-// ===============================
 // Form
-// ===============================
 const form = ref({
   expense_type: '',
   employee_name: '',
@@ -356,9 +347,7 @@ const form = ref({
   payment_date: '',
 })
 
-// ===============================
 // Expense Types & Methods
-// ===============================
 const expenseTypes = [
   { id: 1, name: 'Staff Payment' },
   { id: 2, name: 'Teacher Payment' },
@@ -371,9 +360,7 @@ const expenseTypes = [
 
 const paymentMethods = ['Cash', 'Bkash', 'Nagad', 'Bank']
 
-// ===============================
 // Auto Calculate Due Amount
-// ===============================
 watch(
   () => [form.value.salary_amount, form.value.paid_amount],
   () => {
@@ -388,9 +375,7 @@ watch(
   },
 )
 
-// ===============================
 // Filter & Pagination
-// ===============================
 const filteredExpenses = computed(() => {
   if (!search.value) {
     return expenses.value
@@ -424,9 +409,7 @@ const showingEnd = computed(() => {
   return end > filteredExpenses.value.length ? filteredExpenses.value.length : end
 })
 
-// ===============================
 // Dashboard Cards
-// ===============================
 const totalExpense = computed(() => {
   return expenses.value.reduce((total, expense) => total + Number(expense.salary_amount || 0), 0)
 })
@@ -452,9 +435,7 @@ const monthlyExpense = computed(() => {
     .reduce((total, expense) => total + Number(expense.salary_amount || 0), 0)
 })
 
-// ===============================
 // Actions
-// ===============================
 const resetForm = () => {
   isEditing.value = false
   editingId.value = null
@@ -485,33 +466,50 @@ const formatPaymentMonth = (monthStr) => {
   return monthStr
 }
 
+// Fetch Expenses using Centralized API Service
 const getExpenses = async () => {
   try {
-    const response = await axios.get(API_URL)
-    expenses.value = response.data.expenses || response.data || []
+    const response = await api.get('/expenses')
+    expenses.value = [...(response.data.expenses || response.data || [])]
   } catch (error) {
     console.error('Error fetching expenses:', error)
   }
 }
 
+// Modal Hide & Backdrop Cleanup Function
+const closeModal = () => {
+  const modalElement = document.getElementById('expenseModal')
+
+  if (modalElement) {
+    const modalInstance = window.bootstrap?.Modal?.getInstance(modalElement)
+    if (modalInstance) {
+      modalInstance.hide()
+    } else if (window.bootstrap?.Modal) {
+      new window.bootstrap.Modal(modalElement).hide()
+    }
+  }
+
+  setTimeout(() => {
+    document.querySelectorAll('.modal-backdrop').forEach((el) => el.remove())
+    document.body.classList.remove('modal-open')
+    document.body.style.removeProperty('padding-right')
+    document.body.style.removeProperty('overflow')
+  }, 150)
+}
+
 const saveExpense = async () => {
   try {
     if (isEditing.value) {
-      await axios.put(`${API_URL}/${editingId.value}`, form.value)
-      alert('Expense Updated Successfully')
+      await api.put(`/expenses/${editingId.value}`, form.value)
     } else {
-      await axios.post(API_URL, form.value)
-      alert('Expense Added Successfully')
+      await api.post('/expenses', form.value)
     }
 
-    await getExpenses()
+    closeModal()
     resetForm()
+    await getExpenses()
 
-    const modalElement = document.getElementById('expenseModal')
-    if (modalElement) {
-      const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement)
-      modal.hide()
-    }
+    alert(isEditing.value ? 'Expense Updated Successfully' : 'Expense Added Successfully')
   } catch (error) {
     console.error('Error saving expense:', error)
     if (error.response?.data?.errors) {
@@ -542,9 +540,9 @@ const deleteExpense = async (id) => {
   if (!confirm('Are you sure you want to delete this expense?')) return
 
   try {
-    await axios.delete(`${API_URL}/${id}`)
+    await api.delete(`/expenses/${id}`)
     alert('Expense Deleted Successfully')
-    getExpenses()
+    await getExpenses()
   } catch (error) {
     console.error('Error deleting expense:', error)
   }
@@ -556,9 +554,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* =========================
-   SUMMARY CARDS (MATCHING IMAGE)
-========================= */
+/* SUMMARY CARDS */
 .dash-summary-card {
   border-radius: 12px;
   padding: 20px 24px;
@@ -566,7 +562,13 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   color: #fff;
-  transition: all 0.25s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Card Hover Animation */
+.animated-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
 }
 
 .dash-summary-card small {
@@ -583,7 +585,7 @@ onMounted(() => {
   margin-bottom: 0;
 }
 
-/* Background Colors like Image */
+/* Background Colors */
 .card-blue {
   background: #1d4ed8;
 }
@@ -609,9 +611,7 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-/* =========================
-   TABLE HEADER (BLUE STYLE)
-========================= */
+/* TABLE HEADER (BLUE STYLE) */
 .custom-blue-header {
   background-color: #2563eb !important;
 }
@@ -628,6 +628,57 @@ onMounted(() => {
 .table td {
   padding: 14px;
   white-space: nowrap;
+}
+
+/* Table Row Animation (Fade & Slide) */
+.table-row-enter-active,
+.table-row-leave-active {
+  transition: all 0.3s ease;
+}
+
+.table-row-enter-from {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.table-row-leave-to {
+  opacity: 0;
+  transform: translateX(10px);
+}
+
+/* Button & Action Animation */
+.btn-hover-effect {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.btn-hover-effect:active {
+  transform: scale(0.96);
+}
+
+.btn-action {
+  transition: transform 0.15s ease;
+}
+
+.btn-action:hover {
+  transform: scale(1.05);
+}
+
+/* Search Focus Animation */
+.search-input {
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.search-input:focus {
+  box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.15);
+}
+
+/* Modal Pop Animation */
+.modal.fade .modal-animated {
+  transition: transform 0.25s ease-out;
 }
 
 /* Layout Adjustment */

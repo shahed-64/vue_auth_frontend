@@ -99,9 +99,13 @@
 
         <!-- Main Dashboard -->
 
-        <router-link to="/dashboard" class="menu-item" active-class="active-menu">
+        <router-link
+          v-if="role === 'Manager'"
+          to="/dashboard"
+          class="menu-item"
+          active-class="active-menu"
+        >
           <i class="fa-solid fa-gauge-high"></i>
-
           <span>Main Dashboard</span>
         </router-link>
       </div>
@@ -125,7 +129,7 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const isOpen = ref(false)
-
+const role = localStorage.getItem('role')
 const toggleMenu = () => {
   isOpen.value = !isOpen.value
 }

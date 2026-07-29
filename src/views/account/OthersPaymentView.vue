@@ -1,8 +1,10 @@
 <template>
+  <LoadingSpinner v-if="isLoading" />
+  <RouterView />
   <AccountMenuView />
   <div class="box">
     <!-- =========================
-       Page Header
+        Page Header
     ========================= -->
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div>
@@ -25,7 +27,7 @@
     </div>
 
     <!-- =========================
-       Summary Cards (Matching exact image design)
+        Summary Cards
     ========================= -->
     <div class="row g-3 mb-4">
       <div class="col-lg-3 col-md-6">
@@ -90,7 +92,7 @@
     </div>
 
     <!-- =========================
-       Main Table Card
+        Main Table Card
     ========================= -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
       <!-- Search Filter Bar -->
@@ -119,7 +121,7 @@
         </div>
       </div>
 
-      <!-- Table Content with Hover Class -->
+      <!-- Table Content -->
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="my-custom-table w-100 align-middle">
@@ -144,7 +146,19 @@
                   {{ (currentPage - 1) * itemsPerPage + index + 1 }}
                 </td>
                 <td class="fw-bold text-dark">{{ payment.student?.student_id || 'N/A' }}</td>
-                <td class="fw-medium">{{ payment.student?.full_name || 'N/A' }}</td>
+
+                <!-- Student Name with Avatar -->
+                <td class="fw-medium">
+                  <div class="d-flex align-items-center gap-2">
+                    <img
+                      :src="getImageUrl(payment.student)"
+                      alt="Student Avatar"
+                      class="student-table-img"
+                    />
+                    <span>{{ payment.student?.full_name || 'N/A' }}</span>
+                  </div>
+                </td>
+
                 <td>
                   <span class="badge bg-light text-dark border px-2 py-1 fw-normal">
                     {{ payment.item_name }}
@@ -190,7 +204,7 @@
       </div>
 
       <!-- =========================
-         PAGINATION FOOTER (ALWAYS VISIBLE)
+          PAGINATION FOOTER
       ========================= -->
       <div
         class="card-footer bg-white border-top py-3 px-4 d-flex justify-content-between align-items-center"
@@ -230,7 +244,7 @@
     </div>
 
     <!-- =========================
-       Add / Edit Modal
+        Add / Edit Modal
     ========================= -->
     <div
       class="modal fade"
@@ -370,8 +384,9 @@
 <script setup>
 import AccountMenuView from './AccountMenuView.vue'
 import { ref, computed, onMounted } from 'vue'
-import axios from 'axios'
-
+import api from '@/services/api'
+import LoadingSpinner from '../../components/LoadingSpinner.vue'
+import { isLoading } from '../../utils/loading'
 /* =========================
    State
 ========================= */
@@ -381,7 +396,7 @@ const tableSearch = ref('')
 
 // Pagination Settings
 const currentPage = ref(1)
-const itemsPerPage = ref(10) // প্রতি পেজে ১০ টি করে আইটেম থাকবে
+const itemsPerPage = ref(10)
 
 const searchStudent = ref('')
 const selectedStudent = ref(null)
@@ -399,18 +414,27 @@ const form = ref({
   price: '',
   total_amount: 0,
   payment_method: 'Cash',
-  payment_date: '',
+  payment_date: new Date().toISOString().slice(0, 10),
   remarks: '',
 })
 
 /* =========================
-   API URL
+   Storage URL & Helper
 ========================= */
-const API_URL = 'http://127.0.0.1:8000/api/other-payments'
-const STUDENT_API = 'http://127.0.0.1:8000/api/students'
+const STORAGE_URL = 'http://127.0.0.1:8000/storage/'
+
+const getImageUrl = (student) => {
+  if (student && student.image) {
+    if (student.image.startsWith('http')) {
+      return student.image
+    }
+    return `${STORAGE_URL}${student.image}`
+  }
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(student?.full_name || 'Student')}&background=random`
+}
 
 /* =========================
-   Computed
+   Computed Properties
 ========================= */
 const filteredOtherPayments = computed(() => {
   if (!tableSearch.value) return otherPayments.value
@@ -454,9 +478,11 @@ const lastPurchase = computed(() => {
 })
 
 const filteredStudents = computed(() => {
-  if (!searchStudent.value) return []
-  return students.value.filter((student) =>
-    student.student_id.toLowerCase().includes(searchStudent.value.toLowerCase()),
+  if (!searchStudent.value || selectedStudent.value?.student_id === searchStudent.value) return []
+  return students.value.filter(
+    (student) =>
+      student.student_id.toLowerCase().includes(searchStudent.value.toLowerCase()) ||
+      student.full_name?.toLowerCase().includes(searchStudent.value.toLowerCase()),
   )
 })
 
@@ -473,51 +499,68 @@ const thisMonthOtherCollection = computed(() => {
 })
 
 /* =========================
-   Fetch
+   API Requests
 ========================= */
 const getOtherPayments = async () => {
   try {
-    const response = await axios.get(API_URL)
-    otherPayments.value = response.data.data
+    const response = await api.get('/other-payments')
+    otherPayments.value = response.data.data || response.data
   } catch (error) {
-    console.log(error)
+    console.error('Error fetching payments:', error)
   }
 }
 
 const getStudents = async () => {
   try {
-    const response = await axios.get(STUDENT_API)
-    students.value = response.data.students
+    const response = await api.get('/students')
+    students.value = response.data.students || response.data
   } catch (error) {
-    console.log(error)
+    console.error('Error fetching students:', error)
   }
 }
 
 /* =========================
-   Actions
+   Actions & Methods
 ========================= */
 const selectStudent = (student) => {
   selectedStudent.value = student
   form.value.student_id = student.id
   searchStudent.value = student.student_id
-  filteredStudents.value = []
+}
+
+const closeModal = () => {
+  const modalElement = document.getElementById('otherPaymentModal')
+  const modalInstance = bootstrap.Modal.getInstance(modalElement)
+  if (modalInstance) {
+    modalInstance.hide()
+  } else {
+    document.querySelector('#otherPaymentModal .btn-close')?.click()
+  }
 }
 
 const savePayment = async () => {
   try {
     form.value.total_amount = totalPrice.value
-    await axios.post(API_URL, form.value)
+    await api.post('/other-payments', form.value)
     await getOtherPayments()
     resetForm()
-    document.querySelector('#otherPaymentModal .btn-close')?.click()
+    closeModal()
   } catch (error) {
-    console.log(error.response?.data || error)
+    console.error('Save failed:', error.response?.data || error)
   }
 }
 
 const editPayment = (payment) => {
   isEdit.value = true
   editId.value = payment.id
+
+  // ১. স্টুডেন্ট ডাটা পপুলেট করার লজিক
+  const matchedStudent = students.value.find((s) => s.id === payment.student_id) || payment.student
+  if (matchedStudent) {
+    selectedStudent.value = matchedStudent
+    searchStudent.value = matchedStudent.student_id
+  }
+
   form.value = {
     student_id: payment.student_id,
     item_name: payment.item_name,
@@ -526,7 +569,7 @@ const editPayment = (payment) => {
     total_amount: payment.total_amount,
     payment_method: payment.payment_method,
     payment_date: payment.payment_date,
-    remarks: payment.remarks,
+    remarks: payment.remarks || '',
   }
 
   const modal = new bootstrap.Modal(document.getElementById('otherPaymentModal'))
@@ -536,21 +579,22 @@ const editPayment = (payment) => {
 const updatePayment = async () => {
   try {
     form.value.total_amount = totalPrice.value
-    await axios.put(`${API_URL}/${editId.value}`, form.value)
+    await api.put(`/other-payments/${editId.value}`, form.value)
     await getOtherPayments()
     resetForm()
+    closeModal() // ২. অটো মোডাল ক্লোজ করার লজিক
   } catch (error) {
-    console.log(error)
+    console.error('Update failed:', error.response?.data || error)
   }
 }
 
 const deletePayment = async (id) => {
-  if (!confirm('Are you sure?')) return
+  if (!confirm('Are you sure you want to delete this payment?')) return
   try {
-    await axios.delete(`${API_URL}/${id}`)
+    await api.delete(`/other-payments/${id}`)
     getOtherPayments()
   } catch (error) {
-    console.log(error)
+    console.error('Delete failed:', error)
   }
 }
 
@@ -566,20 +610,19 @@ const resetForm = () => {
     price: '',
     total_amount: 0,
     payment_method: 'Cash',
-    payment_date: '',
+    payment_date: new Date().toISOString().slice(0, 10),
     remarks: '',
   }
 }
 
 /* =========================
-  Lifecycle
+   Lifecycle Hooks
 ========================= */
 onMounted(() => {
   getOtherPayments()
   getStudents()
 })
 </script>
-
 <style scoped>
 .box {
   width: 85%;
@@ -642,7 +685,7 @@ onMounted(() => {
 }
 
 /* ===================================================
-   TABLE & HOVER STYLING (GUARANTEED WORKING)
+   TABLE & HOVER STYLING
 =================================================== */
 .my-custom-table {
   border-collapse: collapse;
@@ -671,10 +714,19 @@ onMounted(() => {
   cursor: pointer;
 }
 
-/* THIS IS THE HOVER EFFECT THAT WORKS PERFECTLY */
 .my-custom-table tbody tr.data-row:hover {
   background-color: #f0fdf4 !important; /* Soft Light Green Hover Color */
   box-shadow: inset 4px 0 0 #10b981; /* Green Bar on Left on Hover */
+}
+
+/* Student Profile Image in Table */
+.student-table-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 /* ===================================================

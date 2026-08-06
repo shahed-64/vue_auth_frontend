@@ -421,17 +421,7 @@ const form = ref({
 /* =========================
    Storage URL & Helper
 ========================= */
-const STORAGE_URL = 'http://127.0.0.1:8000/storage/'
-
-const getImageUrl = (student) => {
-  if (student && student.image) {
-    if (student.image.startsWith('http')) {
-      return student.image
-    }
-    return `${STORAGE_URL}${student.image}`
-  }
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(student?.full_name || 'Student')}&background=random`
-}
+import { getImageUrl } from '@/utils/img'
 
 /* =========================
    Computed Properties
@@ -531,11 +521,18 @@ const selectStudent = (student) => {
 const closeModal = () => {
   const modalElement = document.getElementById('otherPaymentModal')
   const modalInstance = bootstrap.Modal.getInstance(modalElement)
+
   if (modalInstance) {
     modalInstance.hide()
-  } else {
-    document.querySelector('#otherPaymentModal .btn-close')?.click()
   }
+
+  // ব্যাকড্রপ এবং বডির স্ক্রোল প্রবলেম ফিক্স করার জন্য অতিরিক্ত কোড
+  setTimeout(() => {
+    document.querySelectorAll('.modal-backdrop').forEach((el) => el.remove())
+    document.body.classList.remove('modal-open')
+    document.body.style.removeProperty('overflow')
+    document.body.style.removeProperty('padding-right')
+  }, 300)
 }
 
 const savePayment = async () => {
@@ -623,6 +620,7 @@ onMounted(() => {
   getStudents()
 })
 </script>
+
 <style scoped>
 .box {
   width: 85%;

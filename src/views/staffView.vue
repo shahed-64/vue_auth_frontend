@@ -55,7 +55,7 @@
                 <th>Photo</th>
                 <th>Name</th>
                 <th>User Name</th>
-                <th>Skill</th>
+                <th>Work Type</th>
                 <th>Email</th>
                 <th>Role</th>
                 <th width="220">Action</th>
@@ -197,8 +197,13 @@
               </div>
 
               <div class="col-md-6 mb-3">
-                <label class="form-label font-semibold">Skill</label>
-                <input v-model="form.skill" type="text" class="form-control" placeholder="Skill" />
+                <label class="form-label font-semibold">Work Type</label>
+                <input
+                  v-model="form.skill"
+                  type="text"
+                  class="form-control"
+                  placeholder="Full-time, Part-time"
+                />
               </div>
 
               <div class="col-md-6 mb-3">
@@ -230,6 +235,16 @@
                   class="form-control"
                   @change="handleFileChange($event, 'add')"
                   accept="image/*"
+                />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label font-semibold">Salary</label>
+                <input
+                  v-model="form.salary"
+                  type="text"
+                  class="form-control"
+                  placeholder="Enter name"
+                  required
                 />
               </div>
 
@@ -299,7 +314,12 @@
             <option value="Accountant">Accountant</option>
             <option value="Staff">Staff</option>
           </select>
-
+          <input
+            v-model="selectedStaff.salary"
+            type="number"
+            class="form-control mb-3"
+            placeholder="Salary"
+          />
           <div class="mb-2">
             <label class="form-label font-semibold text-muted small mb-1"
               >Change Profile Photo</label
@@ -425,6 +445,7 @@ const form = reactive({
   skill: '',
   role: '',
   email: '',
+  salary: '',
   image: null,
   password: '',
   password_confirmation: '',
@@ -447,6 +468,7 @@ const openAddModal = () => {
   form.skill = ''
   form.role = ''
   form.email = ''
+  form.salary = ''
   form.image = null
   form.password = ''
   form.password_confirmation = ''
@@ -467,6 +489,7 @@ const addStaff = async () => {
     formData.append('skill', form.skill || '')
     formData.append('role', form.role)
     formData.append('email', form.email)
+    formData.append('salary', form.salary)
     formData.append('password', form.password)
     formData.append('password_confirmation', form.password_confirmation)
     if (form.image) {
@@ -508,6 +531,7 @@ const viewData = ref({
   skill: '',
   role: '',
   image: '',
+  salary: '',
 })
 
 const openView = (item) => {
@@ -529,6 +553,7 @@ const selectedStaff = ref({
   skill: '',
   email: '',
   role: '',
+  salary: '',
   image: '',
   imageFile: null,
   password: '',
@@ -618,6 +643,7 @@ const updateStaff = async () => {
     formData.append('skill', selectedStaff.value.skill || '')
     formData.append('role', selectedStaff.value.role)
     formData.append('email', selectedStaff.value.email)
+    formData.append('salary', selectedStaff.value.salary)
 
     if (selectedStaff.value.password) {
       formData.append('password', selectedStaff.value.password)

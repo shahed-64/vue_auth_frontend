@@ -5,10 +5,11 @@ const api = axios.create({
   baseURL: 'http://127.0.0.1:8000/api',
   headers: {
     Accept: 'application/json',
+    'Content-Type': 'application/json',
   },
 })
 
-// Request Interceptor
+// Request Interceptor (API কল শুরু হলে লোডার অন হবে)
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
@@ -27,7 +28,7 @@ api.interceptors.request.use(
   },
 )
 
-// Response Interceptor
+// Response Interceptor (API কল শেষ বা ফেল করলে লোডার অফ হবে)
 api.interceptors.response.use(
   (response) => {
     stopLoading()

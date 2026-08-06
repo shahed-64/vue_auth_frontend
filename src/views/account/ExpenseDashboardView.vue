@@ -23,7 +23,7 @@
         </button>
       </div>
 
-      <!-- Summary Cards (With Hover Scale Animation) -->
+      <!-- Summary Cards -->
       <div class="row g-3 mb-4">
         <div class="col-lg-3 col-md-6">
           <div class="dash-summary-card card-blue animated-card">
@@ -91,7 +91,7 @@
           </div>
         </div>
 
-        <!-- Table with Blue Header & Row Animations -->
+        <!-- Table -->
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
             <thead class="custom-blue-header">
@@ -104,6 +104,7 @@
                 <th>Due</th>
                 <th>Paid Months</th>
                 <th>Method</th>
+                <th>Created By</th>
                 <th>Date</th>
                 <th width="160" class="text-center">Action</th>
               </tr>
@@ -135,6 +136,12 @@
                   {{ formatPaymentMonth(expense.payment_month) }}
                 </td>
                 <td>{{ expense.payment_method }}</td>
+                <td>
+                  <span class="badge bg-light text-dark border fw-semibold">
+                    <i class="bi bi-person-fill me-1 text-secondary"></i>
+                    {{ expense.created_by || 'Admin' }}
+                  </span>
+                </td>
                 <td>{{ expense.payment_date }}</td>
                 <td>
                   <div class="d-flex justify-content-center gap-2">
@@ -158,7 +165,7 @@
               </tr>
 
               <tr v-if="filteredExpenses.length === 0" key="no-data">
-                <td colspan="10" class="text-center py-5 text-muted">No Expense Record Found</td>
+                <td colspan="11" class="text-center py-5 text-muted">No Expense Record Found</td>
               </tr>
             </TransitionGroup>
           </table>
@@ -225,16 +232,51 @@
                     </select>
                   </div>
 
-                  <!-- Employee -->
+                  <!-- Employee / Teacher Name (Dynamic) -->
+                  <!-- Employee / Teacher Name (Dynamic) -->
                   <div class="col-md-6">
-                    <label class="form-label fw-semibold"> Employee Name </label>
+                    <label class="form-label fw-semibold"> Employee / Teacher Name </label>
+
+                    <!-- ১. যদি Teacher Payment সিলেক্ট করা হয় -->
+                    <select
+                      v-if="form.expense_type === 'Teacher Payment'"
+                      class="form-select rounded-3"
+                      v-model="form.employee_name"
+                      @change="onEmployeeSelect"
+                      required
+                    >
+                      <option value="">Select Teacher</option>
+                      <option
+                        v-for="teacher in teachersList"
+                        :key="teacher.id"
+                        :value="teacher.full_name"
+                      >
+                        {{ teacher.full_name }}
+                      </option>
+                    </select>
+
+                    <!-- ২. যদি Staff Payment সিলেক্ট করা হয় (এখানে user_name হবে) -->
+                    <select
+                      v-else-if="form.expense_type === 'Staff Payment'"
+                      class="form-select rounded-3"
+                      v-model="form.employee_name"
+                      @change="onEmployeeSelect"
+                      required
+                    >
+                      <option value="">Select Staff</option>
+                      <option v-for="staff in staffsList" :key="staff.id" :value="staff.user_name">
+                        {{ staff.user_name }}
+                      </option>
+                    </select>
+
+                    <!-- ৩. অন্যথায় সাধারণ ইনপুট বক্স -->
                     <input
+                      v-else
                       class="form-control rounded-3"
                       v-model="form.employee_name"
                       placeholder="Optional"
                     />
                   </div>
-
                   <!-- Salary -->
                   <div class="col-md-4">
                     <label class="form-label fw-semibold"> Salary Amount </label>
@@ -275,6 +317,7 @@
                       type="month"
                       class="form-control rounded-3"
                       v-model="form.payment_month"
+                      required
                     />
                   </div>
 
@@ -287,17 +330,6 @@
                         {{ method }}
                       </option>
                     </select>
-                  </div>
-
-                  <!-- Date -->
-                  <div class="col-md-12">
-                    <label class="form-label fw-semibold"> Payment Date </label>
-                    <input
-                      type="date"
-                      class="form-control rounded-3"
-                      v-model="form.payment_date"
-                      required
-                    />
                   </div>
                 </div>
               </div>
@@ -325,8 +357,11 @@ import AccountMenuView from './AccountMenuView.vue'
 
 import LoadingSpinner from '../../components/LoadingSpinner.vue'
 import { isLoading } from '../../utils/loading'
+
 // State
 const expenses = ref([])
+const teachersList = ref([])
+const staffsList = ref([])
 const search = ref('')
 const isEditing = ref(false)
 const editingId = ref(null)
@@ -344,7 +379,6 @@ const form = ref({
   due_amount: 0,
   payment_month: '',
   payment_method: '',
-  payment_date: '',
 })
 
 // Expense Types & Methods
@@ -359,6 +393,63 @@ const expenseTypes = [
 ]
 
 const paymentMethods = ['Cash', 'Bkash', 'Nagad', 'Bank']
+
+// Fetch Teachers for Auto-fill
+const fetchTeachers = async () => {
+  try {
+    const response = await api.get('/expense-teachers')
+    teachersList.value = response.data.teachers || []
+  } catch (error) {
+    console.error('Error fetching teachers:', error)
+  }
+}
+
+// Fetch Staffs for Auto-fill
+const fetchStaffs = async () => {
+  try {
+    const response = await api.get('/expense-staffs')
+    staffsList.value = response.data.staffs || []
+  } catch (error) {
+    console.error('Error fetching staffs:', error)
+  }
+}
+
+// Employee / Teacher Selection Handler (Auto Fill Salary)
+const onEmployeeSelect = () => {
+  let selectedPerson = null
+
+  if (form.value.expense_type === 'Teacher Payment') {
+    selectedPerson = teachersList.value.find((t) => t.full_name === form.value.employee_name)
+  } else if (form.value.expense_type === 'Staff Payment') {
+    selectedPerson = staffsList.value.find((s) => s.user_name === form.value.employee_name)
+  }
+
+  if (selectedPerson) {
+    form.value.salary_amount = selectedPerson.salary
+  } else {
+    form.value.salary_amount = ''
+  }
+}
+
+// Watcher to auto-update salary if employee_name changes programmatically or via dropdown
+watch(
+  () => form.value.employee_name,
+  (newName) => {
+    if (!newName) return
+
+    if (form.value.expense_type === 'Teacher Payment') {
+      const selectedTeacher = teachersList.value.find((t) => t.full_name === newName)
+      if (selectedTeacher) {
+        form.value.salary_amount = selectedTeacher.salary
+      }
+    } else if (form.value.expense_type === 'Staff Payment') {
+      const selectedStaff = staffsList.value.find((s) => s.user_name === newName)
+      if (selectedStaff) {
+        form.value.salary_amount = selectedStaff.salary
+      }
+    }
+  },
+)
 
 // Auto Calculate Due Amount
 watch(
@@ -448,25 +539,33 @@ const resetForm = () => {
     due_amount: 0,
     payment_month: '',
     payment_method: '',
-    payment_date: '',
   }
 }
 
 const formatPaymentMonth = (monthStr) => {
   if (!monthStr) return '-'
 
-  const parts = monthStr.split('-')
-  if (parts.length === 2) {
-    const year = parts[0]
-    const monthIndex = parseInt(parts[1], 10) - 1
-    const date = new Date(year, monthIndex, 1)
-    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  try {
+    const dateObj = new Date(monthStr)
+    if (!isNaN(dateObj.getTime())) {
+      return dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    }
+
+    const parts = monthStr.split('-')
+    if (parts.length >= 2) {
+      const year = parts[0]
+      const monthIndex = parseInt(parts[1], 10) - 1
+      const date = new Date(year, monthIndex, 1)
+      return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    }
+  } catch (e) {
+    console.error('Error formatting month:', e)
   }
 
   return monthStr
 }
 
-// Fetch Expenses using Centralized API Service
+// Fetch Expenses
 const getExpenses = async () => {
   try {
     const response = await api.get('/expenses')
@@ -476,7 +575,7 @@ const getExpenses = async () => {
   }
 }
 
-// Modal Hide & Backdrop Cleanup Function
+// Modal Hide & Cleanup
 const closeModal = () => {
   const modalElement = document.getElementById('expenseModal')
 
@@ -532,7 +631,6 @@ const editExpense = (expense) => {
     due_amount: expense.due_amount || 0,
     payment_month: expense.payment_month || '',
     payment_method: expense.payment_method || '',
-    payment_date: expense.payment_date || '',
   }
 }
 
@@ -548,11 +646,13 @@ const deleteExpense = async (id) => {
   }
 }
 
+// Lifecycle Hook
 onMounted(() => {
   getExpenses()
+  fetchTeachers()
+  fetchStaffs()
 })
 </script>
-
 <style scoped>
 /* SUMMARY CARDS */
 .dash-summary-card {
@@ -565,7 +665,6 @@ onMounted(() => {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Card Hover Animation */
 .animated-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
@@ -585,7 +684,6 @@ onMounted(() => {
   margin-bottom: 0;
 }
 
-/* Background Colors */
 .card-blue {
   background: #1d4ed8;
 }
@@ -611,7 +709,6 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-/* TABLE HEADER (BLUE STYLE) */
 .custom-blue-header {
   background-color: #2563eb !important;
 }
@@ -630,7 +727,6 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-/* Table Row Animation (Fade & Slide) */
 .table-row-enter-active,
 .table-row-leave-active {
   transition: all 0.3s ease;
@@ -646,7 +742,6 @@ onMounted(() => {
   transform: translateX(10px);
 }
 
-/* Button & Action Animation */
 .btn-hover-effect {
   transition:
     transform 0.2s ease,
@@ -665,7 +760,6 @@ onMounted(() => {
   transform: scale(1.05);
 }
 
-/* Search Focus Animation */
 .search-input {
   transition:
     border-color 0.2s ease,
@@ -676,12 +770,10 @@ onMounted(() => {
   box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.15);
 }
 
-/* Modal Pop Animation */
 .modal.fade .modal-animated {
   transition: transform 0.25s ease-out;
 }
 
-/* Layout Adjustment */
 .mid {
   width: calc(100% - 266px);
   margin-left: 266px;

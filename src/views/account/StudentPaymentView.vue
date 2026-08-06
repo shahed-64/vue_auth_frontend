@@ -399,18 +399,7 @@ const students = ref([])
 const search = ref('')
 const selectedClass = ref('')
 
-const STORAGE_URL = 'http://127.0.0.1:8000/storage/'
-
-/* Image Helper Function */
-const getImageUrl = (student) => {
-  if (student && student.image) {
-    if (student.image.startsWith('http')) {
-      return student.image
-    }
-    return `${STORAGE_URL}${student.image}`
-  }
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(student?.full_name || 'Student')}&background=random`
-}
+import { getImageUrl } from '@/utils/img'
 
 /* Pagination */
 const currentPage = ref(1)

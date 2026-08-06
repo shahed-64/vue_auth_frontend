@@ -32,6 +32,10 @@
                   <td class="fw-bold">Mother's Name</td>
                   <td>: {{ resultData.mother_name }}</td>
                 </tr>
+                <tr>
+                  <td class="fw-bold">Class / Batch</td>
+                  <td>: {{ resultData.class_name }}</td>
+                </tr>
               </table>
             </td>
             <td style="width: 45%; vertical-align: top">
@@ -42,8 +46,11 @@
                 </tr>
 
                 <tr>
-                  <td class="fw-bold">Group</td>
-                  <td>: {{ resultData.group }}</td>
+                  <!-- 🎯 ক্লাসের ওপর ভিত্তি করে লেবেল "Section" নাকি "Group" হবে তা ঠিক করা -->
+                  <td class="fw-bold">
+                    {{ isJuniorClass(resultData.class_name) ? 'Section' : 'Group' }}
+                  </td>
+                  <td>: {{ resultData.course_name }}</td>
                 </tr>
                 <tr>
                   <td class="fw-bold">Type</td>
@@ -217,6 +224,38 @@ const fetchSingleResult = async () => {
   } catch (error) {
     console.error('Error fetching result details:', error)
   }
+}
+// Class 1 থেকে 8 হলে true রিটার্ন করবে (যার ফলে Section দেখাবে)
+const isJuniorClass = (className) => {
+  if (!className) return false
+
+  // ক্লাসের নাম থেকে শুধু সংখ্যাটুকু বের করা (যেমন: "Class 8" থেকে 8)
+  const numericClass = parseInt(className.toString().replace(/\D/g, ''), 10)
+
+  if (!isNaN(numericClass)) {
+    return numericClass >= 1 && numericClass <= 8
+  }
+
+  // যদি ক্লাসের নাম লেখায় থাকে (যেমন: Six, Seven, Eight)
+  const juniorClasses = [
+    'one',
+    'two',
+    'three',
+    'four',
+    'five',
+    'six',
+    'seven',
+    'eight',
+    'class 1',
+    'class 2',
+    'class 3',
+    'class 4',
+    'class 5',
+    'class 6',
+    'class 7',
+    'class 8',
+  ]
+  return juniorClasses.some((c) => className.toString().toLowerCase().includes(c))
 }
 
 onMounted(() => {

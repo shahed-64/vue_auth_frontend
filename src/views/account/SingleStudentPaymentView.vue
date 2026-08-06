@@ -19,7 +19,7 @@
         </div>
         <div class="profile-avatar-wrapper">
           <img
-            :src="getImageUrl(displayUser.image)"
+            :src="getImageUrl(displayUser)"
             alt="Staff Avatar"
             class="rounded-circle border border-2 border-primary object-fit-cover shadow-sm"
             width="45"
@@ -141,39 +141,79 @@
           </thead>
 
           <tbody>
-            <tr v-for="payment in paginatedStudents" :key="payment.id">
-              <td class="fw-bold">{{ payment.student.student_id }}</td>
+            <tr v-for="student in paginatedStudents" :key="student.id">
+              <td class="fw-bold">
+                {{ student.student_id }}
+              </td>
 
               <td>
                 <div class="d-flex align-items-center gap-2">
                   <img
-                    :src="getStudentImageUrl(payment.student)"
+                    :src="getImageUrl(student)"
                     alt="Student Avatar"
                     class="student-table-img rounded-circle object-fit-cover border"
                     width="38"
                     height="38"
+                    @error="onImageError"
                   />
-                  <span class="fw-semibold text-dark">{{ payment.student.full_name }}</span>
+
+                  <span class="fw-semibold text-dark">
+                    {{ student.full_name }}
+                  </span>
                 </div>
               </td>
 
               <td>
-                <span class="badge bg-light text-dark border">{{
-                  payment.student.batch_name
-                }}</span>
-              </td>
-              <td>৳ {{ payment.amount }}</td>
-              <td class="text-success fw-semibold">৳ {{ payment.paid_amount }}</td>
-              <td class="text-danger fw-semibold">৳ {{ payment.due_amount }}</td>
-              <td>
-                <span class="badge" :class="payment.status === 'paid' ? 'bg-success' : 'bg-danger'">
-                  {{ payment.status }}
+                <span class="badge bg-light text-dark border">
+                  {{ student.batch_name }}
                 </span>
               </td>
+
+              <td>৳ {{ Number(student.monthly_fee || 0).toLocaleString() }}</td>
+
+              <td class="text-success fw-semibold">
+                ৳
+                {{
+                  Number(
+                    student.payments?.reduce((sum, p) => sum + Number(p.paid_amount || 0), 0) || 0,
+                  ).toLocaleString()
+                }}
+              </td>
+
+              <td class="text-danger fw-semibold">
+                ৳
+                {{
+                  Number(
+                    (student.payments?.reduce((sum, p) => sum + Number(p.due_amount || 0), 0) ||
+                      0) +
+                      (student.due_months?.length || 0) * Number(student.monthly_fee || 0),
+                  ).toLocaleString()
+                }}
+              </td>
+
+              <td>
+                <span
+                  class="badge"
+                  :class="
+                    student.due_months?.length > 0 ||
+                    student.payments?.some((p) => p.status === 'due')
+                      ? 'bg-danger'
+                      : 'bg-success'
+                  "
+                >
+                  {{
+                    student.due_months?.length > 0 ||
+                    student.payments?.some((p) => p.status === 'due')
+                      ? 'Due'
+                      : 'Paid'
+                  }}
+                </span>
+              </td>
+
               <td>
                 <button
                   class="btn btn-sm btn-primary"
-                  @click="openSummary(payment.student)"
+                  @click="openSummary(student)"
                   data-bs-toggle="modal"
                   data-bs-target="#studentModal"
                 >
@@ -246,9 +286,10 @@
             <div class="col-md-4">
               <div class="profile-card text-center">
                 <img
-                  :src="getStudentImageUrl(selectedStudent)"
+                  :src="getImageUrl(selectedStudent)"
                   class="profile-img mb-3 rounded-circle object-fit-cover"
                   alt="Profile Image"
+                  @error="onImageError"
                 />
 
                 <h5 class="fw-bold mb-1">{{ selectedStudent.full_name }}</h5>
@@ -336,15 +377,20 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+
 import AccountMenuView from './AccountMenuView.vue'
 import api from '@/services/api'
+import { getImageUrl } from '@/utils/img'
 
 import LoadingSpinner from '../../components/LoadingSpinner.vue'
 import { isLoading } from '../../utils/loading'
-const STORAGE_URL = 'http://127.0.0.1:8000/storage/'
 
-/* Search & State */
+/* =========================
+   Search & State
+========================= */
+
 const search = ref('')
+
 const totalStudents = ref(0)
 const totalCollection = ref(0)
 const totalDue = ref(0)
@@ -352,14 +398,20 @@ const totalUnpaidStudents = ref(0)
 
 const payments = ref([])
 const students = ref([])
+
 const selectedStudent = ref({})
 
-/* Logged-in Staff User State */
+/* =========================
+   Staff User
+========================= */
+
 const apiUser = ref(null)
+
 const defaultAvatar = 'https://ui-avatars.com/api/?name=Staff&background=random'
 
 const displayUser = computed(() => {
   const u = apiUser.value || {}
+
   return {
     name: u.name || 'Accountant / Staff',
     role: u.role || 'Staff',
@@ -367,32 +419,22 @@ const displayUser = computed(() => {
   }
 })
 
-/* Image Handlers */
-const getImageUrl = (path) => {
-  if (!path) return defaultAvatar
-  return path
-}
-
 const onImageError = (e) => {
   e.target.onerror = null
   e.target.src = defaultAvatar
 }
 
-const getStudentImageUrl = (student) => {
-  if (student && student.image) {
-    if (student.image.startsWith('http://') || student.image.startsWith('https://')) {
-      return student.image
-    }
-    return `${STORAGE_URL}${student.image}`
-  }
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(student?.full_name || 'Student')}&background=random`
-}
+/* =========================
+ Pagination
+========================= */
 
-/* Pagination */
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
 
-/* Batches */
+/* =========================
+ Batch
+========================= */
+
 const batches = ref([
   'All',
   'Class-1',
@@ -408,6 +450,7 @@ const batches = ref([
   'Class-11',
   'Class-12',
 ])
+
 const selectedBatch = ref('All')
 
 const selectBatch = (batch) => {
@@ -415,86 +458,153 @@ const selectBatch = (batch) => {
   currentPage.value = 1
 }
 
-/* Load Dashboard Data */
+/* =========================
+ Load Data
+========================= */
+
 onMounted(async () => {
   try {
+    /*
+|--------------------------------------------------------------------------
+| Get Payment Summary
+|--------------------------------------------------------------------------
+*/
+
     const paymentRes = await api.get('/payments')
 
-    payments.value = paymentRes.data.payments || []
-    totalStudents.value = paymentRes.data.total_students || 0
     totalCollection.value = paymentRes.data.total_paid_amount || 0
+
     totalDue.value = paymentRes.data.total_due_amount || 0
+
     totalUnpaidStudents.value = paymentRes.data.total_unpaid_students || 0
 
-    // ব্যাকএন্ডের ড্যাশবোর্ড থেকে স্টাফ/ইউজার ডেটা ফেচ করা
     if (paymentRes.data.user) {
       apiUser.value = paymentRes.data.user
     } else {
-      // যদি payments API-তে user না থাকে, তবে আলাদা staff dashboard API কল করা
       try {
         const dashRes = await api.get('/staff/dashboard')
+
         if (dashRes.data.user) {
           apiUser.value = dashRes.data.user
         }
       } catch (e) {
-        console.log('Staff dashboard secondary fetch error:', e)
+        console.log(e)
       }
     }
 
-    const reportRes = await api.get('/student-payment-report')
-    students.value = reportRes.data.students || []
+    /*
+|--------------------------------------------------------------------------
+| Get All Students
+|--------------------------------------------------------------------------
+*/
+
+    const studentRes = await api.get('/students')
+
+    const allStudents = studentRes.data.students || []
+
+    totalStudents.value = allStudents.length
+
+    /*
+|--------------------------------------------------------------------------
+| Merge Student + Payment
+|--------------------------------------------------------------------------
+*/
+
+    const formattedStudents = allStudents.map((student) => {
+      let latestPayment = null
+
+      if (student.payments && student.payments.length > 0) {
+        latestPayment = student.payments[student.payments.length - 1]
+      }
+
+      return {
+        id: latestPayment ? latestPayment.id : student.id,
+
+        student: {
+          ...student,
+        },
+
+        amount: latestPayment ? latestPayment.amount : student.monthly_fee || 0,
+
+        paid_amount: latestPayment ? latestPayment.paid_amount : 0,
+
+        due_amount: latestPayment ? latestPayment.due_amount : student.monthly_fee || 0,
+
+        status: latestPayment ? latestPayment.status : 'due',
+      }
+    })
+
+    payments.value = formattedStudents
+
+    students.value = allStudents
   } catch (error) {
     console.error('API Error:', error)
   }
 })
 
-/* Modal Handler */
+/* =========================
+ Modal
+========================= */
+
 const openSummary = (student) => {
   const reportStudent = students.value.find((s) => Number(s.id) === Number(student.id))
 
-  if (reportStudent) {
-    selectedStudent.value = {
-      ...reportStudent,
-      image: student.image || reportStudent.image,
-    }
-  } else {
-    selectedStudent.value = {
-      ...student,
-      total_paid: 0,
-      total_due: 0,
-      unpaid_months: 0,
-      unpaid_amount: 0,
-      total_outstanding: 0,
-    }
+  if (!reportStudent) return
+
+  const totalPaid =
+    reportStudent.payments?.reduce((sum, payment) => sum + Number(payment.paid_amount || 0), 0) || 0
+
+  const totalDue =
+    reportStudent.payments?.reduce((sum, payment) => sum + Number(payment.due_amount || 0), 0) || 0
+
+  const unpaidMonths = reportStudent.due_months?.length || 0
+
+  const unpaidAmount = unpaidMonths * Number(reportStudent.monthly_fee || 0)
+
+  const totalOutstanding = totalDue + unpaidAmount
+
+  selectedStudent.value = {
+    ...reportStudent,
+
+    total_paid: totalPaid,
+
+    total_due: totalDue,
+
+    unpaid_months: unpaidMonths,
+
+    unpaid_amount: unpaidAmount,
+
+    total_outstanding: totalOutstanding,
   }
+
+  console.log('MODAL DATA:', selectedStudent.value)
 }
+/* =========================
+ Filter
+========================= */
 
-/* Computed Filters & Pagination */
 const filteredStudents = computed(() => {
-  const uniqueStudents = []
-
-  payments.value.forEach((payment) => {
-    const exists = uniqueStudents.find((item) => item.student.id === payment.student.id)
-    if (!exists) {
-      uniqueStudents.push(payment)
-    }
-  })
-
-  return uniqueStudents.filter((payment) => {
-    const student = payment.student
+  return students.value.filter((student) => {
     const batchMatch = selectedBatch.value === 'All' || student.batch_name === selectedBatch.value
+
+    const searchText = search.value.toLowerCase()
+
     const searchMatch =
-      student.full_name.toLowerCase().includes(search.value.toLowerCase()) ||
-      student.student_id.toLowerCase().includes(search.value.toLowerCase())
+      student.full_name?.toLowerCase().includes(searchText) ||
+      student.student_id?.toLowerCase().includes(searchText)
 
     return batchMatch && searchMatch
   })
 })
 
+/* =========================
+ Pagination
+========================= */
+
 const paginatedStudents = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
-  const end = start + itemsPerPage.value
-  return filteredStudents.value.slice(start, end)
+
+  return filteredStudents.value.slice(start, start + itemsPerPage.value)
 })
 
 const totalPages = computed(() => {
@@ -503,14 +613,17 @@ const totalPages = computed(() => {
 
 const showingStart = computed(() => {
   if (filteredStudents.value.length === 0) return 0
+
   return (currentPage.value - 1) * itemsPerPage.value + 1
 })
 
 const showingEnd = computed(() => {
   const end = currentPage.value * itemsPerPage.value
+
   return end > filteredStudents.value.length ? filteredStudents.value.length : end
 })
 </script>
+
 <style scoped>
 .main-content {
   margin-left: 260px;

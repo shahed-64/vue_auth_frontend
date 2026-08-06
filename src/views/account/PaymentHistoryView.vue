@@ -374,21 +374,7 @@ const editForm = ref({
 })
 
 // Avatar Builder
-const defaultAvatar = 'https://cdn-icons-png.flaticon.com/512/149/14907.png'
-
-const getImageUrl = (path) => {
-  if (!path) return defaultAvatar
-  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:image')) {
-    return path
-  }
-
-  const cleanPath = path.replace(/^\/+/, '')
-  if (cleanPath.startsWith('storage/')) {
-    return `http://127.0.0.1:8000/${cleanPath}`
-  }
-  return `http://127.0.0.1:8000/storage/${cleanPath}`
-}
-
+import { getImageUrl } from '@/utils/img'
 const onImageError = (e) => {
   e.target.onerror = null
   e.target.src = defaultAvatar

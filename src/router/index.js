@@ -22,6 +22,12 @@ const router = createRouter({
       component: () => import('../views/dashboardView.vue'),
       meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
     },
+    {
+      path: '/shift',
+      name: 'shiftView',
+      component: () => import('../views/ShifPagetView.vue'),
+      meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
+    },
 
     {
       path: '/resultShow',
@@ -112,6 +118,36 @@ const router = createRouter({
       path: '/:pathMatch(.*)*',
       name: 'NotFound',
       component: () => import('../views/NotFoundView.vue'),
+    },
+    {
+      path: '/teacherView',
+      name: 'teacher',
+      component: () => import('../views/TeachersView.vue'),
+      meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
+    },
+    {
+      path: '/teachers',
+      name: 'teachersView',
+      component: () => import('../views/TeachersView.vue'),
+      meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
+    },
+    {
+      path: '/teacherattendance',
+      name: 'teacherAttendence',
+      component: () => import('../views/TeacherAttendanceView.vue'),
+      meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
+    },
+    {
+      path: '/AttendanceHistry',
+      name: 'teacherAttendanceHistryView',
+      component: () => import('../views/AttendanceHistryView.vue'),
+      meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
+    },
+    {
+      path: '/AttendancOverview',
+      name: 'teacherAttendanceOverview',
+      component: () => import('../views/AttendanceOverviewView.vue'),
+      meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
     },
   ],
 })

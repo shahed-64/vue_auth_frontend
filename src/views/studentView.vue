@@ -69,7 +69,11 @@
             <tr v-for="(item, index) in paginatedStudents" :key="item.id">
               <td>{{ (currentPage - 1) * perPage + index + 1 }}</td>
               <td>
-                <img :src="getImageUrl(item.image)" class="staff-avatar" alt="Student Photo" />
+                <img
+                  :src="item ? getImageUrl(item) : defaultAvatar"
+                  class="staff-avatar"
+                  alt="Student Photo"
+                />
               </td>
               <td>
                 <div class="staff-name">
@@ -181,16 +185,29 @@
             <input
               v-model="form.course_name"
               class="form-control mb-3"
-              placeholder="Course Name *"
-            />
-            <input
-              v-model="form.batch_name"
-              class="form-control mb-3"
-              placeholder="Batch/Class Name *"
+              placeholder="Group/section *"
             />
 
-            <label class="form-label text-muted small">Admission Date *</label>
-            <input v-model="form.admission_date" type="date" class="form-control mb-3" />
+            <!-- SELECT DROPDOWN FOR BATCH/CLASS -->
+            <select v-model="form.batch_name" class="form-control mb-3">
+              <option value="" disabled selected>Select Batch/Class *</option>
+              <option value="Class-1">Class-1</option>
+              <option value="Class-2">Class-2</option>
+              <option value="Class-3">Class-3</option>
+              <option value="Class-4">Class-4</option>
+              <option value="Class-5">Class-5</option>
+              <option value="Class-6">Class-6</option>
+              <option value="Class-7">Class-7</option>
+              <option value="Class-8">Class-8</option>
+              <option value="Class-9">Class-9</option>
+              <option value="Class-10">Class-10</option>
+            </select>
+            <input
+              type="number"
+              v-model="form.monthly_fee"
+              class="form-control"
+              placeholder="Enter Monthly Fee"
+            />
           </div>
 
           <div class="modal-footer">
@@ -281,11 +298,19 @@
             />
 
             <label class="form-label">Batch/Class</label>
-            <input
-              v-model="selectedStudent.batch_name"
-              class="form-control mb-3"
-              placeholder="Batch Name"
-            />
+
+            <select v-model="selectedStudent.batch_name" class="form-control mb-3">
+              <option value="Class-1">Class-1</option>
+              <option value="Class-2">Class-2</option>
+              <option value="Class-3">Class-3</option>
+              <option value="Class-4">Class-4</option>
+              <option value="Class-5">Class-5</option>
+              <option value="Class-6">Class-6</option>
+              <option value="Class-7">Class-7</option>
+              <option value="Class-8">Class-8</option>
+              <option value="Class-9">Class-9</option>
+              <option value="Class-10">Class-10</option>
+            </select>
 
             <label class="form-label">Admission Date</label>
             <input v-model="selectedStudent.admission_date" type="date" class="form-control mb-3" />
@@ -313,7 +338,8 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import { isLoading } from '../utils/loading'
 // CONFIG & DEFAULTS
-const STORAGE_URL = 'http://localhost:8000/storage/'
+// GET IMAGE FULL URL
+import { getImageUrl } from '@/utils/img'
 const defaultAvatar = 'https://i.pravatar.cc/150'
 
 // STATES
@@ -345,6 +371,7 @@ const form = reactive({
   course_name: '',
   batch_name: '',
   admission_date: '',
+  monthly_fee: '',
 })
 
 // SELECTED STUDENT
@@ -359,13 +386,6 @@ const selectedStudent = ref({
   admission_date: '',
   image: null,
 })
-
-// GET IMAGE FULL URL
-const getImageUrl = (imagePath) => {
-  if (!imagePath) return defaultAvatar
-  if (imagePath.startsWith('http')) return imagePath
-  return `${STORAGE_URL}${imagePath}`
-}
 
 // FILE SELECTION & PREVIEW HANDLER
 const handleFileChange = (event, type) => {
@@ -394,7 +414,7 @@ const resetForm = () => {
   form.batch_name = ''
   form.admission_date = ''
   addImageFile.value = null
-
+  form.monthly_fee = ''
   if (addPreview.value) {
     URL.revokeObjectURL(addPreview.value)
     addPreview.value = null
@@ -426,9 +446,10 @@ const student_create = async () => {
     formData.append('mothers_name', form.mothers_name)
     formData.append('phone', form.phone)
     formData.append('email', form.email)
-    formData.append('batch_name', form.batch_name)
+    formData.append('batch_name', form.batch_name ? form.batch_name.trim() : '')
     formData.append('course_name', form.course_name)
     formData.append('admission_date', form.admission_date)
+    formData.append('monthly_fee', form.monthly_fee)
 
     if (addImageFile.value) {
       formData.append('image', addImageFile.value)
@@ -458,6 +479,12 @@ const openView = (student) => {
 // OPEN EDIT
 const openEdit = (student) => {
   selectedStudent.value = JSON.parse(JSON.stringify(student))
+
+  // Trim spaces to align with select options
+  if (selectedStudent.value.batch_name) {
+    selectedStudent.value.batch_name = selectedStudent.value.batch_name.trim()
+  }
+
   editImageFile.value = null
   if (editPreview.value) {
     URL.revokeObjectURL(editPreview.value)
@@ -476,7 +503,10 @@ const updateStudent = async () => {
     formData.append('phone', selectedStudent.value.phone || '')
     formData.append('email', selectedStudent.value.email || '')
     formData.append('course_name', selectedStudent.value.course_name || '')
-    formData.append('batch_name', selectedStudent.value.batch_name || '')
+    formData.append(
+      'batch_name',
+      selectedStudent.value.batch_name ? selectedStudent.value.batch_name.trim() : '',
+    )
     formData.append('admission_date', selectedStudent.value.admission_date || '')
 
     // Laravel Multipart FormData Method Override
@@ -533,12 +563,14 @@ const closeModal = (modalId) => {
 
 // COMPUTED PROPERTIES
 const uniqueClasses = computed(() => {
-  const classes = students.value.map((item) => item.batch_name).filter(Boolean)
+  const classes = students.value
+    .map((item) => (item.batch_name ? item.batch_name.trim() : ''))
+    .filter(Boolean)
   return [...new Set(classes)]
 })
 
 const filteredStudents = computed(() => {
-  const keyword = search.value.toLowerCase()
+  const keyword = search.value.toLowerCase().trim()
 
   return students.value.filter((student) => {
     const matchSearch =
@@ -546,7 +578,8 @@ const filteredStudents = computed(() => {
       student.email?.toLowerCase().includes(keyword) ||
       student.student_id?.toLowerCase().includes(keyword)
 
-    const matchClass = !selectedClass.value || student.batch_name === selectedClass.value
+    const studentBatch = student.batch_name ? student.batch_name.trim() : ''
+    const matchClass = !selectedClass.value || studentBatch === selectedClass.value.trim()
 
     return matchSearch && matchClass
   })
@@ -577,6 +610,7 @@ onMounted(() => {
   getStudent()
 })
 </script>
+
 <style scoped>
 /* Image Preview Style */
 .image-preview {

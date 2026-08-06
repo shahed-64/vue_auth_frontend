@@ -47,7 +47,11 @@
       <i class="fa-solid fa-users"></i>
       <span>Staff</span>
     </router-link>
-
+    <!-- Result -->
+    <router-link to="/shift" active-class="active-menu" @click="closeSidebar">
+      <i class="fa-solid fa-square-poll-vertical"></i>
+      <span>Shift</span>
+    </router-link>
     <!-- Account -->
     <router-link
       v-if="role === 'Manager'"
@@ -89,13 +93,85 @@
         </li>
       </ul>
     </div>
+    <div class="dropdown w-100 mb-2">
+      <button class="student-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+        <span>
+          <i class="fa-solid fa-user-graduate"></i>
+          Teachers
+        </span>
+      </button>
+
+      <ul class="dropdown-menu w-100">
+        <li>
+          <router-link
+            class="dropdown-item"
+            to="/teacherView"
+            active-class="active-menu"
+            @click="closeSidebar"
+          >
+            <i class="fa-solid fa-list"></i>
+            All Teachers
+          </router-link>
+        </li>
+
+        <li>
+          <router-link
+            class="dropdown-item"
+            to="/teacherattendance"
+            active-class="active-menu"
+            @click="closeSidebar"
+          >
+            <i class="fa-solid fa-list"></i>
+            Teachers Attendance
+          </router-link>
+        </li>
+        <li>
+          <router-link
+            class="dropdown-item"
+            to="/AttendancOverview"
+            active-class="active-menu"
+            @click="closeSidebar"
+          >
+            <i class="fa-solid fa-list"></i>
+            Attendance Summary
+          </router-link>
+        </li>
+        <li>
+          <router-link
+            class="dropdown-item"
+            to="/AttendanceHistry"
+            active-class="active-menu"
+            @click="closeSidebar"
+          >
+            <i class="fa-solid fa-list"></i>
+            Attendance History
+          </router-link>
+        </li>
+      </ul>
+    </div>
 
     <!-- Settings -->
     <router-link to="/settings" active-class="active-menu" @click="closeSidebar">
       <i class="fa-solid fa-gear"></i>
       <span>Settings</span>
     </router-link>
-    <button @click="backupDatabase" class="btn btn-primary">Backup Database</button>
+    <div class="px-3 mt-3">
+      <button @click="takeBackup" :disabled="loading" class="btn btn-primary w-100 mb-2">
+        <span v-if="loading">Backing up... Please wait</span>
+        <span v-else><i class="fa-solid fa-database me-2"></i> Take Database Backup</span>
+      </button>
+
+      <p v-if="message" class="mt-2 text-sm" :class="isError ? 'text-danger' : 'text-success'">
+        {{ message }}
+      </p>
+    </div>
+
+    <!-- Logout -->
+    <button @click="logout" class="btn btn-danger logout-btn">
+      <i class="fa-solid fa-right-from-bracket me-2"></i>
+      Logout
+    </button>
+
     <!-- Logout -->
     <button @click="logout" class="btn btn-danger logout-btn">
       <i class="fa-solid fa-right-from-bracket me-2"></i>
@@ -106,12 +182,46 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-
+import axios from 'axios'
+// রিঅ্যাক্টিভ ভেরিয়েবলগুলো ডিফাইন করা
+const loading = ref(false)
+const message = ref('')
+const isError = ref(false)
 const role = localStorage.getItem('role')
 const router = useRouter()
 
 const isSidebarOpen = ref(false)
 
+const takeBackup = async () => {
+  loading.value = true
+  message.value = 'Backup is running, please wait...'
+  isError.value = false
+
+  try {
+    const token = localStorage.getItem('token')
+
+    const response = await axios.post(
+      'http://127.0.0.1:8000/api/run-backup',
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+
+    message.value = response.data.message || 'Backup completed successfully!'
+    isError.value = false
+  } catch (error) {
+    isError.value = true
+    // 🌟 এই কনসোল লগটি বসিয়ে দিন:
+    console.log('Full Error:', error.response || error)
+
+    message.value = error.response?.data?.message || 'Something went wrong during backup!'
+  } finally {
+    loading.value = false
+  }
+}
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value
 }

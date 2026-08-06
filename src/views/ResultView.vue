@@ -89,7 +89,6 @@
         </div>
 
         <!-- Table -->
-        <!-- Table -->
         <div class="table-responsive">
           <table class="table align-middle table-hover mb-0">
             <thead class="table-light text-uppercase fs-7 text-muted">
@@ -120,8 +119,9 @@
                 </td>
                 <td class="text-center">
                   <a
-                    :href="`http://localhost:5174/resultShow?id=${result.id}`"
-                    class="btn btn-primary btn-sm px-4 py-1.5 fw-bold rounded-pill shadow-sm"
+                    :href="`/resultShow?id=${result.id}`"
+                    target="_blank"
+                    class="btn btn-primary btn-sm"
                   >
                     PDF
                   </a>
@@ -129,7 +129,7 @@
               </tr>
               <!-- যদি কোনো ডাটা না থাকে -->
               <tr v-if="filteredResults.length === 0">
-                <td colspan="9" class="text-center py-4 text-muted">কোনো রেজাল্ট পাওয়া যায়নি!</td>
+                <td colspan="9" class="text-center py-4 text-muted">কোনো রেজাল্ট পাওয়া যায়নি!</td>
               </tr>
             </tbody>
           </table>
@@ -161,6 +161,7 @@
     tabindex="-1"
     v-if="isAddModalOpen"
     style="background: rgba(0, 0, 0, 0.5)"
+    @click.self="closeDropdown"
   >
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content border-0 shadow-lg rounded-4 p-3">
@@ -173,20 +174,53 @@
           <form @submit.prevent="saveNewResult">
             <!-- Select Fields Row -->
             <div class="row">
-              <div class="col-md-4 mb-3">
-                <label class="form-label small fw-bold text-muted">Student ID</label>
-                <select
-                  class="form-select rounded-3"
-                  v-model="form.student_id"
-                  @change="studentChanged"
-                  required
+              <!-- 🎯 CUSTOM SEARCHABLE STUDENT SELECT INPUT -->
+              <div class="col-md-4 mb-3 position-relative">
+                <label class="form-label small fw-bold text-muted">Student ID / Name</label>
+                <div class="input-group">
+                  <input
+                    type="text"
+                    class="form-control rounded-3"
+                    v-model="studentSearchText"
+                    placeholder="Type ID or Name to search..."
+                    @focus="isDropdownOpen = true"
+                    @input="isDropdownOpen = true"
+                  />
+                  <button
+                    v-if="studentSearchText"
+                    type="button"
+                    class="btn btn-outline-secondary border-start-0"
+                    @click="clearStudentSelection"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <!-- Custom Dropdown List -->
+                <div
+                  v-if="isDropdownOpen"
+                  class="dropdown-menu show shadow-lg border rounded-3 bg-white position-absolute w-100 mt-1"
+                  style="max-height: 220px; overflow-y: auto; z-index: 1060"
                 >
-                  <option value="" disabled selected>Select Student</option>
-                  <option v-for="student in studentsList" :key="student.id" :value="student.id">
-                    {{ student.student_id }} - {{ student.full_name }}
-                  </option>
-                </select>
+                  <button
+                    type="button"
+                    v-for="student in searchableStudents"
+                    :key="student.id"
+                    class="dropdown-item py-2 px-3 border-bottom text-wrap text-start"
+                    @click="selectStudent(student)"
+                  >
+                    <span class="fw-bold text-primary">{{ student.student_id }}</span> -
+                    {{ student.full_name }}
+                  </button>
+                  <div
+                    v-if="searchableStudents.length === 0"
+                    class="p-3 text-muted text-center small"
+                  >
+                    No student found!
+                  </div>
+                </div>
               </div>
+
               <div class="col-md-4 mb-3">
                 <label class="form-label small fw-bold text-muted">Exam Year</label>
                 <select class="form-select rounded-3" v-model="form.exam_year" required>
@@ -196,6 +230,7 @@
                   <option value="2024">2024</option>
                 </select>
               </div>
+
               <div class="col-md-4 mb-3">
                 <label class="form-label small fw-bold text-muted">Exam Type</label>
                 <select class="form-select rounded-3" v-model="form.exam_type" required>
@@ -225,6 +260,7 @@
                 />
               </div>
             </div>
+
             <div class="modal-footer border-0 px-0 pb-0 pt-3">
               <button
                 type="button"
@@ -243,13 +279,12 @@
     </div>
   </div>
 </template>
+
 <script setup>
 import dashPageView from './dashPageView.vue'
 import { ref, reactive, onMounted, computed } from 'vue'
 
-// Axios এর বদলে আপনার Custom API Instance ইম্পোর্ট করা হলো
 import api from '@/services/api'
-
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import { isLoading } from '../utils/loading'
 
@@ -259,19 +294,26 @@ const isAddModalOpen = ref(false)
 const studentsList = ref([])
 const currentSubjects = ref([])
 
+// 🎯 Searchable Student States
+const studentSearchText = ref('')
+const isDropdownOpen = ref(false)
+
+// ১. ICT সহ সব সাবজেক্টের নাম ছোট হাতের অক্ষরে রাখা হয়েছে
 const classSubjects = {
   'Class-1': ['bangla', 'english', 'general_math'],
   'Class-2': ['bangla', 'english', 'general_math'],
   'Class-3': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science'],
   'Class-4': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science'],
   'Class-5': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science'],
-  'Class-6': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science', 'ICT'],
-  'Class-7': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science', 'ICT'],
-  'Class-8': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science', 'ICT'],
+  'Class-6': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science', 'ict'],
+  'Class-7': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science', 'ict'],
+  'Class-8': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science', 'ict'],
+  'Class-9': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science', 'ict'],
+  'Class-10': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science', 'ict'],
 }
 
 const groupSubjects = {
-  Science: [
+  science: [
     'bangla',
     'english',
     'higher_math',
@@ -282,23 +324,62 @@ const groupSubjects = {
     'biology',
     'ict',
   ],
-  Arts: ['bangla', 'english', 'history', 'geography', 'ict'],
-  Commerce: ['bangla', 'english', 'accounting', 'finance', 'ict'],
+  arts: ['bangla', 'english', 'history', 'geography', 'ict'],
+  commerce: ['bangla', 'english', 'accounting', 'finance', 'ict'],
 }
 
+// 🎯 Search Filter Logic (১০০০+ স্টুডেন্টের জন্য পারফরম্যান্স অপটিমাইজড)
+const searchableStudents = computed(() => {
+  if (!studentSearchText.value.trim()) {
+    return studentsList.value.slice(0, 50)
+  }
+  const text = studentSearchText.value.toLowerCase().trim()
+  return studentsList.value.filter((student) => {
+    const id = student.student_id ? student.student_id.toString().toLowerCase() : ''
+    const name = student.full_name ? student.full_name.toLowerCase() : ''
+    return id.includes(text) || name.includes(text)
+  })
+})
+
+// 🎯 Student Selection Handler
+const selectStudent = (student) => {
+  form.student_id = student.id
+  studentSearchText.value = `${student.student_id} - ${student.full_name}`
+  isDropdownOpen.value = false
+  studentChanged()
+}
+
+// Clear Selection
+const clearStudentSelection = () => {
+  studentSearchText.value = ''
+  form.student_id = ''
+  currentSubjects.value = []
+  isDropdownOpen.value = true
+}
+
+const closeDropdown = () => {
+  isDropdownOpen.value = false
+}
+
+// ২. studentChanged ফাংশন আপডেট
 const studentChanged = () => {
   const student = studentsList.value.find((item) => item.id == form.student_id)
   if (!student) return
 
-  if (
-    student.batch_name == 'Class-9' ||
-    student.batch_name == 'Class-10' ||
-    student.batch_name == 'Class-11' ||
-    student.batch_name == 'Class-12'
-  ) {
-    currentSubjects.value = groupSubjects[student.course_name] || []
+  // batch_name ও course_name কে Trim ও Lowercase করে চেক করা
+  const batch = student.batch_name ? student.batch_name.trim() : ''
+  const course = student.course_name ? student.course_name.trim().toLowerCase() : ''
+
+  const isHighSchool = ['Class-9', 'Class-10', 'Class-11', 'Class-12'].includes(batch)
+
+  if (isHighSchool && groupSubjects[course]) {
+    // যদি Group (Science, Arts, Commerce) পাওয়া যায়
+    currentSubjects.value = groupSubjects[course]
+  } else if (classSubjects[batch]) {
+    // সাধারণ Class অনুযায়ী সাবজেক্ট নির্ধারণ
+    currentSubjects.value = classSubjects[batch]
   } else {
-    currentSubjects.value = classSubjects[student.batch_name] || []
+    currentSubjects.value = []
   }
 }
 
@@ -375,7 +456,6 @@ const calculateResultDetails = (result) => {
     return 0.0
   }
 
-  // মূল বিষয়সমূহের GPA পয়েন্ট যোগ করা
   allMainSubjects.forEach((subject) => {
     if (result[subject] !== null && result[subject] !== undefined && result[subject] !== '') {
       const point = getPoint(result[subject])
@@ -387,7 +467,6 @@ const calculateResultDetails = (result) => {
     }
   })
 
-  // Optional Subject (Higher Math) হ্যান্ডেল করা
   let bonusPoint = 0
   if (
     result.higher_math !== null &&
@@ -415,7 +494,6 @@ const calculateResultDetails = (result) => {
 const totalStudents = computed(() => resultsList.value.length)
 const publishedResults = computed(() => resultsList.value.length)
 
-// পাস রেট হিসাব
 const passRate = computed(() => {
   if (!resultsList.value.length) return '0.0'
 
@@ -427,7 +505,6 @@ const passRate = computed(() => {
   return ((passedCount / resultsList.value.length) * 100).toFixed(1)
 })
 
-// GPA 5.00 হিসাব
 const totalGpaFive = computed(() => {
   return resultsList.value.filter((item) => {
     const res = calculateResultDetails(item)
@@ -458,22 +535,30 @@ const openAddModal = () => {
   Object.keys(form).forEach((key) => {
     form[key] = ''
   })
+  studentSearchText.value = ''
+  currentSubjects.value = []
   isAddModalOpen.value = true
 }
 
 const closeAddModal = () => {
   isAddModalOpen.value = false
+  isDropdownOpen.value = false
 }
 
 // 🔹 API Call (POST New Result)
 const saveNewResult = async () => {
+  if (!form.student_id) {
+    alert('Please select a student from the search list!')
+    return
+  }
+
   try {
     const response = await api.post('/results', form)
 
     if (response.data.success) {
       alert(response.data.message)
       closeAddModal()
-      fetchData() // নতুন ডাটা সেভ হওয়ার সাথে সাথে তালিকা রিফ্রেশ করার জন্য
+      fetchData()
     }
   } catch (error) {
     if (error.response && error.response.status === 422) {
@@ -485,6 +570,7 @@ const saveNewResult = async () => {
   }
 }
 </script>
+
 <style scoped>
 .result-page-wrapper {
   background-color: #f8f9fa;

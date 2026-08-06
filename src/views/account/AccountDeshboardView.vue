@@ -102,7 +102,7 @@
       <div class="row g-4 mt-4">
         <!-- Chart -->
         <div class="col-lg-8">
-          <div class="dashboard-box chart-box">
+          <div class="dashboard-box chart-box" style="height: 588px">
             <div class="box-header">
               <div>
                 <h5>
@@ -113,7 +113,7 @@
               </div>
               <button class="btn btn-light btn-sm">This Year</button>
             </div>
-            <div class="chart-area">
+            <div class="chart-area" style="height: 453px">
               <MonthlyPaymentChart :payments="monthlyPayments" />
             </div>
           </div>
@@ -151,6 +151,13 @@
             <div class="quick-item">
               <i class="bi bi-person-x text-warning"></i>
               <div>
+                <h4>{{ totalStudents }}</h4>
+                <small>Total Students</small>
+              </div>
+            </div>
+            <div class="quick-item">
+              <i class="bi bi-person-x text-warning"></i>
+              <div>
                 <h4>{{ runningMonthUnpaidStudents }}</h4>
                 <small>Unpaid Students</small>
               </div>
@@ -161,13 +168,13 @@
 
       <!-- ================= STUDENT STATISTICS ================= -->
       <div class="row g-4 mt-4">
-        <div class="col-md-3">
-          <div class="dashboard-box small-stat">
-            <i class="bi bi-mortarboard text-primary"></i>
-            <h3>{{ totalStudents }}</h3>
-            <p>Total Students</p>
-          </div>
-        </div>
+        <!--   <div class="col-md-3">
+            <div class="dashboard-box small-stat">
+              <i class="bi bi-mortarboard text-primary"></i>
+              <h3>{{ totalStudents }}</h3>
+              <p>Total Students</p>
+            </div>
+          </div> -->
 
         <div class="col-md-3">
           <div class="dashboard-box small-stat">
@@ -184,7 +191,13 @@
             <p>Today's Collection</p>
           </div>
         </div>
-
+        <div class="col-md-3">
+          <div class="dashboard-box small-stat">
+            <i class="bi bi-mortarboard text-primary"></i>
+            <h3>{{ todayExpense }}</h3>
+            <p>Today's Expense</p>
+          </div>
+        </div>
         <div class="col-md-3">
           <div class="dashboard-box small-stat">
             <i class="bi bi-receipt text-warning"></i>
@@ -268,7 +281,8 @@ const totalExpense = ref(0)
 const totalOtherPayment = ref(0)
 const runningMonthUnpaidStudents = ref(0)
 const rawOtherPayments = ref([])
-
+const thisMonthCollection = ref(0)
+const todayExpense = ref(0)
 const currentUser = ref({
   name: '',
   role: '',
@@ -313,36 +327,6 @@ const currentCash = computed(() => {
 })
 
 // This Month Collection
-const thisMonthCollection = computed(() => {
-  const currentDate = new Date()
-  const currentYear = currentDate.getFullYear()
-  const currentMonth = currentDate.getMonth()
-
-  const mainPaymentsThisMonth = payments.value.reduce((total, payment) => {
-    if (!payment.payment_date) return total
-    const pDate = new Date(payment.payment_date)
-
-    if (pDate.getFullYear() === currentYear && pDate.getMonth() === currentMonth) {
-      return (
-        total +
-        Number(payment.paid_amount || 0) +
-        Number(payment.admission_fee || 0) +
-        Number(payment.exam_fee || 0)
-      )
-    }
-    return total
-  }, 0)
-
-  const otherPaymentsThisMonth = rawOtherPayments.value.reduce((total, payment) => {
-    const pDate = new Date(payment.created_at || payment.date)
-    if (pDate.getFullYear() === currentYear && pDate.getMonth() === currentMonth) {
-      return total + Number(payment.total_amount || 0)
-    }
-    return total
-  }, 0)
-
-  return mainPaymentsThisMonth + otherPaymentsThisMonth
-})
 
 // Today's Collection
 const todayCollection = computed(() => {
@@ -376,10 +360,16 @@ const todayCollection = computed(() => {
 const getDashboardData = async () => {
   try {
     const response = await api.get('/payments')
+    console.log('FULL RESPONSE:', response.data)
+    console.log('PAYMENTS:', response.data.payments)
     const data = response.data
 
     // Dashboard Statistics & Data
-    totalPaidAmount.value = data.total_paid_amount || 0
+    totalPaidAmount.value =
+      Number(data.total_paid_amount || 0) +
+      (data.payments || []).reduce((sum, p) => {
+        return sum + Number(p.admission_fee || 0) + Number(p.exam_fee || 0)
+      }, 0)
     totalDueAmount.value = data.total_due_amount || 0
     totalStudents.value = data.total_students || 0
     dueStudents.value = data.due_students || 0
@@ -388,6 +378,20 @@ const getDashboardData = async () => {
     thisMonthDue.value = data.this_month_due || 0
     runningMonthUnpaidStudents.value = data.running_month_unpaid_students || 0
     payments.value = data.payments || []
+    thisMonthCollection.value =
+      Number(data.this_month_collection || 0) +
+      payments.value.reduce((total, payment) => {
+        if (!payment.payment_date) return total
+
+        const date = new Date(payment.payment_date)
+        const now = new Date()
+
+        if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) {
+          return total + Number(payment.admission_fee || 0) + Number(payment.exam_fee || 0)
+        }
+
+        return total
+      }, 0)
 
     // Logged-in User Info Handling
     const loggedUser = data.user || data.manager || data.logged_in_user || data.accountant
@@ -402,6 +406,33 @@ const getDashboardData = async () => {
     }
   } catch (error) {
     console.error('Dashboard Data Fetch Error:', error.response?.data || error.message)
+  }
+}
+
+// today's expense
+const getTotalExpense = async () => {
+  try {
+    const response = await api.get('/expenses')
+
+    const expenses = response.data.expenses || []
+
+    // Total Expense
+    totalExpense.value = expenses.reduce((total, expense) => {
+      return total + Number(expense.paid_amount || 0)
+    }, 0)
+
+    // Today's Expense
+    const today = new Date().toISOString().slice(0, 10)
+
+    todayExpense.value = expenses.reduce((total, expense) => {
+      if (expense.payment_date?.slice(0, 10) === today) {
+        return total + Number(expense.paid_amount || 0)
+      }
+
+      return total
+    }, 0)
+  } catch (error) {
+    console.error('Expense Error:', error)
   }
 }
 
@@ -446,16 +477,6 @@ const getDashboardimages = async () => {
 }
 
 // Total Expense
-const getTotalExpense = async () => {
-  try {
-    const response = await api.get('/expenses')
-    totalExpense.value = (response.data.expenses || []).reduce((total, expense) => {
-      return total + Number(expense.salary_amount || 0)
-    }, 0)
-  } catch (error) {
-    console.error('Expense Error:', error)
-  }
-}
 
 // Other Payments
 const getTotalOtherPayment = async () => {
@@ -477,6 +498,7 @@ onMounted(() => {
   getTotalOtherPayment()
 })
 </script>
+
 <style scoped>
 .dashboard-content {
   margin-left: 250px;

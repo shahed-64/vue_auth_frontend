@@ -9,17 +9,18 @@
     <div class="main-wrapper flex-grow-1 min-vh-100 d-flex flex-column">
       <RouterView />
 
-      <!-- Teacher Attendance History Section -->
+      <!-- Staff Attendance History Section -->
       <main class="attendance-section py-3 py-md-4 px-2 px-md-3">
         <div class="attendance-container bg-white rounded-3 shadow-sm p-3 p-md-4">
           <!-- =====================================================
                TITLE & MONTH SELECTOR
           ====================================================== -->
+
           <div
             class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4"
           >
             <div>
-              <h2 class="h4 h3-md mb-0 fw-bold text-dark">Teacher Attendance History</h2>
+              <h2 class="h4 h3-md mb-0 fw-bold text-dark">Staff Attendance History</h2>
 
               <p class="text-muted mb-0 small">
                 View monthly attendance history, check-in, check-out and late records
@@ -49,6 +50,7 @@
           <!-- =====================================================
                HOLIDAY NOTICE
           ====================================================== -->
+
           <div
             v-if="currentMonthHolidays.length > 0"
             class="alert alert-warning border-0 shadow-sm rounded-3 d-flex align-items-start mb-4 p-3"
@@ -84,6 +86,7 @@
           <!-- =====================================================
                SEARCH & SUMMARY
           ====================================================== -->
+
           <div
             class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3"
           >
@@ -98,7 +101,7 @@
                   type="text"
                   v-model="searchQuery"
                   class="form-control border-start-0 ps-0 shadow-none"
-                  placeholder="Search Teacher ID or Name..."
+                  placeholder="Search Staff ID or Name..."
                 />
               </div>
             </div>
@@ -118,6 +121,7 @@
           <!-- =====================================================
                HISTORY TABLE
           ====================================================== -->
+
           <div class="card border-0 shadow-sm">
             <div class="card-body p-0">
               <div class="table-responsive">
@@ -126,9 +130,9 @@
                     <tr class="fw-semibold text-secondary small">
                       <th scope="col" class="ps-3 ps-md-4">DATE</th>
 
-                      <th scope="col">TEACHER ID</th>
+                      <th scope="col">STAFF ID</th>
 
-                      <th scope="col">TEACHER NAME</th>
+                      <th scope="col">STAFF NAME</th>
 
                       <th scope="col">SHIFT</th>
 
@@ -174,14 +178,14 @@
                         </span>
                       </td>
 
-                      <!-- TEACHER ID -->
+                      <!-- STAFF ID -->
                       <td>
                         <div class="fw-semibold text-dark text-uppercase small">
                           {{ item.code }}
                         </div>
                       </td>
 
-                      <!-- TEACHER NAME -->
+                      <!-- STAFF NAME -->
                       <td>
                         <div class="fw-bold text-dark text-uppercase small text-nowrap">
                           {{ item.name }}
@@ -303,7 +307,9 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+
 import dashPageView from './dashPageView.vue'
+
 import api from '@/services/api'
 
 /* =========================================================
@@ -342,6 +348,16 @@ const formatDateOnly = (dateValue) => {
   if (!dateValue) {
     return 'N/A'
   }
+
+  /*
+   * Converts:
+   *
+   * 2026-08-27T00:00:00.000000Z
+   *
+   * to:
+   *
+   * 2026-08-27
+   */
 
   return String(dateValue).split('T')[0]
 }
@@ -498,6 +514,10 @@ const currentMonthHolidays = computed(() => {
 
     const endDate = formatDateOnly(holiday.end_date)
 
+    /*
+     * Detect date-range overlap.
+     */
+
     return startDate <= monthEnd && endDate >= monthStart
   })
 })
@@ -521,6 +541,11 @@ const getHolidayDatesForSelectedMonth = () => {
     let startDate = formatDateOnly(holiday.start_date)
 
     let endDate = formatDateOnly(holiday.end_date)
+
+    /*
+     * Keep only dates
+     * inside selected month.
+     */
 
     if (startDate < monthStart) {
       startDate = monthStart
@@ -552,7 +577,9 @@ const getHolidayDatesForSelectedMonth = () => {
     }
   })
 
-  /* Remove duplicate holiday dates */
+  /*
+   * Remove duplicate holiday dates.
+   */
 
   const uniqueDates = []
 
@@ -570,7 +597,7 @@ const getHolidayDatesForSelectedMonth = () => {
 }
 
 /* =========================================================
-   FETCH TEACHER ATTENDANCE HISTORY
+   FETCH STAFF ATTENDANCE HISTORY
 ========================================================= */
 
 const fetchHistoryData = async () => {
@@ -578,30 +605,30 @@ const fetchHistoryData = async () => {
 
   try {
     /* =====================================================
-       FETCH TEACHERS
+       FETCH STAFF
     ====================================================== */
 
-    let teacherList = []
+    let staffList = []
 
     try {
-      const teacherResponse = await api.get('/teachers')
+      const staffResponse = await api.get('/staff')
 
-      const rawTeachers = teacherResponse.data
+      const rawStaff = staffResponse.data
 
-      if (Array.isArray(rawTeachers)) {
-        teacherList = rawTeachers
-      } else if (rawTeachers && Array.isArray(rawTeachers.data)) {
-        teacherList = rawTeachers.data
+      if (Array.isArray(rawStaff)) {
+        staffList = rawStaff
+      } else if (rawStaff && Array.isArray(rawStaff.data)) {
+        staffList = rawStaff.data
       }
-    } catch (teacherError) {
-      console.warn('Could not fetch teacher list:', teacherError)
+    } catch (staffError) {
+      console.warn('Could not fetch staff list:', staffError)
     }
 
     /* =====================================================
        FETCH ATTENDANCE
     ====================================================== */
 
-    const response = await api.get('/teacher-attendances', {
+    const response = await api.get('/staff-attendances', {
       params: {
         month: selectedMonth.value,
       },
@@ -620,14 +647,14 @@ const fetchHistoryData = async () => {
     ====================================================== */
 
     const attendanceRows = rawData.map((att, index) => {
-      const teacher = att.teacher || att.employee || {}
+      const staff = att.staff || att.employee || {}
 
       const rawInTime = att.in_time || null
 
       const rawOutTime = att.out_time || null
 
       const shiftStart =
-        att.shift?.start_time || att.shift_start_time || teacher.shift?.start_time || '09:00:00'
+        att.shift?.start_time || att.shift_start_time || staff.shift?.start_time || '09:00:00'
 
       const lateMins = calculateLateMinutes(rawInTime, shiftStart)
 
@@ -643,8 +670,8 @@ const fetchHistoryData = async () => {
         shiftNamesArr = [att.shift_name]
       } else if (att.shift && att.shift.name) {
         shiftNamesArr = [att.shift.name]
-      } else if (Array.isArray(teacher.shifts)) {
-        shiftNamesArr = teacher.shifts
+      } else if (Array.isArray(staff.shifts)) {
+        shiftNamesArr = staff.shifts
           .map((shift) => (typeof shift === 'object' ? shift.name : shift))
           .filter(Boolean)
       }
@@ -656,8 +683,8 @@ const fetchHistoryData = async () => {
       let computedStatus = att.status || 'Absent'
 
       /*
-             Preserve Leave and Holiday
-          */
+       * Preserve Leave and Holiday.
+       */
 
       if (computedStatus !== 'Leave' && computedStatus !== 'Holiday') {
         if (rawInTime && lateMins > 0) {
@@ -673,26 +700,26 @@ const fetchHistoryData = async () => {
 
       const rawDate = att.date || att.attendance_date || null
 
-      const formattedDate = formatDateOnly(rawDate)
+      /*
+       * IMPORTANT:
+       *
+       * Converts:
+       * 2026-08-27T00:00:00.000000Z
+       *
+       * to:
+       * 2026-08-27
+       */
 
-      /* =================================================
-             RETURN ROW
-          ================================================= */
+      const formattedDate = formatDateOnly(rawDate)
 
       return {
         uniqueKey: `attendance-${att.id || index}`,
 
         date: formattedDate,
 
-        name: teacher.name || teacher.full_name || att.teacher_name || 'Unknown',
+        name: staff.name || staff.full_name || att.staff_name || 'Unknown',
 
-        code:
-          teacher.teacher_code ||
-          teacher.teacher_id ||
-          teacher.code ||
-          teacher.id ||
-          att.teacher_id ||
-          'N/A',
+        code: staff.staff_code || staff.employee_code || staff.id || att.staff_id || 'N/A',
 
         shiftNames: shiftNamesArr,
 
@@ -708,7 +735,7 @@ const fetchHistoryData = async () => {
 
         note: att.note || '-',
 
-        teacherId: att.teacher_id || teacher.id || null,
+        staffId: att.staff_id || staff.id || null,
 
         isHoliday: computedStatus === 'Holiday',
       }
@@ -720,71 +747,71 @@ const fetchHistoryData = async () => {
 
     const holidayDates = getHolidayDatesForSelectedMonth()
 
-    let teachersForHoliday = teacherList
+    let staffForHoliday = staffList
 
     /*
-      If /teachers didn't return data,
-      use teachers from attendance.
-    */
+     * If /staff didn't return data,
+     * use staff from attendance.
+     */
 
-    if (teachersForHoliday.length === 0) {
-      const teacherMap = new Map()
+    if (staffForHoliday.length === 0) {
+      const staffMap = new Map()
 
       rawData.forEach((att) => {
-        const teacher = att.teacher || att.employee || {}
+        const staff = att.staff || att.employee || {}
 
-        const teacherId = att.teacher_id || teacher.id
+        const staffId = att.staff_id || staff.id
 
-        if (teacherId && !teacherMap.has(String(teacherId))) {
-          teacherMap.set(String(teacherId), {
-            ...teacher,
-            id: teacherId,
+        if (staffId && !staffMap.has(String(staffId))) {
+          staffMap.set(String(staffId), {
+            ...staff,
+            id: staffId,
           })
         }
       })
 
-      teachersForHoliday = Array.from(teacherMap.values())
+      staffForHoliday = Array.from(staffMap.values())
     }
 
     const holidayRows = []
 
     holidayDates.forEach((holiday) => {
-      teachersForHoliday.forEach((teacher) => {
-        const teacherId = teacher.id || teacher.teacher_id
+      staffForHoliday.forEach((staff) => {
+        const staffId = staff.id || staff.staff_id
 
         /*
-              Check if attendance already exists
-              for this teacher on this date.
-            */
+         * Check if attendance already exists
+         * for this staff on this date.
+         */
 
         const existingAttendance = attendanceRows.find(
-          (row) => row.date === holiday.date && String(row.teacherId) === String(teacherId),
+          (row) => row.date === holiday.date && String(row.staffId) === String(staffId),
         )
 
         /*
-              If attendance exists,
-              don't create duplicate Holiday row.
-            */
+         * If attendance exists,
+         * don't create duplicate Holiday row.
+         */
 
         if (existingAttendance) {
           return
         }
 
         /* =================================================
-               TEACHER SHIFT
+               STAFF SHIFT
             ================================================== */
 
         let shiftNamesArr = []
 
-        if (Array.isArray(teacher.shifts) && teacher.shifts.length > 0) {
-          shiftNamesArr = teacher.shifts
+        if (Array.isArray(staff.shifts) && staff.shifts.length > 0) {
+          shiftNamesArr = staff.shifts
             .map((shift) => (typeof shift === 'object' ? shift.name : shift))
             .filter(Boolean)
-        } else if (teacher.shift) {
-          if (typeof teacher.shift === 'object' && teacher.shift.name) {
-            shiftNamesArr = [teacher.shift.name]
-          } else if (typeof teacher.shift === 'string') {
-            shiftNamesArr = [teacher.shift]
+        } else if (staff.shift) {
+          if (typeof staff.shift === 'object' && staff.shift.name) {
+            shiftNamesArr = [staff.shift.name]
+          } else if (typeof staff.shift === 'string') {
+            shiftNamesArr = [staff.shift]
           }
         }
 
@@ -793,13 +820,13 @@ const fetchHistoryData = async () => {
             ================================================== */
 
         holidayRows.push({
-          uniqueKey: `holiday-${holiday.date}-${teacherId}`,
+          uniqueKey: `holiday-${holiday.date}-${staffId}`,
 
           date: holiday.date,
 
-          name: teacher.name || teacher.full_name || 'Unknown',
+          name: staff.name || staff.full_name || 'Unknown',
 
-          code: teacher.teacher_code || teacher.teacher_id || teacher.id || 'N/A',
+          code: staff.staff_code || staff.employee_code || staff.id || 'N/A',
 
           shiftNames: shiftNamesArr,
 
@@ -815,7 +842,7 @@ const fetchHistoryData = async () => {
 
           note: holiday.title || 'Holiday',
 
-          teacherId: teacherId,
+          staffId: staffId,
 
           isHoliday: true,
         })
@@ -842,7 +869,7 @@ const fetchHistoryData = async () => {
 
     historyList.value = mergedRows
   } catch (error) {
-    console.error('Error fetching teacher attendance history:', error)
+    console.error('Error fetching staff attendance history:', error)
 
     historyList.value = []
   } finally {

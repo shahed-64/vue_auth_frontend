@@ -308,14 +308,29 @@
                 </div>
               </div>
 
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">Paid Amount (৳)</label>
+                  <input
+                    v-model.number="editForm.paid_amount"
+                    type="number"
+                    class="form-control"
+                    required
+                  />
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">Admission Fee (৳)</label>
+                  <input
+                    v-model.number="editForm.admission_fee"
+                    type="number"
+                    class="form-control"
+                  />
+                </div>
+              </div>
+
               <div class="mb-3">
-                <label class="form-label fw-semibold">Paid Amount (৳)</label>
-                <input
-                  v-model.number="editForm.paid_amount"
-                  type="number"
-                  class="form-control"
-                  required
-                />
+                <label class="form-label fw-semibold">Exam Fee (৳)</label>
+                <input v-model.number="editForm.exam_fee" type="number" class="form-control" />
               </div>
             </div>
 
@@ -370,6 +385,8 @@ const editForm = ref({
   student_name: '',
   month: '',
   paid_amount: 0,
+  admission_fee: 0,
+  exam_fee: 0,
   payment_method: 'Cash',
 })
 
@@ -476,6 +493,8 @@ const openEditModal = (payment) => {
     student_name: payment.student?.full_name || 'N/A',
     month: payment.month,
     paid_amount: payment.paid_amount,
+    admission_fee: payment.admission_fee || 0,
+    exam_fee: payment.exam_fee || 0,
     payment_method: payment.payment_method || 'Cash',
   }
   showEditModal.value = true
@@ -490,6 +509,8 @@ const updatePayment = async () => {
   try {
     const res = await api.put(`/payments/${editForm.value.id}`, {
       paid_amount: editForm.value.paid_amount,
+      admission_fee: editForm.value.admission_fee,
+      exam_fee: editForm.value.exam_fee,
       payment_method: editForm.value.payment_method,
       month: editForm.value.month,
     })

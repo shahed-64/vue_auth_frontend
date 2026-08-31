@@ -27,7 +27,7 @@
   justify-content: center;
   align-items: center;
   z-index: 99999;
-  background: #04060a;
+  background: rgba(0, 0, 0, 0.658);
   pointer-events: auto; /* prevents clicking behind while loading */
 }
 

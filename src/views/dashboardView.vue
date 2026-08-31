@@ -112,18 +112,10 @@
               </p>
 
               <div class="row mt-4">
-                <div class="col">
-                  <h5>{{ currentUser.tweets || 750 }}</h5>
-                  <small>Tweets</small>
-                </div>
-                <div class="col">
-                  <h5>{{ currentUser.following || 865 }}</h5>
-                  <small>Following</small>
-                </div>
-                <div class="col">
-                  <h5>{{ currentUser.followers || 3645 }}</h5>
-                  <small>Followers</small>
-                </div>
+                <q>
+                  "Empowering institutions through seamless administration and digital
+                  transformation."
+                </q>
               </div>
             </div>
           </div>

@@ -227,7 +227,15 @@
                   <option value="Staff">Staff</option>
                 </select>
               </div>
-
+              <div class="col-md-6 mb-3">
+                <label class="form-label font-semibold">Assign Shift</label>
+                <select v-model="form.shift_id" class="form-select" required>
+                  <option value="" disabled>Select Shift</option>
+                  <option v-for="shift in shifts" :key="shift.id" :value="shift.id">
+                    {{ shift.name }} ({{ shift.start_time }} - {{ shift.end_time }})
+                  </option>
+                </select>
+              </div>
               <div class="col-md-6 mb-3">
                 <label class="form-label font-semibold">Profile Photo</label>
                 <input
@@ -320,6 +328,16 @@
             class="form-control mb-3"
             placeholder="Salary"
           />
+          <!-- Edit Shift -->
+          <div class="mb-2">
+            <label class="form-label font-semibold text-muted small mb-1">Assign Shift</label>
+            <select v-model="selectedStaff.shift_id" class="form-select mb-2">
+              <option value="" disabled>Select Shift</option>
+              <option v-for="shift in shifts" :key="shift.id" :value="shift.id">
+                {{ shift.name }} ({{ shift.start_time }} - {{ shift.end_time }})
+              </option>
+            </select>
+          </div>
           <div class="mb-2">
             <label class="form-label font-semibold text-muted small mb-1"
               >Change Profile Photo</label
@@ -410,6 +428,7 @@ const search = ref('')
 const loading = ref(false)
 const submitting = ref(false)
 const currentPage = ref(1)
+const shifts = ref([])
 const perPage = 10
 
 const currentRole = localStorage.getItem('role')
@@ -427,6 +446,17 @@ const getImageUrl = (imagePath) => {
     return `${baseURL}/storage/${imagePath}`
   }
   return 'https://i.pravatar.cc/100?img=1'
+}
+// Get Shift
+// Get Shift
+const getShifts = async () => {
+  try {
+    const res = await api.get('/shifts')
+    // ব্যাকএন্ডে যেহেতু 'data' কী এর মধ্যে শিফট পাঠানো হচ্ছে, তাই এখানে res.data.data দিতে হবে
+    shifts.value = res.data.data || res.data.shifts || res.data || []
+  } catch (error) {
+    console.error('Error fetching shifts:', error.response?.data)
+  }
 }
 
 // =======================
@@ -447,6 +477,7 @@ const form = reactive({
   email: '',
   salary: '',
   image: null,
+  shift_id: '',
   password: '',
   password_confirmation: '',
 })
@@ -469,6 +500,7 @@ const openAddModal = () => {
   form.role = ''
   form.email = ''
   form.salary = ''
+  form.shift_id = ''
   form.image = null
   form.password = ''
   form.password_confirmation = ''
@@ -490,6 +522,7 @@ const addStaff = async () => {
     formData.append('role', form.role)
     formData.append('email', form.email)
     formData.append('salary', form.salary)
+    formData.append('shift_id', form.shift_id) //  শুধু এটি থাকবে
     formData.append('password', form.password)
     formData.append('password_confirmation', form.password_confirmation)
     if (form.image) {
@@ -520,7 +553,6 @@ const addStaff = async () => {
     submitting.value = false
   }
 }
-
 // =======================
 // VIEW DATA
 // =======================
@@ -644,6 +676,7 @@ const updateStaff = async () => {
     formData.append('role', selectedStaff.value.role)
     formData.append('email', selectedStaff.value.email)
     formData.append('salary', selectedStaff.value.salary)
+    formData.append('shift_id', selectedStaff.value.shift_id) // 🎯 এটি এখানে যুক্ত করুন
 
     if (selectedStaff.value.password) {
       formData.append('password', selectedStaff.value.password)
@@ -670,7 +703,6 @@ const updateStaff = async () => {
     submitting.value = false
   }
 }
-
 // =======================
 // DELETE STAFF
 // =======================
@@ -692,6 +724,7 @@ const deleteStaff = async (id) => {
 // =======================
 onMounted(() => {
   getStaff()
+  getShifts()
 })
 </script>
 

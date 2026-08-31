@@ -2,7 +2,7 @@ import axios from 'axios'
 import { startLoading, stopLoading } from '../utils/loading'
 
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api',
+  baseURL: `${window.location.origin}/api`,
   headers: {
     Accept: 'application/json',
     'Content-Type': 'application/json',

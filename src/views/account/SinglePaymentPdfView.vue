@@ -91,6 +91,10 @@
         <button class="btn btn-primary" @click="printPage">Print / Save PDF</button>
 
         <button class="btn btn-success ms-2" @click="sendWhatsApp">Send WhatsApp</button>
+
+        <router-link to="/payment/history" class="btn btn-info ms-2">
+          <span>Back</span>
+        </router-link>
       </div>
     </div>
   </div>

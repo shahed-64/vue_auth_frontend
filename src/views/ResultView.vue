@@ -1,36 +1,49 @@
 <template>
   <LoadingSpinner v-if="isLoading" />
+
   <RouterView />
+
   <dashPageView />
+
   <div class="result-page-wrapper py-4">
     <div class="container-fluid px-4">
-      <!-- Top Summary Cards -->
+      <!-- =====================================================
+           SUMMARY CARDS
+      ====================================================== -->
       <div class="row g-4 mb-4">
-        <!-- Card 1 -->
+        <!-- Exam Participants -->
         <div class="col-md-3 col-sm-6">
           <div class="card border-0 shadow-sm rounded-4 p-3 border-start border-success border-4">
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <p class="text-muted mb-1 small fw-bold">Exam Participants</p>
-                <h4 class="fw-bold text-dark mb-0">{{ totalStudents }}</h4>
+                <h4 class="fw-bold text-dark mb-0">
+                  {{ totalStudents }}
+                </h4>
               </div>
+
               <div class="icon-box bg-success-subtle text-success rounded-3 p-3">🎓</div>
             </div>
           </div>
         </div>
-        <!-- Card 2 -->
+
+        <!-- Published Results -->
         <div class="col-md-3 col-sm-6">
           <div class="card border-0 shadow-sm rounded-4 p-3 border-start border-primary border-4">
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <p class="text-muted mb-1 small fw-bold">Published Results</p>
-                <h4 class="fw-bold text-dark mb-0">{{ publishedResults }}</h4>
+                <h4 class="fw-bold text-dark mb-0">
+                  {{ publishedResults }}
+                </h4>
               </div>
+
               <div class="icon-box bg-primary-subtle text-primary rounded-3 p-3">📄</div>
             </div>
           </div>
         </div>
-        <!-- Card 3 -->
+
+        <!-- Pass Rate -->
         <div class="col-md-3 col-sm-6">
           <div class="card border-0 shadow-sm rounded-4 p-3 border-start border-warning border-4">
             <div class="d-flex justify-content-between align-items-center">
@@ -38,33 +51,41 @@
                 <p class="text-muted mb-1 small fw-bold">Pass Rate</p>
                 <h4 class="fw-bold text-dark mb-0">{{ passRate }}%</h4>
               </div>
+
               <div class="icon-box bg-warning-subtle text-warning rounded-3 p-3">📈</div>
             </div>
           </div>
         </div>
-        <!-- Card 4 -->
+
+        <!-- GPA 5 -->
         <div class="col-md-3 col-sm-6">
           <div class="card border-0 shadow-sm rounded-4 p-3 border-start border-info border-4">
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <p class="text-muted mb-1 small fw-bold">Total GPA 5.00</p>
-                <h4 class="fw-bold text-dark mb-0">{{ totalGpaFive }}</h4>
+                <h4 class="fw-bold text-dark mb-0">
+                  {{ totalGpaFive }}
+                </h4>
               </div>
+
               <div class="icon-box bg-info-subtle text-info rounded-3 p-3">⭐</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Main Section: Result History / List -->
+      <!-- =====================================================
+           RESULT LIST
+      ====================================================== -->
       <div class="card border-0 shadow-sm rounded-4 p-4">
-        <!-- Header, Search Bar & Add Result Button -->
+        <!-- Header -->
         <div
           class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mb-4"
         >
           <h4 class="fw-bold text-dark mb-0">Student Result List</h4>
 
           <div class="d-flex align-items-center gap-3">
+            <!-- Search -->
             <div class="search-box position-relative" style="width: 260px">
               <input
                 type="text"
@@ -72,12 +93,13 @@
                 v-model="search"
                 placeholder="Search by Student ID or Name..."
               />
+
               <span class="position-absolute top-50 end-0 translate-middle-y me-3 text-muted">
                 🔍
               </span>
             </div>
 
-            <!-- Add Result Modal Trigger Button -->
+            <!-- Add Result -->
             <button
               type="button"
               class="btn btn-success btn-sm px-4 py-2 fw-bold rounded-pill shadow-sm d-flex align-items-center gap-2 text-nowrap"
@@ -88,7 +110,9 @@
           </div>
         </div>
 
-        <!-- Table -->
+        <!-- =====================================================
+             TABLE
+        ====================================================== -->
         <div class="table-responsive">
           <table class="table align-middle table-hover mb-0">
             <thead class="table-light text-uppercase fs-7 text-muted">
@@ -101,22 +125,32 @@
                 <th class="py-3 text-center" style="width: 20%">Action / Receipt</th>
               </tr>
             </thead>
+
             <tbody>
-              <!-- ডাইনামিক লুপ -->
+              <!-- Result Rows -->
               <tr v-for="(result, index) in filteredResults" :key="result.id">
-                <td class="ps-3 fw-semibold text-muted">{{ index + 1 }}</td>
-                <td class="fw-bold text-dark">
-                  {{ result.student ? result.student.student_id : 'N/A' }}
+                <td class="ps-3 fw-semibold text-muted">
+                  {{ index + 1 }}
                 </td>
+
                 <td class="fw-bold text-dark">
-                  {{ result.student ? result.student.full_name : 'N/A' }}
+                  {{ result.student?.student_id || 'N/A' }}
                 </td>
-                <td class="fw-medium text-secondary">{{ result.exam_type }}</td>
+
+                <td class="fw-bold text-dark">
+                  {{ result.student?.full_name || 'N/A' }}
+                </td>
+
+                <td class="fw-medium text-secondary">
+                  {{ result.exam_type || 'N/A' }}
+                </td>
+
                 <td>
-                  <span class="badge bg-light text-dark border px-3 py-1 rounded-pill">{{
-                    result.exam_year
-                  }}</span>
+                  <span class="badge bg-light text-dark border px-3 py-1 rounded-pill">
+                    {{ result.exam_year || 'N/A' }}
+                  </span>
                 </td>
+
                 <td class="text-center">
                   <a
                     :href="`/resultShow?id=${result.id}`"
@@ -127,9 +161,10 @@
                   </a>
                 </td>
               </tr>
-              <!-- যদি কোনো ডাটা না থাকে -->
+
+              <!-- Empty -->
               <tr v-if="filteredResults.length === 0">
-                <td colspan="9" class="text-center py-4 text-muted">কোনো রেজাল্ট পাওয়া যায়নি!</td>
+                <td colspan="6" class="text-center py-5 text-muted">No result found!</td>
               </tr>
             </tbody>
           </table>
@@ -137,81 +172,100 @@
 
         <!-- Pagination Footer -->
         <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-          <p class="text-muted small mb-0">Showing entries via API</p>
-          <nav>
-            <ul class="pagination pagination-sm mb-0">
-              <li class="page-item disabled">
-                <a class="page-link rounded-start-pill" href="#">Prev</a>
-              </li>
-              <li class="page-item active">
-                <a class="page-link bg-primary border-primary" href="#">1</a>
-              </li>
-              <li class="page-item"><a class="page-link rounded-end-pill" href="#">Next</a></li>
-            </ul>
-          </nav>
+          <p class="text-muted small mb-0">Showing {{ filteredResults.length }} result(s)</p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Add Result Insert Modal -->
+  <!-- =========================================================
+       ADD RESULT MODAL
+  ========================================================== -->
+
   <div
-    class="modal fade"
-    :class="{ 'show d-block': isAddModalOpen }"
-    tabindex="-1"
     v-if="isAddModalOpen"
+    class="modal fade show d-block"
+    tabindex="-1"
     style="background: rgba(0, 0, 0, 0.5)"
-    @click.self="closeDropdown"
+    @click.self="closeAddModal"
   >
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content border-0 shadow-lg rounded-4 p-3">
+        <!-- Modal Header -->
         <div class="modal-header border-0 pb-0">
           <h5 class="modal-title fw-bold text-dark">Insert Student Result & Marks</h5>
+
           <button type="button" class="btn-close shadow-none" @click="closeAddModal"></button>
         </div>
 
+        <!-- Modal Body -->
         <div class="modal-body">
           <form @submit.prevent="saveNewResult">
-            <!-- Select Fields Row -->
+            <!-- =================================================
+                 STUDENT / YEAR / EXAM
+            ================================================== -->
+
             <div class="row">
-              <!-- 🎯 CUSTOM SEARCHABLE STUDENT SELECT INPUT -->
+              <!-- Student -->
               <div class="col-md-4 mb-3 position-relative">
-                <label class="form-label small fw-bold text-muted">Student ID / Name</label>
+                <label class="form-label small fw-bold text-muted"> Student ID / Name </label>
+
                 <div class="input-group">
                   <input
                     type="text"
                     class="form-control rounded-3"
                     v-model="studentSearchText"
-                    placeholder="Type ID or Name to search..."
-                    @focus="isDropdownOpen = true"
-                    @input="isDropdownOpen = true"
+                    placeholder="Type ID or Name..."
+                    @focus="isStudentDropdownOpen = true"
+                    @input="isStudentDropdownOpen = true"
                   />
+
                   <button
                     v-if="studentSearchText"
                     type="button"
-                    class="btn btn-outline-secondary border-start-0"
+                    class="btn btn-outline-secondary"
                     @click="clearStudentSelection"
                   >
                     ✕
                   </button>
                 </div>
 
-                <!-- Custom Dropdown List -->
+                <!-- Student Dropdown -->
                 <div
-                  v-if="isDropdownOpen"
+                  v-if="isStudentDropdownOpen"
                   class="dropdown-menu show shadow-lg border rounded-3 bg-white position-absolute w-100 mt-1"
                   style="max-height: 220px; overflow-y: auto; z-index: 1060"
                 >
                   <button
-                    type="button"
                     v-for="student in searchableStudents"
                     :key="student.id"
+                    type="button"
                     class="dropdown-item py-2 px-3 border-bottom text-wrap text-start"
                     @click="selectStudent(student)"
                   >
-                    <span class="fw-bold text-primary">{{ student.student_id }}</span> -
+                    <span class="fw-bold text-primary">
+                      {{ student.student_id }}
+                    </span>
+
+                    -
                     {{ student.full_name }}
+
+                    <small class="text-muted d-block">
+                      Class:
+                      {{
+                        student.class_info?.class_name ||
+                        student.class_name ||
+                        student.batch_name ||
+                        'N/A'
+                      }}
+
+                      <span v-if="getStudentGroupName(student)">
+                        | Group:
+                        {{ getStudentGroupName(student) }}
+                      </span>
+                    </small>
                   </button>
+
                   <div
                     v-if="searchableStudents.length === 0"
                     class="p-3 text-muted text-center small"
@@ -221,45 +275,276 @@
                 </div>
               </div>
 
-              <div class="col-md-4 mb-3">
-                <label class="form-label small fw-bold text-muted">Exam Year</label>
-                <select class="form-select rounded-3" v-model="form.exam_year" required>
-                  <option value="" disabled selected>Select Year</option>
-                  <option value="2026">2026</option>
-                  <option value="2025">2025</option>
-                  <option value="2024">2024</option>
-                </select>
+              <!-- Exam Year -->
+              <div class="col-md-4 mb-3 position-relative">
+                <label class="form-label small fw-bold text-muted"> Exam Year </label>
+
+                <div class="input-group">
+                  <input
+                    type="text"
+                    class="form-control rounded-3"
+                    v-model="yearSearchText"
+                    placeholder="Search or select year..."
+                    @focus="isYearDropdownOpen = true"
+                    @input="isYearDropdownOpen = true"
+                  />
+
+                  <button
+                    v-if="yearSearchText"
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    @click="clearYearSelection"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <!-- Year Dropdown -->
+                <div
+                  v-if="isYearDropdownOpen"
+                  class="dropdown-menu show shadow-lg border rounded-3 bg-white position-absolute w-100 mt-1"
+                  style="max-height: 220px; overflow-y: auto; z-index: 1060"
+                >
+                  <button
+                    v-for="exam in searchableYears"
+                    :key="exam.id"
+                    type="button"
+                    class="dropdown-item py-2 px-3 border-bottom text-wrap text-start"
+                    @click="selectYear(exam)"
+                  >
+                    <span class="fw-bold text-warning">
+                      {{ exam.examination_year }}
+                    </span>
+                  </button>
+
+                  <div v-if="searchableYears.length === 0" class="p-3 text-muted text-center small">
+                    No year found!
+                  </div>
+                </div>
               </div>
 
-              <div class="col-md-4 mb-3">
-                <label class="form-label small fw-bold text-muted">Exam Type</label>
-                <select class="form-select rounded-3" v-model="form.exam_type" required>
-                  <option value="" disabled selected>Select Exam Type</option>
-                  <option value="Half Yearly">HALF YEARLY</option>
-                  <option value="FINAL">FINAL</option>
-                  <option value="Test Exam">TEST</option>
-                  <option value="model Test ">MODEL TEST</option>
-                </select>
+              <!-- Exam Type -->
+              <div class="col-md-4 mb-3 position-relative">
+                <label class="form-label small fw-bold text-muted"> Exam Type </label>
+
+                <div class="input-group">
+                  <input
+                    type="text"
+                    class="form-control rounded-3"
+                    v-model="examSearchText"
+                    placeholder="Search or select exam type..."
+                    @focus="isExamDropdownOpen = true"
+                    @input="isExamDropdownOpen = true"
+                  />
+
+                  <button
+                    v-if="examSearchText"
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    @click="clearExamSelection"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <!-- Exam Dropdown -->
+                <div
+                  v-if="isExamDropdownOpen"
+                  class="dropdown-menu show shadow-lg border rounded-3 bg-white position-absolute w-100 mt-1"
+                  style="max-height: 220px; overflow-y: auto; z-index: 1060"
+                >
+                  <button
+                    v-for="exam in searchableExaminations"
+                    :key="exam.id"
+                    type="button"
+                    class="dropdown-item py-2 px-3 border-bottom text-wrap text-start"
+                    @click="selectExam(exam)"
+                  >
+                    <span class="fw-bold text-success">
+                      {{ exam.examination_type }}
+                    </span>
+                  </button>
+
+                  <div
+                    v-if="searchableExaminations.length === 0"
+                    class="p-3 text-muted text-center small"
+                  >
+                    No examination found!
+                  </div>
+                </div>
               </div>
             </div>
 
             <hr class="my-3 text-muted opacity-25" />
-            <h6 class="fw-bold text-dark mb-3">Subject Marks / Grades</h6>
-            <div class="row">
-              <div class="col-md-4 mb-3" v-for="subject in currentSubjects" :key="subject">
-                <label class="form-label fw-bold">
-                  {{ subject.replaceAll('_', ' ').toUpperCase() }}
-                </label>
 
-                <input
-                  type="number"
-                  step="0.01"
-                  class="form-control rounded-3"
-                  v-model="form[subject]"
-                  placeholder="Enter Marks"
-                />
+            <!-- =========================================================
+                 STUDENT CLASS & GROUP INFO
+            ========================================================== -->
+
+            <div v-if="form.student_id && selectedStudent" class="mb-4">
+              <div class="card border-0 bg-light rounded-3">
+                <div class="card-body py-3">
+                  <div class="row align-items-center">
+                    <!-- CLASS -->
+                    <div class="col-md-6 mb-2 mb-md-0">
+                      <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-mortarboard-fill text-primary fs-5"></i>
+
+                        <div>
+                          <small class="text-muted d-block fw-semibold"> Class </small>
+
+                          <span class="fw-bold text-dark">
+                            {{
+                              selectedStudent.class_info?.class_name ||
+                              selectedStudent.class_name ||
+                              selectedStudent.batch_name ||
+                              'N/A'
+                            }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- GROUP -->
+                    <div class="col-md-6">
+                      <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-people-fill text-success fs-5"></i>
+
+                        <div>
+                          <small class="text-muted d-block fw-semibold"> Group </small>
+
+                          <span class="fw-bold text-dark">
+                            {{ getStudentGroupName(selectedStudent) }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+
+            <!-- =========================================================
+                 SUBJECT MARKS
+            ========================================================== -->
+
+            <h6 class="fw-bold text-dark mb-3">Subject Marks</h6>
+
+            <!-- NO STUDENT -->
+            <div v-if="!form.student_id" class="alert alert-info">
+              <i class="bi bi-info-circle me-2"></i>
+              Please select a student first.
+            </div>
+
+            <!-- NO SUBJECT -->
+            <div v-else-if="currentSubjects.length === 0" class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+
+              No subjects are assigned to this student's class/group.
+            </div>
+
+            <!-- SUBJECTS -->
+            <div v-else>
+              <!-- =======================================================
+                   MAIN SUBJECTS
+              ======================================================== -->
+
+              <div v-if="mainSubjects.length" class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="fw-bold text-primary mb-0">
+                    <i class="bi bi-book me-2"></i>
+
+                    Main Subjects
+                  </h6>
+
+                  <span class="badge bg-primary-subtle text-primary">
+                    {{ mainSubjects.length }} Subjects
+                  </span>
+                </div>
+
+                <div class="row">
+                  <div
+                    v-for="subject in mainSubjects"
+                    :key="subject.unique_key"
+                    class="col-md-4 mb-3"
+                  >
+                    <div class="border rounded-3 p-3 bg-white shadow-sm">
+                      <label class="form-label fw-bold mb-2">
+                        {{ subject.name }}
+
+                        <span v-if="subject.code" class="text-muted small">
+                          ({{ subject.code }})
+                        </span>
+                      </label>
+
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="999.99"
+                        class="form-control rounded-3"
+                        :value="subject.marks"
+                        placeholder="Enter Marks"
+                        @input="updateSubjectMarks(subject.unique_key, $event.target.value)"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- =======================================================
+                   ADDITIONAL SUBJECT
+              ======================================================== -->
+
+              <div v-if="additionalSubjects.length" class="mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="fw-bold text-success mb-0">
+                    <i class="bi bi-plus-circle me-2"></i>
+
+                    Additional Subject
+                  </h6>
+
+                  <span class="badge bg-success-subtle text-success">
+                    {{ additionalSubjects.length }} Subject
+                  </span>
+                </div>
+
+                <div class="row">
+                  <div
+                    v-for="subject in additionalSubjects"
+                    :key="subject.unique_key"
+                    class="col-md-4 mb-3"
+                  >
+                    <div
+                      class="border border-success-subtle rounded-3 p-3 bg-success bg-opacity-10"
+                    >
+                      <label class="form-label fw-bold mb-2">
+                        {{ subject.name }}
+
+                        <span v-if="subject.code" class="text-muted small">
+                          ({{ subject.code }})
+                        </span>
+                      </label>
+
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="999.99"
+                        class="form-control rounded-3"
+                        :value="subject.marks"
+                        placeholder="Enter Marks"
+                        @input="updateSubjectMarks(subject.unique_key, $event.target.value)"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- =================================================
+                 MODAL FOOTER
+            ================================================== -->
 
             <div class="modal-footer border-0 px-0 pb-0 pt-3">
               <button
@@ -269,8 +554,15 @@
               >
                 Cancel
               </button>
-              <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm">
-                Add Result
+
+              <button
+                type="submit"
+                class="btn btn-success rounded-pill px-4 fw-bold shadow-sm"
+                :disabled="isSaving"
+              >
+                <span v-if="isSaving"> Saving... </span>
+
+                <span v-else> Add Result </span>
               </button>
             </div>
           </form>
@@ -281,314 +573,874 @@
 </template>
 
 <script setup>
-import dashPageView from './dashPageView.vue'
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 
-import api from '@/services/api'
+import dashPageView from './dashPageView.vue'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
+import api from '@/services/api'
 import { isLoading } from '../utils/loading'
 
+/*
+|--------------------------------------------------------------------------
+| STATE
+|--------------------------------------------------------------------------
+*/
+
 const resultsList = ref([])
-const search = ref('')
-const isAddModalOpen = ref(false)
 const studentsList = ref([])
+const examinationsList = ref([])
+
 const currentSubjects = ref([])
 
-// 🎯 Searchable Student States
+const search = ref('')
+
+const isAddModalOpen = ref(false)
+const isSaving = ref(false)
+
+/*
+|--------------------------------------------------------------------------
+| SEARCH STATES
+|--------------------------------------------------------------------------
+*/
+
 const studentSearchText = ref('')
-const isDropdownOpen = ref(false)
+const yearSearchText = ref('')
+const examSearchText = ref('')
 
-// ১. ICT সহ সব সাবজেক্টের নাম ছোট হাতের অক্ষরে রাখা হয়েছে
-const classSubjects = {
-  'Class-1': ['bangla', 'english', 'general_math'],
-  'Class-2': ['bangla', 'english', 'general_math'],
-  'Class-3': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science'],
-  'Class-4': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science'],
-  'Class-5': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science'],
-  'Class-6': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science', 'ict'],
-  'Class-7': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science', 'ict'],
-  'Class-8': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science', 'ict'],
-  'Class-9': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science', 'ict'],
-  'Class-10': ['bangla', 'english', 'general_math', 'religion', 'bgs', 'general_science', 'ict'],
-}
+const isStudentDropdownOpen = ref(false)
+const isYearDropdownOpen = ref(false)
+const isExamDropdownOpen = ref(false)
 
-const groupSubjects = {
-  science: [
-    'bangla',
-    'english',
-    'higher_math',
-    'physics_1',
-    'physics_2',
-    'chemistry_1',
-    'chemistry_2',
-    'biology',
-    'ict',
-  ],
-  arts: ['bangla', 'english', 'history', 'geography', 'ict'],
-  commerce: ['bangla', 'english', 'accounting', 'finance', 'ict'],
-}
-
-// 🎯 Search Filter Logic (১০০০+ স্টুডেন্টের জন্য পারফরম্যান্স অপটিমাইজড)
-const searchableStudents = computed(() => {
-  if (!studentSearchText.value.trim()) {
-    return studentsList.value.slice(0, 50)
-  }
-  const text = studentSearchText.value.toLowerCase().trim()
-  return studentsList.value.filter((student) => {
-    const id = student.student_id ? student.student_id.toString().toLowerCase() : ''
-    const name = student.full_name ? student.full_name.toLowerCase() : ''
-    return id.includes(text) || name.includes(text)
-  })
-})
-
-// 🎯 Student Selection Handler
-const selectStudent = (student) => {
-  form.student_id = student.id
-  studentSearchText.value = `${student.student_id} - ${student.full_name}`
-  isDropdownOpen.value = false
-  studentChanged()
-}
-
-// Clear Selection
-const clearStudentSelection = () => {
-  studentSearchText.value = ''
-  form.student_id = ''
-  currentSubjects.value = []
-  isDropdownOpen.value = true
-}
-
-const closeDropdown = () => {
-  isDropdownOpen.value = false
-}
-
-// ২. studentChanged ফাংশন আপডেট
-const studentChanged = () => {
-  const student = studentsList.value.find((item) => item.id == form.student_id)
-  if (!student) return
-
-  // batch_name ও course_name কে Trim ও Lowercase করে চেক করা
-  const batch = student.batch_name ? student.batch_name.trim() : ''
-  const course = student.course_name ? student.course_name.trim().toLowerCase() : ''
-
-  const isHighSchool = ['Class-9', 'Class-10', 'Class-11', 'Class-12'].includes(batch)
-
-  if (isHighSchool && groupSubjects[course]) {
-    // যদি Group (Science, Arts, Commerce) পাওয়া যায়
-    currentSubjects.value = groupSubjects[course]
-  } else if (classSubjects[batch]) {
-    // সাধারণ Class অনুযায়ী সাবজেক্ট নির্ধারণ
-    currentSubjects.value = classSubjects[batch]
-  } else {
-    currentSubjects.value = []
-  }
-}
+/*
+|--------------------------------------------------------------------------
+| FORM
+|--------------------------------------------------------------------------
+*/
 
 const form = reactive({
   student_id: '',
   exam_year: '',
   exam_type: '',
-  bangla: '',
-  english: '',
-  general_math: '',
-  higher_math: '',
-  physics_1: '',
-  physics_2: '',
-  chemistry_1: '',
-  chemistry_2: '',
-  biology: '',
-  ict: '',
-  bgs: '',
-  general_science: '',
-  religion: '',
-  history: '',
-  geography: '',
-  accounting: '',
-  finance: '',
+  subjects: [],
 })
 
-// 🔹 API Call (GET Results & Students)
+/*
+|--------------------------------------------------------------------------
+| SELECTED STUDENT
+|--------------------------------------------------------------------------
+*/
+
+const selectedStudent = computed(() => {
+  if (!form.student_id) {
+    return null
+  }
+
+  return studentsList.value.find((student) => student.id == form.student_id) || null
+})
+
+/*
+|--------------------------------------------------------------------------
+| GET STUDENT GROUP NAME
+|--------------------------------------------------------------------------
+|
+| Group-এর data backend থেকে বিভিন্ন structure-এ আসতে পারে।
+| এখানে শুধু Group check করা হচ্ছে।
+|
+*/
+
+const getStudentGroupName = (student) => {
+  if (!student) {
+    return 'N/A'
+  }
+
+  return (
+    student.group?.group_name ||
+    student.group?.name ||
+    student.group_name ||
+    student.group?.title ||
+    'N/A'
+  )
+}
+
+/*
+|--------------------------------------------------------------------------
+| MAIN SUBJECTS
+|--------------------------------------------------------------------------
+*/
+
+const mainSubjects = computed(() => {
+  return currentSubjects.value.filter((subject) => !subject.is_additional)
+})
+
+/*
+|--------------------------------------------------------------------------
+| ADDITIONAL SUBJECTS
+|--------------------------------------------------------------------------
+*/
+
+const additionalSubjects = computed(() => {
+  return currentSubjects.value.filter((subject) => subject.is_additional)
+})
+
+/*
+|--------------------------------------------------------------------------
+| FETCH RESULTS + STUDENTS
+|--------------------------------------------------------------------------
+*/
+
 const fetchData = async () => {
   try {
     const response = await api.get('/results')
-    resultsList.value = response.data.results
-    if (response.data.students) {
-      studentsList.value = response.data.students
-    }
+
+    resultsList.value = response.data.results || []
+
+    studentsList.value = response.data.students || []
+
+    console.log('Students:', studentsList.value)
   } catch (error) {
-    console.error('Error fetching data:', error)
+    console.error('Error fetching result data:', error)
   }
 }
 
-// 🔹 ১. মার্কস থেকে GPA & Status বের করার Helper Function
-const calculateResultDetails = (result) => {
-  const allMainSubjects = [
-    'bangla',
-    'english',
-    'general_math',
-    'physics_1',
-    'physics_2',
-    'chemistry_1',
-    'chemistry_2',
-    'ict',
-    'bgs',
-    'biology',
-    'general_science',
-    'religion',
-    'history',
-    'geography',
-    'accounting',
-    'finance',
-  ]
+/*
+|--------------------------------------------------------------------------
+| FETCH EXAMINATIONS
+|--------------------------------------------------------------------------
+*/
 
-  let totalPoints = 0
-  let subjectCount = 0
-  let hasFailed = false
+const fetchExaminations = async () => {
+  try {
+    const response = await api.get('/examinations')
 
-  const getPoint = (marks) => {
-    if (marks === null || marks === '') return null
-    const m = parseFloat(marks)
-    if (m >= 80) return 5.0
-    if (m >= 70) return 4.0
-    if (m >= 60) return 3.5
-    if (m >= 50) return 3.0
-    if (m >= 40) return 2.0
-    if (m >= 33) return 1.0
-    return 0.0
+    if (response.data.status) {
+      examinationsList.value = response.data.data || []
+    }
+  } catch (error) {
+    console.error('Error fetching examinations:', error)
+  }
+}
+
+/*
+|--------------------------------------------------------------------------
+| SEARCHABLE STUDENTS
+|--------------------------------------------------------------------------
+*/
+
+const searchableStudents = computed(() => {
+  const text = studentSearchText.value.toLowerCase().trim()
+
+  if (!text) {
+    return studentsList.value.slice(0, 50)
   }
 
-  allMainSubjects.forEach((subject) => {
-    if (result[subject] !== null && result[subject] !== undefined && result[subject] !== '') {
-      const point = getPoint(result[subject])
-      if (point !== null) {
-        totalPoints += point
-        subjectCount++
-        if (point === 0) hasFailed = true
-      }
+  return studentsList.value.filter((student) => {
+    const id = student.student_id?.toString().toLowerCase() || ''
+
+    const name = student.full_name?.toString().toLowerCase() || ''
+
+    const group = getStudentGroupName(student)?.toString().toLowerCase() || ''
+
+    return id.includes(text) || name.includes(text) || group.includes(text)
+  })
+})
+
+/*
+|--------------------------------------------------------------------------
+| SEARCHABLE EXAMINATIONS
+|--------------------------------------------------------------------------
+*/
+
+const searchableExaminations = computed(() => {
+  const text = examSearchText.value.toLowerCase().trim()
+
+  if (!text) {
+    return examinationsList.value.slice(0, 50)
+  }
+
+  return examinationsList.value.filter((exam) => {
+    const type = exam.examination_type?.toString().toLowerCase() || ''
+
+    return type.includes(text)
+  })
+})
+
+/*
+|--------------------------------------------------------------------------
+| SEARCHABLE YEARS
+|--------------------------------------------------------------------------
+*/
+
+const searchableYears = computed(() => {
+  const map = new Map()
+
+  examinationsList.value.forEach((exam) => {
+    if (exam.examination_year && !map.has(exam.examination_year)) {
+      map.set(exam.examination_year, exam)
     }
   })
 
-  let bonusPoint = 0
-  if (
-    result.higher_math !== null &&
-    result.higher_math !== undefined &&
-    result.higher_math !== ''
-  ) {
-    const hmPoint = getPoint(result.higher_math)
-    if (hmPoint !== null && hmPoint > 2.0) {
-      bonusPoint = hmPoint - 2.0
+  const years = Array.from(map.values())
+
+  const text = yearSearchText.value.toLowerCase().trim()
+
+  if (!text) {
+    return years.slice(0, 50)
+  }
+
+  return years.filter((exam) => {
+    const year = exam.examination_year?.toString().toLowerCase() || ''
+
+    return year.includes(text)
+  })
+})
+
+/*
+|--------------------------------------------------------------------------
+| SELECT STUDENT
+|--------------------------------------------------------------------------
+*/
+
+const selectStudent = (student) => {
+  form.student_id = student.id
+
+  studentSearchText.value = `${student.student_id} - ${student.full_name}`
+
+  isStudentDropdownOpen.value = false
+
+  /*
+  |--------------------------------------------------------------------------
+  | IMPORTANT
+  |--------------------------------------------------------------------------
+  | Student select করার সাথে সাথে
+  |
+  | Student
+  |    ↓
+  | Group
+  |    ↓
+  | Group Subjects
+  |    ↓
+  | Result Subjects
+  |
+  | load হবে।
+  |--------------------------------------------------------------------------
+  */
+
+  loadStudentSubjects()
+}
+
+/*
+|--------------------------------------------------------------------------
+| CLEAR STUDENT
+|--------------------------------------------------------------------------
+*/
+
+const clearStudentSelection = () => {
+  form.student_id = ''
+
+  studentSearchText.value = ''
+
+  currentSubjects.value = []
+
+  form.subjects = []
+
+  isStudentDropdownOpen.value = true
+}
+
+/*
+|--------------------------------------------------------------------------
+| LOAD STUDENT SUBJECTS
+|--------------------------------------------------------------------------
+|
+| Course এখানে ব্যবহার করা হচ্ছে না।
+|
+| Subject source:
+|
+| 1. Student Class Subjects
+| 2. Student Group Subjects
+|
+| Group Subjects-এর মধ্যে যেগুলো additional হিসেবে backend
+| থেকে আসবে সেগুলো Additional Subject হিসেবে দেখাবে।
+|
+|--------------------------------------------------------------------------
+*/
+
+const loadStudentSubjects = () => {
+  const student = studentsList.value.find((item) => item.id == form.student_id)
+
+  if (!student) {
+    currentSubjects.value = []
+    form.subjects = []
+    return
+  }
+
+  console.log('====================================')
+  console.log('SELECTED STUDENT:', student)
+  console.log('CLASS INFO:', student.class_info)
+  console.log('GROUP:', student.group)
+  console.log('GROUP NAME:', getStudentGroupName(student))
+  console.log('GROUP SUBJECTS:', student.group_subjects)
+  console.log('====================================')
+
+  /*
+  |--------------------------------------------------------------------------
+  | CLASS SUBJECTS
+  |--------------------------------------------------------------------------
+  */
+
+  let classSubjects = []
+
+  if (student.class_info && Array.isArray(student.class_info.subjects)) {
+    classSubjects = student.class_info.subjects
+  } else if (Array.isArray(student.subjects)) {
+    classSubjects = student.subjects
+  } else if (Array.isArray(student.class_subjects)) {
+    classSubjects = student.class_subjects
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | GROUP SUBJECTS
+  |--------------------------------------------------------------------------
+  */
+
+  let groupSubjects = []
+
+  if (Array.isArray(student.group_subjects)) {
+    groupSubjects = student.group_subjects
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | NORMALIZE CLASS SUBJECTS
+  |--------------------------------------------------------------------------
+  */
+
+  const normalizedClassSubjects = classSubjects.map((subject) => {
+    return {
+      unique_key: `main_${subject.id}`,
+
+      id: subject.id,
+
+      name: subject.name || subject.subject_name || subject.subject?.name || 'Unknown Subject',
+
+      code: subject.code || subject.subject_code || subject.subject?.code || null,
+
+      is_additional: false,
+
+      marks: '',
+    }
+  })
+
+  /*
+  |--------------------------------------------------------------------------
+  | NORMALIZE GROUP SUBJECTS
+  |--------------------------------------------------------------------------
+  |
+  | Backend যদি is_additional পাঠায় সেটা respect করবে।
+  |
+  | যদি Group mapping-এর data-তে is_additional না থাকে,
+  | তাহলে default false থাকবে।
+  |
+  |--------------------------------------------------------------------------
+  */
+
+  const normalizedGroupSubjects = groupSubjects.map((subject) => {
+    return {
+      unique_key: `group_${subject.id}`,
+
+      id: subject.id,
+
+      name: subject.name || subject.subject_name || subject.subject?.name || 'Unknown Subject',
+
+      code: subject.code || subject.subject_code || subject.subject?.code || null,
+
+      is_additional:
+        subject.is_additional === true ||
+        subject.is_additional === 1 ||
+        subject.is_additional === '1',
+
+      marks: '',
+    }
+  })
+
+  /*
+  |--------------------------------------------------------------------------
+  | MERGE
+  |--------------------------------------------------------------------------
+  */
+
+  const mergedSubjects = [...normalizedClassSubjects, ...normalizedGroupSubjects]
+
+  /*
+  |--------------------------------------------------------------------------
+  | REMOVE DUPLICATE SUBJECTS
+  |--------------------------------------------------------------------------
+  |
+  | একই subject class + group দুই জায়গায় থাকলে
+  | Group mapping priority পাবে।
+  |
+  |--------------------------------------------------------------------------
+  */
+
+  const subjectMap = new Map()
+
+  mergedSubjects.forEach((subject) => {
+    const existing = subjectMap.get(subject.id)
+
+    if (!existing) {
+      subjectMap.set(subject.id, subject)
+      return
+    }
+
+    if (subject.is_additional && !existing.is_additional) {
+      subjectMap.set(subject.id, subject)
+    }
+  })
+
+  currentSubjects.value = Array.from(subjectMap.values())
+
+  console.log('FINAL CURRENT SUBJECTS:', currentSubjects.value)
+
+  console.log('MAIN SUBJECTS:', mainSubjects.value)
+
+  console.log('ADDITIONAL SUBJECTS:', additionalSubjects.value)
+
+  /*
+  |--------------------------------------------------------------------------
+  | SYNC FORM
+  |--------------------------------------------------------------------------
+  */
+
+  syncFormSubjects()
+}
+
+/*
+|--------------------------------------------------------------------------
+| UPDATE SUBJECT MARKS
+|--------------------------------------------------------------------------
+*/
+
+const updateSubjectMarks = (subjectKey, marks) => {
+  const subject = currentSubjects.value.find((item) => item.unique_key === subjectKey)
+
+  if (!subject) {
+    return
+  }
+
+  subject.marks = marks
+
+  syncFormSubjects()
+}
+
+/*
+|--------------------------------------------------------------------------
+| SYNC FORM SUBJECTS
+|--------------------------------------------------------------------------
+*/
+
+const syncFormSubjects = () => {
+  form.subjects = currentSubjects.value.map((subject) => ({
+    subject_id: subject.id,
+
+    marks: subject.marks === '' || subject.marks === null ? null : Number(subject.marks),
+
+    is_additional: subject.is_additional,
+  }))
+}
+
+/*
+|--------------------------------------------------------------------------
+| SELECT EXAM
+|--------------------------------------------------------------------------
+*/
+
+const selectExam = (exam) => {
+  form.exam_type = exam.examination_type
+
+  examSearchText.value = exam.examination_type
+
+  isExamDropdownOpen.value = false
+}
+
+/*
+|--------------------------------------------------------------------------
+| CLEAR EXAM
+|--------------------------------------------------------------------------
+*/
+
+const clearExamSelection = () => {
+  form.exam_type = ''
+
+  examSearchText.value = ''
+
+  isExamDropdownOpen.value = true
+}
+
+/*
+|--------------------------------------------------------------------------
+| SELECT YEAR
+|--------------------------------------------------------------------------
+*/
+
+const selectYear = (exam) => {
+  form.exam_year = exam.examination_year
+
+  yearSearchText.value = exam.examination_year
+
+  isYearDropdownOpen.value = false
+}
+
+/*
+|--------------------------------------------------------------------------
+| CLEAR YEAR
+|--------------------------------------------------------------------------
+*/
+
+const clearYearSelection = () => {
+  form.exam_year = ''
+
+  yearSearchText.value = ''
+
+  isYearDropdownOpen.value = true
+}
+
+/*
+|--------------------------------------------------------------------------
+| CLOSE MODAL
+|--------------------------------------------------------------------------
+*/
+
+const closeAddModal = () => {
+  isAddModalOpen.value = false
+
+  isStudentDropdownOpen.value = false
+
+  isYearDropdownOpen.value = false
+
+  isExamDropdownOpen.value = false
+}
+
+/*
+|--------------------------------------------------------------------------
+| OPEN MODAL
+|--------------------------------------------------------------------------
+*/
+
+const openAddModal = () => {
+  form.student_id = ''
+
+  form.exam_year = ''
+
+  form.exam_type = ''
+
+  form.subjects = []
+
+  studentSearchText.value = ''
+
+  yearSearchText.value = ''
+
+  examSearchText.value = ''
+
+  currentSubjects.value = []
+
+  isStudentDropdownOpen.value = false
+
+  isYearDropdownOpen.value = false
+
+  isExamDropdownOpen.value = false
+
+  isAddModalOpen.value = true
+}
+
+/*
+|--------------------------------------------------------------------------
+| SAVE RESULT
+|--------------------------------------------------------------------------
+*/
+
+const saveNewResult = async () => {
+  if (!form.student_id) {
+    alert('Please select a student!')
+    return
+  }
+
+  if (!form.exam_year) {
+    alert('Please select an exam year!')
+    return
+  }
+
+  if (!form.exam_type) {
+    alert('Please select an exam type!')
+    return
+  }
+
+  if (!currentSubjects.value.length) {
+    alert('No subjects are assigned to this student class/group!')
+    return
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | Make sure latest marks are synced
+  |--------------------------------------------------------------------------
+  */
+
+  syncFormSubjects()
+
+  const payload = {
+    student_id: Number(form.student_id),
+
+    exam_year: form.exam_year,
+
+    exam_type: form.exam_type,
+
+    subjects: form.subjects,
+  }
+
+  console.log('Sending Result Payload:', payload)
+
+  isSaving.value = true
+
+  try {
+    const response = await api.post('/results', payload)
+
+    if (response.data.success) {
+      alert(response.data.message || 'Result successfully stored!')
+
+      closeAddModal()
+
+      await fetchData()
+    }
+  } catch (error) {
+    console.error('Save Result Error:', error)
+
+    if (error.response?.status === 422) {
+      console.error('Validation Errors:', error.response.data.errors)
+
+      const errors = error.response.data.errors
+
+      if (errors) {
+        const messages = Object.values(errors).flat().join('\n')
+
+        alert(messages)
+      } else {
+        alert(error.response.data.message || 'Validation error!')
+      }
+    } else {
+      console.error('Server Error:', error.response?.data)
+
+      alert(error.response?.data?.message || 'Something went wrong while saving result!')
+    }
+  } finally {
+    isSaving.value = false
+  }
+}
+
+/*
+|--------------------------------------------------------------------------
+| FILTER RESULTS
+|--------------------------------------------------------------------------
+*/
+
+const filteredResults = computed(() => {
+  const keyword = search.value.toLowerCase().trim()
+
+  if (!keyword) {
+    return resultsList.value
+  }
+
+  return resultsList.value.filter((result) => {
+    const studentId = result.student?.student_id?.toString().toLowerCase() || ''
+
+    const studentName = result.student?.full_name?.toString().toLowerCase() || ''
+
+    const examType = result.exam_type?.toString().toLowerCase() || ''
+
+    const examYear = result.exam_year?.toString().toLowerCase() || ''
+
+    return (
+      studentId.includes(keyword) ||
+      studentName.includes(keyword) ||
+      examType.includes(keyword) ||
+      examYear.includes(keyword)
+    )
+  })
+})
+
+/*
+|--------------------------------------------------------------------------
+| GRADE POINT
+|--------------------------------------------------------------------------
+*/
+
+const getPoint = (marks) => {
+  if (marks === null || marks === undefined || marks === '') {
+    return null
+  }
+
+  const m = Number(marks)
+
+  if (m >= 80) return 5.0
+
+  if (m >= 70) return 4.0
+
+  if (m >= 60) return 3.5
+
+  if (m >= 50) return 3.0
+
+  if (m >= 40) return 2.0
+
+  if (m >= 33) return 1.0
+
+  return 0.0
+}
+
+/*
+|--------------------------------------------------------------------------
+| CALCULATE RESULT
+|--------------------------------------------------------------------------
+*/
+
+const calculateResultDetails = (result) => {
+  const subjects = result.result_subjects || result.resultSubjects || []
+
+  let totalPoints = 0
+
+  let subjectCount = 0
+
+  let hasFailed = false
+
+  subjects.forEach((resultSubject) => {
+    const marks = resultSubject.marks
+
+    if (marks === null || marks === undefined) {
+      return
+    }
+
+    const point = getPoint(marks)
+
+    if (point === null) {
+      return
+    }
+
+    totalPoints += point
+
+    subjectCount++
+
+    if (point === 0) {
+      hasFailed = true
+    }
+  })
+
+  if (subjectCount === 0 || hasFailed) {
+    return {
+      gpa: 0,
+      status: 'Fail',
     }
   }
 
-  if (subjectCount === 0 || hasFailed) {
-    return { gpa: 0, status: 'Fail' }
-  }
+  const gpa = Math.min(5, totalPoints / subjectCount)
 
-  const finalGpa = Math.min(5.0, (totalPoints + bonusPoint) / subjectCount)
   return {
-    gpa: parseFloat(finalGpa.toFixed(2)),
+    gpa: Number(gpa.toFixed(2)),
+
     status: 'Pass',
   }
 }
 
-// 🔹 ২. Summary Cards Computed Properties
-const totalStudents = computed(() => resultsList.value.length)
-const publishedResults = computed(() => resultsList.value.length)
+/*
+|--------------------------------------------------------------------------
+| DASHBOARD COUNTS
+|--------------------------------------------------------------------------
+*/
+
+const totalStudents = computed(() => {
+  return resultsList.value.length
+})
+
+const publishedResults = computed(() => {
+  return resultsList.value.length
+})
 
 const passRate = computed(() => {
-  if (!resultsList.value.length) return '0.0'
+  if (!resultsList.value.length) {
+    return '0.0'
+  }
 
-  const passedCount = resultsList.value.filter((item) => {
-    const res = calculateResultDetails(item)
-    return res.status === 'Pass'
-  }).length
+  const passed = resultsList.value.filter(
+    (result) => calculateResultDetails(result).status === 'Pass',
+  ).length
 
-  return ((passedCount / resultsList.value.length) * 100).toFixed(1)
+  return ((passed / resultsList.value.length) * 100).toFixed(1)
 })
 
 const totalGpaFive = computed(() => {
-  return resultsList.value.filter((item) => {
-    const res = calculateResultDetails(item)
-    return res.status === 'Pass' && res.gpa >= 5.0
+  return resultsList.value.filter((result) => {
+    const details = calculateResultDetails(result)
+
+    return details.status === 'Pass' && details.gpa >= 5
   }).length
 })
 
-const filteredResults = computed(() => {
-  if (!search.value.trim()) {
-    return resultsList.value
-  }
+/*
+|--------------------------------------------------------------------------
+| CLOSE DROPDOWNS
+|--------------------------------------------------------------------------
+*/
 
-  const keyword = search.value.toLowerCase()
+const closeDropdowns = () => {
+  isStudentDropdownOpen.value = false
 
-  return resultsList.value.filter((result) => {
-    const studentId = result.student?.student_id?.toLowerCase() || ''
-    const fullName = result.student?.full_name?.toLowerCase() || ''
+  isYearDropdownOpen.value = false
 
-    return studentId.includes(keyword) || fullName.includes(keyword)
-  })
+  isExamDropdownOpen.value = false
+}
+
+/*
+|--------------------------------------------------------------------------
+| ON MOUNT
+|--------------------------------------------------------------------------
+*/
+
+onMounted(async () => {
+  await Promise.all([fetchData(), fetchExaminations()])
 })
-
-onMounted(() => {
-  fetchData()
-})
-
-const openAddModal = () => {
-  Object.keys(form).forEach((key) => {
-    form[key] = ''
-  })
-  studentSearchText.value = ''
-  currentSubjects.value = []
-  isAddModalOpen.value = true
-}
-
-const closeAddModal = () => {
-  isAddModalOpen.value = false
-  isDropdownOpen.value = false
-}
-
-// 🔹 API Call (POST New Result)
-const saveNewResult = async () => {
-  if (!form.student_id) {
-    alert('Please select a student from the search list!')
-    return
-  }
-
-  try {
-    const response = await api.post('/results', form)
-
-    if (response.data.success) {
-      alert(response.data.message)
-      closeAddModal()
-      fetchData()
-    }
-  } catch (error) {
-    if (error.response && error.response.status === 422) {
-      alert('Validation error! Please check your inputs.')
-      console.log(error.response.data.errors)
-    } else {
-      alert('Something went wrong!')
-    }
-  }
-}
 </script>
 
 <style scoped>
 .result-page-wrapper {
   background-color: #f8f9fa;
   min-height: 100vh;
-  font-family: 'Arial', sans-serif;
+  font-family: Arial, sans-serif;
   width: 86%;
   margin-left: 259px;
 }
+
 .fs-7 {
   font-size: 0.75rem;
   letter-spacing: 0.5px;
 }
+
 .card {
   transition: all 0.2s ease-in-out;
 }
+
 .table td,
 .table th {
   vertical-align: middle;
+}
+
+.dropdown-menu {
+  display: block;
+}
+
+.icon-box {
+  min-width: 48px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
 }
 
 @media (max-width: 992px) {
@@ -597,6 +1449,12 @@ const saveNewResult = async () => {
     margin-left: 0 !important;
     padding-left: 15px;
     padding-right: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-box {
+    width: 100% !important;
   }
 }
 </style>

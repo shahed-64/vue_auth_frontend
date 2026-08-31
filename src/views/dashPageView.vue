@@ -37,20 +37,26 @@
       <span>Result</span>
     </router-link>
 
-    <!-- Staff -->
-    <router-link
-      v-if="role === 'Manager' || role === 'Admin'"
-      to="/staff"
-      active-class="active-menu"
-      @click="closeSidebar"
-    >
-      <i class="fa-solid fa-users"></i>
-      <span>Staff</span>
-    </router-link>
     <!-- Result -->
     <router-link to="/shift" active-class="active-menu" @click="closeSidebar">
       <i class="fa-solid fa-square-poll-vertical"></i>
       <span>Shift</span>
+    </router-link>
+
+    <!-- Sections -->
+    <router-link to="/section" active-class="active-menu" @click="closeSidebar">
+      <i class="fa-solid fa-square-poll-vertical"></i>
+      <span>Sections</span>
+    </router-link>
+    <!-- Class -->
+    <router-link to="/class" active-class="active-menu" @click="closeSidebar">
+      <i class="fa-solid fa-square-poll-vertical"></i>
+      <span>Class</span>
+    </router-link>
+
+    <router-link to="/exam" active-class="active-menu" @click="closeSidebar">
+      <i class="fa-solid fa-square-poll-vertical"></i>
+      <span>Examination</span>
     </router-link>
     <!-- Account -->
     <router-link
@@ -62,7 +68,10 @@
       <i class="fa-solid fa-wallet"></i>
       <span>Account Dashboard</span>
     </router-link>
-
+    <router-link to="/subject" active-class="active-menu" @click="closeSidebar">
+      <i class="fa-solid fa-square-poll-vertical"></i>
+      <span>Subjects</span>
+    </router-link>
     <!-- Student Dropdown -->
     <div class="dropdown w-100 mb-2">
       <button class="student-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -97,6 +106,61 @@
       <button class="student-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
         <span>
           <i class="fa-solid fa-user-graduate"></i>
+          Staff
+        </span>
+      </button>
+
+      <ul class="dropdown-menu w-100">
+        <!-- Staff -->
+        <router-link
+          v-if="role === 'Manager' || role === 'Admin'"
+          to="/staff"
+          active-class="active-menu"
+          @click="closeSidebar"
+        >
+          <i class="fa-solid fa-users"></i>
+          <span>All Staff</span>
+        </router-link>
+        <li>
+          <router-link
+            class="dropdown-item"
+            to="/staffAttendance"
+            active-class="active-menu"
+            @click="closeSidebar"
+          >
+            <i class="fa-solid fa-list"></i>
+            Staff Attendance
+          </router-link>
+        </li>
+
+        <li>
+          <router-link
+            class="dropdown-item"
+            to="/StaffAttendancOverview"
+            active-class="active-menu"
+            @click="closeSidebar"
+          >
+            <i class="fa-solid fa-list"></i>
+            Attendance Summary
+          </router-link>
+        </li>
+        <li>
+          <router-link
+            class="dropdown-item"
+            to="/StaffAttendanceHistry"
+            active-class="active-menu"
+            @click="closeSidebar"
+          >
+            <i class="fa-solid fa-list"></i>
+            Attendance History
+          </router-link>
+        </li>
+      </ul>
+    </div>
+    <div class="dropdown w-100 mb-2">
+      <button class="student-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+        <span>
+          <i class="fa-solid fa-user-graduate"></i>
           Teachers
         </span>
       </button>
@@ -113,7 +177,6 @@
             All Teachers
           </router-link>
         </li>
-
         <li>
           <router-link
             class="dropdown-item"
@@ -125,6 +188,7 @@
             Teachers Attendance
           </router-link>
         </li>
+
         <li>
           <router-link
             class="dropdown-item"
@@ -149,7 +213,14 @@
         </li>
       </ul>
     </div>
-
+    <router-link to="/ClassGroup" active-class="active-menu" @click="closeSidebar">
+      <i class="fa-solid fa-square-poll-vertical"></i>
+      <span>Class Group</span>
+    </router-link>
+    <router-link to="/holiday" active-class="active-menu" @click="closeSidebar">
+      <i class="fa-solid fa-square-poll-vertical"></i>
+      <span>Hollidays</span>
+    </router-link>
     <!-- Settings -->
     <router-link to="/settings" active-class="active-menu" @click="closeSidebar">
       <i class="fa-solid fa-gear"></i>
@@ -183,7 +254,9 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
-// রিঅ্যাক্টিভ ভেরিয়েবলগুলো ডিফাইন করা
+import api from '../services/api'
+
+// রিঅ্যাক্টিভ ভেরিয়েবলগুলো ডিফাইন
 const loading = ref(false)
 const message = ref('')
 const isError = ref(false)
@@ -200,8 +273,8 @@ const takeBackup = async () => {
   try {
     const token = localStorage.getItem('token')
 
-    const response = await axios.post(
-      'http://127.0.0.1:8000/api/run-backup',
+    const response = await api.post(
+      '/run-backup',
       {},
       {
         headers: {
@@ -214,7 +287,7 @@ const takeBackup = async () => {
     isError.value = false
   } catch (error) {
     isError.value = true
-    // 🌟 এই কনসোল লগটি বসিয়ে দিন:
+
     console.log('Full Error:', error.response || error)
 
     message.value = error.response?.data?.message || 'Something went wrong during backup!'
@@ -222,6 +295,7 @@ const takeBackup = async () => {
     loading.value = false
   }
 }
+
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value
 }
@@ -237,7 +311,7 @@ const logout = () => {
   router.push('/login')
 }
 
-//database backup
+// Database Backup Download
 const backupDatabase = async () => {
   const response = await api.get('/backup', {
     responseType: 'blob',
@@ -251,7 +325,6 @@ const backupDatabase = async () => {
   link.click()
 }
 </script>
-
 <style scoped>
 /* DESKTOP SIDEBAR */
 /* ================= Sidebar ================= */

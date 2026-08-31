@@ -28,7 +28,24 @@ const router = createRouter({
       component: () => import('../views/ShifPagetView.vue'),
       meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
     },
-
+    {
+      path: '/section',
+      name: 'SectionView',
+      component: () => import('../views/SectionView.vue'),
+      meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
+    },
+    {
+      path: '/class',
+      name: 'ClassView',
+      component: () => import('../views/ClassView.vue'),
+      meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
+    },
+    {
+      path: '/exam',
+      name: 'ExaminationView',
+      component: () => import('../views/ExaminationView.vue'),
+      meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
+    },
     {
       path: '/resultShow',
       name: 'ResultPage',
@@ -47,11 +64,22 @@ const router = createRouter({
       component: () => import('../views/studentView.vue'),
       meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
     },
-
+    {
+      path: '/subject',
+      name: 'subjectView',
+      component: () => import('../views/SubjectView.vue'),
+      meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
+    },
     {
       path: '/staff',
       name: 'staffView',
       component: () => import('../views/staffView.vue'),
+      meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
+    },
+    {
+      path: '/staffAttendance',
+      name: 'StaffAttendanceView',
+      component: () => import('../views/StaffAttendanceView.vue'),
       meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
     },
 
@@ -101,6 +129,12 @@ const router = createRouter({
       component: () => import('../views/dashPageView.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/ClassGroup',
+      name: 'ClassGroup',
+      component: () => import('../views/ClassGroupView.vue'),
+      meta: { requiresAuth: true },
+    },
 
     {
       path: '/others-payment',
@@ -144,9 +178,27 @@ const router = createRouter({
       meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
     },
     {
+      path: '/StaffAttendanceHistry',
+      name: 'StaffAttendanceHistryView',
+      component: () => import('../views/StaffAttendanceHistryView.vue'),
+      meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
+    },
+    {
       path: '/AttendancOverview',
       name: 'teacherAttendanceOverview',
       component: () => import('../views/AttendanceOverviewView.vue'),
+      meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
+    },
+    {
+      path: '/StaffAttendancOverview',
+      name: 'StaffAttendanceOverview',
+      component: () => import('../views/StaffAttendanceOverviewView.vue'),
+      meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
+    },
+    {
+      path: '/holiday',
+      name: 'HOlidaysView',
+      component: () => import('../views/HolidaysView.vue'),
       meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
     },
   ],

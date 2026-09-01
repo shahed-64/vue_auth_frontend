@@ -2,14 +2,27 @@
   <div class="marksheet-wrapper py-5" v-if="resultData">
     <div class="container">
       <div class="marksheet-container position-relative bg-white p-4 p-md-5 mx-auto">
-        <!-- Watermark Background -->
-        <div class="watermark">BOARD</div>
+        <!-- ===================================================== -->
+        <!-- LOGO WATERMARK -->
+        <!-- ===================================================== -->
+        <div v-if="institute?.logo" class="logo-watermark">
+          <img
+            :src="getLogoUrl(institute.logo)"
+            :alt="institute?.institute_name || 'Institute Logo'"
+          />
+        </div>
 
-        <!-- Top Header -->
-        <div class="text-center mb-4">
-          <h3 class="header-title mb-1">B@TCHPOINT COACHING CENTER</h3>
+        <!-- ===================================================== -->
+        <!-- TOP HEADER -->
+        <!-- ===================================================== -->
+        <div class="text-center mb-4 position-relative z-1">
+          <h3 class="header-title mb-1">
+            {{ institute?.institute_name || 'Institute Name' }}
+          </h3>
 
-          <p class="text-muted mb-2">DHAKA, BANGLADESH</p>
+          <p class="text-muted mb-2">
+            {{ institute?.location || 'DHAKA, BANGLADESH' }}
+          </p>
 
           <h4 class="fw-bold text-dark border-bottom pb-2 d-inline-block px-4">
             {{ resultData.type }} EXAMINATION -
@@ -19,7 +32,9 @@
           <h5 class="text-secondary mt-1">ACADEMIC TRANSCRIPT</h5>
         </div>
 
-        <!-- Student Information -->
+        <!-- ===================================================== -->
+        <!-- STUDENT INFORMATION -->
+        <!-- ===================================================== -->
         <table class="info-table mb-4 position-relative z-1">
           <tr>
             <!-- LEFT SIDE -->
@@ -87,6 +102,7 @@
 
                   <td>
                     :
+
                     <span class="badge bg-success fs-6">
                       {{ resultData.gpa }}
                     </span>
@@ -120,9 +136,9 @@
             </thead>
 
             <tbody>
-              <!-- ============================================= -->
+              <!-- ================================================= -->
               <!-- MAIN SUBJECTS -->
-              <!-- ============================================= -->
+              <!-- ================================================= -->
 
               <tr v-for="(subject, index) in mainSubjects" :key="subject.id || index">
                 <td>{{ index + 1 }}.</td>
@@ -156,9 +172,9 @@
                 </td>
               </tr>
 
-              <!-- ============================================= -->
+              <!-- ================================================= -->
               <!-- ADDITIONAL SUBJECTS -->
-              <!-- ============================================= -->
+              <!-- ================================================= -->
 
               <template
                 v-for="(subject, index) in additionalSubjects"
@@ -193,9 +209,9 @@
                 </tr>
               </template>
 
-              <!-- ============================================= -->
+              <!-- ================================================= -->
               <!-- NO SUBJECT -->
-              <!-- ============================================= -->
+              <!-- ================================================= -->
 
               <tr v-if="mainSubjects.length === 0 && additionalSubjects.length === 0">
                 <td colspan="6" class="text-center text-muted py-4">No subject result found.</td>
@@ -288,6 +304,7 @@
             :key="'info-' + (subject.id || index)"
           >
             {{ subject.subject_name }}
+
             <span v-if="index < additionalSubjects.length - 1"> , </span>
           </span>
 
@@ -327,13 +344,16 @@
         </button>
 
         <router-link to="/result" class="btn btn-info px-4 py-2 fw-bold shadow-sm ms-2">
-          <span>Back</span>
+          <span> Back </span>
         </router-link>
       </div>
     </div>
   </div>
 
-  <!-- Loading -->
+  <!-- ========================================================= -->
+  <!-- LOADING -->
+  <!-- ========================================================= -->
+
   <div v-else class="text-center py-5">
     <p class="fs-5 text-muted">Loading Result...</p>
   </div>
@@ -355,6 +375,44 @@ const route = useRoute()
 // ============================================================
 
 const resultData = ref(null)
+
+// ============================================================
+// INSTITUTE DATA
+// ============================================================
+
+const institute = ref(null)
+
+// ============================================================
+// FETCH INSTITUTE INFORMATION
+// ============================================================
+
+const fetchInstitute = async () => {
+  try {
+    const response = await api.get('/institute-info')
+
+    institute.value = response.data.data
+  } catch (error) {
+    console.error('Failed to fetch institute information:', error)
+  }
+}
+
+// ============================================================
+// LOGO URL
+// ============================================================
+
+const getLogoUrl = (logo) => {
+  if (!logo) {
+    return ''
+  }
+
+  // If backend already returns complete URL
+  if (logo.startsWith('http://') || logo.startsWith('https://')) {
+    return logo
+  }
+
+  // Laravel storage path
+  return `/storage/${logo}`
+}
 
 // ============================================================
 // FETCH SINGLE RESULT
@@ -381,12 +439,6 @@ const fetchSingleResult = async () => {
 // ============================================================
 // MAIN SUBJECTS
 // ============================================================
-//
-// Backend resultData.subjects এর মধ্যে
-// additional subject-ও থাকতে পারে।
-//
-// তাই এখানে আলাদা করা হচ্ছে।
-// ============================================================
 
 const mainSubjects = computed(() => {
   if (!resultData.value || !Array.isArray(resultData.value.subjects)) {
@@ -399,29 +451,18 @@ const mainSubjects = computed(() => {
 // ============================================================
 // ADDITIONAL SUBJECTS
 // ============================================================
-//
-// Backend:
-//
-// additional_subject = [ ... ]
-//
-// তাই frontend-এ array হিসেবেই handle করা হচ্ছে।
-// ============================================================
 
 const additionalSubjects = computed(() => {
   if (!resultData.value) {
     return []
   }
 
-  // First priority:
   // Backend থেকে সরাসরি additional_subject
-
   if (Array.isArray(resultData.value.additional_subject)) {
     return resultData.value.additional_subject
   }
 
-  // Fallback:
-  // subjects থেকে বের করা
-
+  // Fallback: subjects থেকে বের করা
   if (Array.isArray(resultData.value.subjects)) {
     return resultData.value.subjects.filter((subject) => subject.is_additional === true)
   }
@@ -431,10 +472,6 @@ const additionalSubjects = computed(() => {
 
 // ============================================================
 // JUNIOR CLASS CHECK
-// ============================================================
-//
-// Class 1-8 হলে Section
-// অন্যথায় Group
 // ============================================================
 
 const isJuniorClass = (className) => {
@@ -543,12 +580,6 @@ const calculateGrade = (marks) => {
 // ============================================================
 // ADDITIONAL SUBJECT GRADE
 // ============================================================
-//
-// Additional subject-এর ক্ষেত্রে F দেখানো হবে না
-// যদি marks থাকে, normal grade দেখাবে।
-//
-// GPA calculation থেকে এটা আলাদা।
-// ============================================================
 
 const calculateAdditionalGrade = (marks) => {
   if (marks === null || marks === undefined || marks === '') {
@@ -628,66 +659,145 @@ const printMarksheet = () => {
 // ============================================================
 
 onMounted(() => {
+  fetchInstitute()
+
   fetchSingleResult()
 })
 </script>
 
 <style scoped>
+/* =========================================================
+   MARKSHEET WRAPPER
+========================================================= */
+
 .marksheet-wrapper {
   background-color: #f2f4f7;
+
   font-family: 'Arial', sans-serif;
+
   min-height: 100vh;
 }
 
+/* =========================================================
+   MARKSHEET CONTAINER
+========================================================= */
+
 .marksheet-container {
   max-width: 850px;
+
   border: 5px solid #198754;
+
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+
   position: relative;
+
+  overflow: hidden;
 }
 
-.watermark {
+/* =========================================================
+   LOGO WATERMARK
+========================================================= */
+
+.logo-watermark {
   position: absolute;
+
   top: 50%;
+
   left: 50%;
+
   transform: translate(-50%, -50%);
-  font-size: 8rem;
-  color: rgba(25, 135, 84, 0.04);
+
+  width: 430px;
+
+  height: 430px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
   z-index: 0;
-  font-weight: bold;
+
   pointer-events: none;
+
   user-select: none;
 }
 
+/* =========================================================
+   WATERMARK IMAGE
+========================================================= */
+
+.logo-watermark img {
+  width: 100%;
+
+  height: 100%;
+
+  object-fit: contain;
+
+  opacity: 0.055;
+
+  filter: grayscale(100%);
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
 .header-title {
   color: #198754;
+
   font-weight: bold;
 }
 
+/* =========================================================
+   INFORMATION TABLE
+========================================================= */
+
 .info-table {
   width: 100%;
+
   border-collapse: collapse;
 }
+
+/* =========================================================
+   TABLE
+========================================================= */
 
 .table-bordered th,
 .table-bordered td {
   border-color: #dee2e6 !important;
+
   vertical-align: middle;
 }
+
+/* =========================================================
+   GRADING TABLE
+========================================================= */
 
 .grade-table th,
 .grade-table td {
   font-size: 0.85rem;
+
   padding: 4px;
 }
+
+/* =========================================================
+   ADDITIONAL SUBJECT
+========================================================= */
 
 .additional-row {
   border-top: 2px solid #ffc107 !important;
 }
 
+/* =========================================================
+   PRINT
+========================================================= */
+
 @media print {
   @page {
     size: A4 portrait;
+
     margin: 10mm;
   }
 
@@ -697,20 +807,68 @@ onMounted(() => {
 
   .marksheet-wrapper {
     background-color: #fff;
+
     padding: 0 !important;
   }
 
   .marksheet-container {
     border: 3px solid #000;
+
     box-shadow: none;
+
     margin: 0;
+
     padding: 15px !important;
+
     width: 100%;
+
     max-width: 100%;
+
+    overflow: hidden;
+  }
+
+  /* Keep logo watermark in print */
+
+  .logo-watermark {
+    display: flex !important;
+
+    position: absolute;
+
+    top: 50%;
+
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+  }
+
+  .logo-watermark img {
+    opacity: 0.055;
   }
 
   .no-print {
     display: none !important;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 576px) {
+  .marksheet-container {
+    border-width: 3px;
+
+    padding: 15px !important;
+  }
+
+  .logo-watermark {
+    width: 300px;
+
+    height: 300px;
+  }
+
+  .header-title {
+    font-size: 20px;
   }
 }
 </style>

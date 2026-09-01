@@ -1,79 +1,60 @@
 <template>
-  <!-- MOBILE HEADER -->
+  <!-- ================= MOBILE HEADER ================= -->
   <div class="mobile-header d-md-none">
-    <button class="menu-btn" @click="toggleSidebar">
+    <button type="button" class="menu-btn" @click="toggleSidebar">
       <i class="fa-solid fa-bars"></i>
     </button>
 
-    <h5 class="mb-0 text-white">Admin Panel</h5>
+    <div class="mobile-header-title">
+      <h5 class="mb-0 text-white">
+        {{ institute?.institute_name || 'Admin Panel' }}
+      </h5>
+    </div>
   </div>
 
-  <!-- OVERLAY -->
-  <div class="sidebar-overlay" :class="{ active: isSidebarOpen }" @click="toggleSidebar"></div>
+  <!-- ================= OVERLAY ================= -->
+  <div class="sidebar-overlay" :class="{ active: isSidebarOpen }" @click="closeSidebar"></div>
 
-  <!-- SIDEBAR -->
-  <div class="sidebar" :class="{ active: isSidebarOpen }">
-    <!-- Logo -->
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar" :class="{ active: isSidebarOpen }">
+    <!-- ================= INSTITUTE LOGO ================= -->
     <div class="sidebar-logo">
       <div class="logo-icon">
-        <i class="fa-solid fa-graduation-cap"></i>
+        <!-- Institute Logo -->
+        <img
+          v-if="institute?.logo"
+          :src="getLogoUrl(institute.logo)"
+          :alt="institute?.institute_name || 'Institute Logo'"
+          class="institute-logo"
+        />
+
+        <!-- Default Icon -->
+        <i v-else class="fa-solid fa-graduation-cap"></i>
       </div>
 
       <div class="logo-content">
-        <h5 class="logo-title">Coaching MS</h5>
-        <span class="logo-subtitle">Management System</span>
+        <h5 class="logo-title">
+          {{ institute?.institute_name || 'Coaching MS' }}
+        </h5>
+
+        <span class="logo-subtitle"> Management System </span>
       </div>
     </div>
 
-    <!-- Dashboard -->
+    <!-- ================= DASHBOARD ================= -->
     <router-link to="/dashboard" active-class="active-menu" @click="closeSidebar">
       <i class="fa-solid fa-gauge-high"></i>
       <span>Dashboard</span>
     </router-link>
 
-    <!-- Result -->
-    <router-link to="/result" active-class="active-menu" @click="closeSidebar">
-      <i class="fa-solid fa-square-poll-vertical"></i>
-      <span>Result</span>
+    <!-- ================= INSTITUTE ================= -->
+    <router-link to="/Institure-Info" active-class="active-menu" @click="closeSidebar">
+      <i class="fa-solid fa-building"></i>
+      <span>Institute Information</span>
     </router-link>
 
-    <!-- Result -->
-    <router-link to="/shift" active-class="active-menu" @click="closeSidebar">
-      <i class="fa-solid fa-square-poll-vertical"></i>
-      <span>Shift</span>
-    </router-link>
-
-    <!-- Sections -->
-    <router-link to="/section" active-class="active-menu" @click="closeSidebar">
-      <i class="fa-solid fa-square-poll-vertical"></i>
-      <span>Sections</span>
-    </router-link>
-    <!-- Class -->
-    <router-link to="/class" active-class="active-menu" @click="closeSidebar">
-      <i class="fa-solid fa-square-poll-vertical"></i>
-      <span>Class</span>
-    </router-link>
-
-    <router-link to="/exam" active-class="active-menu" @click="closeSidebar">
-      <i class="fa-solid fa-square-poll-vertical"></i>
-      <span>Examination</span>
-    </router-link>
-    <!-- Account -->
-    <router-link
-      v-if="role === 'Manager'"
-      to="/account/dashboard"
-      active-class="active-menu"
-      @click="closeSidebar"
-    >
-      <i class="fa-solid fa-wallet"></i>
-      <span>Account Dashboard</span>
-    </router-link>
-    <router-link to="/subject" active-class="active-menu" @click="closeSidebar">
-      <i class="fa-solid fa-square-poll-vertical"></i>
-      <span>Subjects</span>
-    </router-link>
-    <!-- Student Dropdown -->
-    <div class="dropdown w-100 mb-2">
+    <!-- ================= STUDENTS ================= -->
+    <div class="dropdown sidebar-dropdown">
       <button class="student-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
         <span>
           <i class="fa-solid fa-user-graduate"></i>
@@ -81,7 +62,7 @@
         </span>
       </button>
 
-      <ul class="dropdown-menu w-100">
+      <ul class="dropdown-menu">
         <li>
           <router-link
             class="dropdown-item"
@@ -89,38 +70,107 @@
             active-class="active-menu"
             @click="closeSidebar"
           >
-            <i class="fa-solid fa-list"></i>
+            <i class="fa-solid fa-users"></i>
             All Students
           </router-link>
         </li>
 
         <li>
-          <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#addModal">
+          <button
+            type="button"
+            class="dropdown-item"
+            data-bs-toggle="modal"
+            data-bs-target="#addModal"
+          >
             <i class="fa-solid fa-user-plus"></i>
             Add Student
           </button>
         </li>
       </ul>
     </div>
-    <div class="dropdown w-100 mb-2">
+
+    <!-- ================= TEACHERS ================= -->
+    <div class="dropdown sidebar-dropdown">
       <button class="student-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
         <span>
-          <i class="fa-solid fa-user-graduate"></i>
+          <i class="fa-solid fa-chalkboard-user"></i>
+          Teachers
+        </span>
+      </button>
+
+      <ul class="dropdown-menu">
+        <li>
+          <router-link
+            class="dropdown-item"
+            to="/teacherView"
+            active-class="active-menu"
+            @click="closeSidebar"
+          >
+            <i class="fa-solid fa-users"></i>
+            All Teachers
+          </router-link>
+        </li>
+
+        <li>
+          <router-link
+            class="dropdown-item"
+            to="/teacherattendance"
+            active-class="active-menu"
+            @click="closeSidebar"
+          >
+            <i class="fa-solid fa-calendar-check"></i>
+            Teacher Attendance
+          </router-link>
+        </li>
+
+        <li>
+          <router-link
+            class="dropdown-item"
+            to="/AttendancOverview"
+            active-class="active-menu"
+            @click="closeSidebar"
+          >
+            <i class="fa-solid fa-chart-column"></i>
+            Attendance Summary
+          </router-link>
+        </li>
+
+        <li>
+          <router-link
+            class="dropdown-item"
+            to="/AttendanceHistry"
+            active-class="active-menu"
+            @click="closeSidebar"
+          >
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            Attendance History
+          </router-link>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ================= STAFF ================= -->
+    <div class="dropdown sidebar-dropdown">
+      <button class="student-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+        <span>
+          <i class="fa-solid fa-user-tie"></i>
           Staff
         </span>
       </button>
 
-      <ul class="dropdown-menu w-100">
-        <!-- Staff -->
-        <router-link
-          v-if="role === 'Manager' || role === 'Admin'"
-          to="/staff"
-          active-class="active-menu"
-          @click="closeSidebar"
-        >
-          <i class="fa-solid fa-users"></i>
-          <span>All Staff</span>
-        </router-link>
+      <ul class="dropdown-menu">
+        <li v-if="role === 'Manager' || role === 'Admin'">
+          <router-link
+            class="dropdown-item"
+            to="/staff"
+            active-class="active-menu"
+            @click="closeSidebar"
+          >
+            <i class="fa-solid fa-users"></i>
+            All Staff
+          </router-link>
+        </li>
+
         <li>
           <router-link
             class="dropdown-item"
@@ -128,7 +178,7 @@
             active-class="active-menu"
             @click="closeSidebar"
           >
-            <i class="fa-solid fa-list"></i>
+            <i class="fa-solid fa-calendar-check"></i>
             Staff Attendance
           </router-link>
         </li>
@@ -140,10 +190,11 @@
             active-class="active-menu"
             @click="closeSidebar"
           >
-            <i class="fa-solid fa-list"></i>
+            <i class="fa-solid fa-chart-column"></i>
             Attendance Summary
           </router-link>
         </li>
+
         <li>
           <router-link
             class="dropdown-item"
@@ -151,121 +202,209 @@
             active-class="active-menu"
             @click="closeSidebar"
           >
-            <i class="fa-solid fa-list"></i>
+            <i class="fa-solid fa-clock-rotate-left"></i>
             Attendance History
           </router-link>
         </li>
       </ul>
     </div>
-    <div class="dropdown w-100 mb-2">
-      <button class="student-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
-        <span>
-          <i class="fa-solid fa-user-graduate"></i>
-          Teachers
-        </span>
-      </button>
 
-      <ul class="dropdown-menu w-100">
-        <li>
-          <router-link
-            class="dropdown-item"
-            to="/teacherView"
-            active-class="active-menu"
-            @click="closeSidebar"
-          >
-            <i class="fa-solid fa-list"></i>
-            All Teachers
-          </router-link>
-        </li>
-        <li>
-          <router-link
-            class="dropdown-item"
-            to="/teacherattendance"
-            active-class="active-menu"
-            @click="closeSidebar"
-          >
-            <i class="fa-solid fa-list"></i>
-            Teachers Attendance
-          </router-link>
-        </li>
+    <!-- ================= ACADEMIC SECTION ================= -->
+    <div class="menu-section-title">Academic</div>
 
-        <li>
-          <router-link
-            class="dropdown-item"
-            to="/AttendancOverview"
-            active-class="active-menu"
-            @click="closeSidebar"
-          >
-            <i class="fa-solid fa-list"></i>
-            Attendance Summary
-          </router-link>
-        </li>
-        <li>
-          <router-link
-            class="dropdown-item"
-            to="/AttendanceHistry"
-            active-class="active-menu"
-            @click="closeSidebar"
-          >
-            <i class="fa-solid fa-list"></i>
-            Attendance History
-          </router-link>
-        </li>
-      </ul>
-    </div>
+    <!-- ================= CLASS ================= -->
+    <router-link to="/class" active-class="active-menu" @click="closeSidebar">
+      <i class="fa-solid fa-school"></i>
+      <span>Class</span>
+    </router-link>
+
+    <!-- ================= CLASS GROUP ================= -->
     <router-link to="/ClassGroup" active-class="active-menu" @click="closeSidebar">
-      <i class="fa-solid fa-square-poll-vertical"></i>
+      <i class="fa-solid fa-layer-group"></i>
       <span>Class Group</span>
     </router-link>
-    <router-link to="/holiday" active-class="active-menu" @click="closeSidebar">
-      <i class="fa-solid fa-square-poll-vertical"></i>
-      <span>Hollidays</span>
+
+    <!-- ================= SECTION ================= -->
+    <router-link to="/section" active-class="active-menu" @click="closeSidebar">
+      <i class="fa-solid fa-table-columns"></i>
+      <span>Sections</span>
     </router-link>
-    <!-- Settings -->
+
+    <!-- ================= SUBJECT ================= -->
+    <router-link to="/subject" active-class="active-menu" @click="closeSidebar">
+      <i class="fa-solid fa-book-open"></i>
+      <span>Subjects</span>
+    </router-link>
+
+    <!-- ================= EXAMINATION ================= -->
+    <router-link to="/exam" active-class="active-menu" @click="closeSidebar">
+      <i class="fa-solid fa-file-pen"></i>
+      <span>Examination</span>
+    </router-link>
+
+    <!-- ================= RESULT ================= -->
+    <router-link to="/result" active-class="active-menu" @click="closeSidebar">
+      <i class="fa-solid fa-square-poll-vertical"></i>
+      <span>Result</span>
+    </router-link>
+
+    <!-- ================= SHIFT ================= -->
+    <router-link to="/shift" active-class="active-menu" @click="closeSidebar">
+      <i class="fa-solid fa-clock"></i>
+      <span>Shift</span>
+    </router-link>
+
+    <!-- ================= HOLIDAY ================= -->
+    <router-link to="/holiday" active-class="active-menu" @click="closeSidebar">
+      <i class="fa-solid fa-calendar-days"></i>
+      <span>Holidays</span>
+    </router-link>
+
+    <!-- ================= ACCOUNT DASHBOARD ================= -->
+    <router-link
+      v-if="role === 'Manager'"
+      to="/account/dashboard"
+      active-class="active-menu"
+      @click="closeSidebar"
+    >
+      <i class="fa-solid fa-wallet"></i>
+      <span>Account Dashboard</span>
+    </router-link>
+
+    <!-- ================= SETTINGS ================= -->
     <router-link to="/settings" active-class="active-menu" @click="closeSidebar">
       <i class="fa-solid fa-gear"></i>
       <span>Settings</span>
     </router-link>
-    <div class="px-3 mt-3">
-      <button @click="takeBackup" :disabled="loading" class="btn btn-primary w-100 mb-2">
-        <span v-if="loading">Backing up... Please wait</span>
-        <span v-else><i class="fa-solid fa-database me-2"></i> Take Database Backup</span>
+
+    <!-- ================= BACKUP ================= -->
+    <div class="backup-section">
+      <button type="button" @click="takeBackup" :disabled="loading" class="backup-btn">
+        <span v-if="loading">
+          <i class="fa-solid fa-spinner fa-spin me-2"></i>
+          Backing up...
+        </span>
+
+        <span v-else>
+          <i class="fa-solid fa-database me-2"></i>
+          Take Database Backup
+        </span>
       </button>
 
-      <p v-if="message" class="mt-2 text-sm" :class="isError ? 'text-danger' : 'text-success'">
+      <p v-if="message" class="backup-message" :class="isError ? 'text-danger' : 'text-success'">
         {{ message }}
       </p>
     </div>
 
-    <!-- Logout -->
-    <button @click="logout" class="btn btn-danger logout-btn">
-      <i class="fa-solid fa-right-from-bracket me-2"></i>
-      Logout
+    <!-- ================= LOGOUT ================= -->
+    <button type="button" @click="logout" class="logout-btn">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      <span>Logout</span>
     </button>
-
-    <!-- Logout -->
-    <button @click="logout" class="btn btn-danger logout-btn">
-      <i class="fa-solid fa-right-from-bracket me-2"></i>
-      Logout
-    </button>
-  </div>
+  </aside>
 </template>
+
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
 import api from '../services/api'
 
-// রিঅ্যাক্টিভ ভেরিয়েবলগুলো ডিফাইন
-const loading = ref(false)
-const message = ref('')
-const isError = ref(false)
-const role = localStorage.getItem('role')
+/* =========================================================
+   ROUTER
+========================================================= */
+
 const router = useRouter()
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
 
 const isSidebarOpen = ref(false)
 
+/* =========================================================
+   USER ROLE
+========================================================= */
+
+const role = localStorage.getItem('role')
+
+/* =========================================================
+   BACKUP
+========================================================= */
+
+const loading = ref(false)
+const message = ref('')
+const isError = ref(false)
+
+/* =========================================================
+   INSTITUTE
+========================================================= */
+
+const institute = ref(null)
+
+/* =========================================================
+   GET LOGO URL
+========================================================= */
+
+const getLogoUrl = (logo) => {
+  if (!logo) {
+    return ''
+  }
+
+  // Already a complete URL
+  if (logo.startsWith('http://') || logo.startsWith('https://') || logo.startsWith('data:image')) {
+    return logo
+  }
+
+  // Laravel storage path
+  if (logo.startsWith('/storage/')) {
+    return logo
+  }
+
+  if (logo.startsWith('storage/')) {
+    return `/${logo}`
+  }
+
+  // If backend returns only filename/path
+  return `/storage/${logo}`
+}
+
+/* =========================================================
+   FETCH INSTITUTE INFORMATION
+========================================================= */
+
+const fetchInstitute = async () => {
+  try {
+    const response = await api.get('/institute-info')
+
+    institute.value = response.data.data
+
+    console.log('Institute Information:', institute.value)
+  } catch (error) {
+    console.error('Failed to fetch institute information:', error.response || error)
+  }
+}
+
+/* =========================================================
+   SIDEBAR TOGGLE
+========================================================= */
+
+const toggleSidebar = () => {
+  isSidebarOpen.value = !isSidebarOpen.value
+}
+
+const closeSidebar = () => {
+  isSidebarOpen.value = false
+}
+
+/* =========================================================
+   DATABASE BACKUP
+========================================================= */
+
 const takeBackup = async () => {
+  if (loading.value) {
+    return
+  }
+
   loading.value = true
   message.value = 'Backup is running, please wait...'
   isError.value = false
@@ -284,11 +423,12 @@ const takeBackup = async () => {
     )
 
     message.value = response.data.message || 'Backup completed successfully!'
+
     isError.value = false
   } catch (error) {
-    isError.value = true
-
     console.log('Full Error:', error.response || error)
+
+    isError.value = true
 
     message.value = error.response?.data?.message || 'Something went wrong during backup!'
   } finally {
@@ -296,13 +436,9 @@ const takeBackup = async () => {
   }
 }
 
-const toggleSidebar = () => {
-  isSidebarOpen.value = !isSidebarOpen.value
-}
-
-const closeSidebar = () => {
-  isSidebarOpen.value = false
-}
+/* =========================================================
+   LOGOUT
+========================================================= */
 
 const logout = () => {
   localStorage.removeItem('token')
@@ -311,23 +447,19 @@ const logout = () => {
   router.push('/login')
 }
 
-// Database Backup Download
-const backupDatabase = async () => {
-  const response = await api.get('/backup', {
-    responseType: 'blob',
-  })
+/* =========================================================
+   LIFECYCLE
+========================================================= */
 
-  const url = window.URL.createObjectURL(response.data)
-
-  const link = document.createElement('a')
-  link.href = url
-  link.download = 'database_backup.sql'
-  link.click()
-}
+onMounted(() => {
+  fetchInstitute()
+})
 </script>
+
 <style scoped>
-/* DESKTOP SIDEBAR */
-/* ================= Sidebar ================= */
+/* =========================================================
+   DESKTOP SIDEBAR
+========================================================= */
 
 .sidebar {
   width: 260px;
@@ -338,8 +470,10 @@ const backupDatabase = async () => {
   padding: 20px;
 
   position: fixed;
+
   left: 0;
   top: 0;
+  bottom: 0;
 
   overflow-y: auto;
 
@@ -350,190 +484,248 @@ const backupDatabase = async () => {
   border-right: 1px solid rgba(255, 255, 255, 0.06);
 
   box-shadow: 6px 0 18px rgba(0, 0, 0, 0.18);
+
+  box-sizing: border-box;
 }
 
-.next-div {
-  margin-left: 260px;
-}
-/* ================= Menu ================= */
+/* =========================================================
+   SIDEBAR LOGO
+========================================================= */
 
-.sidebar a {
+.sidebar-logo {
   display: flex;
+
   align-items: center;
 
-  color: #e5e7eb;
-  text-decoration: none;
+  gap: 14px;
 
-  padding: 12px 15px;
-  margin-bottom: 8px;
+  padding-bottom: 20px;
+
+  margin-bottom: 22px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* =========================================================
+   LOGO ICON CONTAINER
+========================================================= */
+
+.logo-icon {
+  width: 52px;
+  height: 52px;
+
+  flex: 0 0 52px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  background-color: transparent !important;
+
+  color: #fff;
+
+  border-radius: 14px;
+
+  font-size: 22px;
+
+  overflow: hidden;
+}
+
+/* =========================================================
+   INSTITUTE LOGO
+========================================================= */
+
+.institute-logo {
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  padding: 5px;
 
   border-radius: 10px;
 
-  font-size: 15px;
+  display: block;
+}
+
+/* =========================================================
+   LOGO CONTENT
+========================================================= */
+
+.logo-content {
+  min-width: 0;
+
+  display: flex;
+
+  flex-direction: column;
+}
+
+.logo-title {
+  margin: 0;
+
+  color: #fff;
+
+  font-size: 17px;
+
+  font-weight: 700;
+
+  line-height: 1.3;
+
+  word-break: break-word;
+}
+
+.logo-subtitle {
+  color: #94a3b8;
+
+  font-size: 11px;
+
+  letter-spacing: 0.4px;
+
+  margin-top: 2px;
+}
+
+/* =========================================================
+   MENU LINKS
+========================================================= */
+
+.sidebar > a {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  color: #e5e7eb;
+
+  text-decoration: none;
+
+  padding: 11px 14px;
+
+  margin-bottom: 6px;
+
+  border-radius: 10px;
+
+  font-size: 14px;
+
   font-weight: 500;
 
   transition: all 0.25s ease;
 }
 
-.sidebar a:hover {
+.sidebar > a:hover {
   background: rgba(255, 255, 255, 0.08);
+
   color: #fff;
 
-  transform: translateX(4px);
+  transform: translateX(3px);
 }
+
+.sidebar > a i {
+  width: 22px;
+
+  text-align: center;
+
+  font-size: 15px;
+
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   ACTIVE MENU
+========================================================= */
 
 .active-menu {
   background: #2563eb !important;
+
   color: #fff !important;
 
   box-shadow: 0 8px 18px rgba(37, 99, 235, 0.3);
 }
 
+/* =========================================================
+   SECTION TITLE
+========================================================= */
+
+.menu-section-title {
+  color: #64748b;
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  text-transform: uppercase;
+
+  letter-spacing: 1px;
+
+  padding: 12px 14px 6px;
+}
+
+/* =========================================================
+   DROPDOWN
+========================================================= */
+
+.sidebar-dropdown {
+  width: 100%;
+
+  margin-bottom: 4px;
+}
+
 .student-btn {
   width: 100%;
 
   background: transparent !important;
+
   border: none !important;
+
   outline: none;
 
   color: #e5e7eb !important;
 
+  text-align: left;
+
   display: flex;
+
   align-items: center;
+
   justify-content: space-between;
 
-  padding: 12px 15px;
-  margin-bottom: 8px;
+  padding: 11px 14px;
 
   border-radius: 10px;
 
-  font-size: 15px;
+  font-size: 14px;
+
   font-weight: 500;
 
   transition: all 0.25s ease;
 }
 
+.student-btn > span {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+}
+
 .student-btn:hover {
   background: rgba(255, 255, 255, 0.08) !important;
+
   color: #fff !important;
-
-  transform: translateX(4px);
 }
 
-.student-btn::after {
-  margin-left: auto;
-}
-/* MOBILE TOPBAR */
-.mobile-header {
-  position: sticky;
-  top: 0;
-  z-index: 998;
-  background: #111827;
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  gap: 15px;
+.student-btn > span > i {
+  width: 22px;
+
+  text-align: center;
+
+  font-size: 15px;
 }
 
-.menu-btn {
-  border: none;
-  background: transparent;
-  color: white;
-  font-size: 30px;
-  line-height: 1;
-}
-
-/* OVERLAY */
-.sidebar-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  visibility: hidden;
-  opacity: 0;
-  transition: 0.3s;
-  z-index: 997;
-}
-
-.sidebar-overlay.active {
-  visibility: visible;
-  opacity: 1;
-}
-
-/* MOBILE */
-@media (max-width: 768px) {
-  .sidebar {
-    left: -100%;
-    width: 260px;
-  }
-
-  .sidebar.active {
-    left: 0;
-  }
-}
-
-/* DESKTOP */
-@media (min-width: 769px) {
-  .mobile-header {
-    display: none;
-  }
-}
-.dropdown-menu {
-  background-color: #111827 !important;
-}
-.adstu {
-  color: aliceblue !important;
-}
-/* ---------- Logo ---------- */
-
-.sidebar-logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-bottom: 20px;
-  margin-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.logo-icon {
-  width: 50px;
-  height: 50px;
-  background: #2563eb;
-  border-radius: 12px;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  color: #fff;
-  font-size: 22px;
-}
-
-.logo-title {
-  color: #fff;
-  font-weight: 700;
-}
-
-.logo-subtitle {
-  color: #94a3b8;
-}
-.student-btn {
-  width: 100%;
-  background: transparent !important;
-  border: none !important;
-  color: #fff !important;
-  text-align: left;
-  padding: 12px 15px;
-  border-radius: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: 0.3s;
-}
-
-.student-btn:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-}
-/* ================= Dropdown ================= */
+/* =========================================================
+   DROPDOWN MENU
+========================================================= */
 
 .dropdown-menu {
   width: 100%;
@@ -546,14 +738,17 @@ const backupDatabase = async () => {
 
   padding: 6px;
 
-  margin-top: 6px !important;
+  margin-top: 4px !important;
 
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
 }
 
 .dropdown-item {
   display: flex;
+
   align-items: center;
+
+  gap: 12px;
 
   color: #e5e7eb !important;
 
@@ -561,74 +756,82 @@ const backupDatabase = async () => {
 
   border-radius: 8px;
 
-  font-size: 14px;
+  font-size: 13px;
 
   transition: all 0.25s ease;
 }
 
 .dropdown-item:hover {
   background: #2563eb !important;
+
   color: #fff !important;
 
   transform: translateX(3px);
 }
 
 .dropdown-item i {
-  width: 18px;
-}
-/* ================= Logo ================= */
+  width: 19px;
 
-.sidebar-logo {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-
-  padding-bottom: 20px;
-  margin-bottom: 22px;
-
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
 }
 
-.logo-icon {
-  width: 52px;
-  height: 52px;
+/* =========================================================
+   BACKUP
+========================================================= */
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.backup-section {
+  margin-top: 14px;
 
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  padding-top: 14px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.backup-btn {
+  width: 100%;
+
+  border: none;
+
+  border-radius: 9px;
+
+  padding: 11px 12px;
+
+  background: #2563eb;
+
   color: #fff;
 
-  border-radius: 14px;
+  font-size: 13px;
 
-  font-size: 22px;
+  font-weight: 600;
 
-  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.35);
+  transition: all 0.25s ease;
 }
 
-.logo-content {
-  display: flex;
-  flex-direction: column;
+.backup-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+
+  transform: translateY(-1px);
 }
 
-.logo-title {
-  margin: 0;
-  color: #fff;
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.2;
+.backup-btn:disabled {
+  opacity: 0.7;
+
+  cursor: not-allowed;
 }
 
-.logo-subtitle {
-  color: #94a3b8;
-  font-size: 12px;
-  letter-spacing: 0.5px;
+.backup-message {
+  font-size: 11px;
+
+  margin: 8px 2px 0;
+
+  word-break: break-word;
 }
 
-/* ================= Logout ================= */
+/* =========================================================
+   LOGOUT
+========================================================= */
 
-.sidebar .btn-danger {
+.logout-btn {
   width: 100%;
 
   border: none;
@@ -637,39 +840,118 @@ const backupDatabase = async () => {
 
   padding: 12px 15px;
 
-  margin-top: 20px;
+  margin-top: 12px;
+
+  margin-bottom: 5px;
+
+  background: #dc2626;
+
+  color: #fff;
 
   font-weight: 600;
 
-  background: #dc2626;
+  font-size: 14px;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  gap: 10px;
 
   transition: all 0.25s ease;
 }
 
-.sidebar .btn-danger {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-
-  width: calc(100% - 40px);
-
-  border: none;
-  border-radius: 10px;
-
-  padding: 12px 15px;
-
-  font-weight: 600;
-
-  background: #dc2626;
-
-  transition: all 0.25s ease;
-}
-
-.sidebar .btn-danger:hover {
+.logout-btn:hover {
   background: #b91c1c;
+
   transform: translateY(-2px);
 }
-/* ================= Scrollbar ================= */
+
+/* =========================================================
+   MOBILE HEADER
+========================================================= */
+
+.mobile-header {
+  position: sticky;
+
+  top: 0;
+
+  z-index: 998;
+
+  background: #111827;
+
+  padding: 12px 16px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
+
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.menu-btn {
+  border: none;
+
+  background: transparent;
+
+  color: #fff;
+
+  font-size: 27px;
+
+  line-height: 1;
+
+  padding: 0;
+}
+
+.mobile-header-title {
+  min-width: 0;
+}
+
+.mobile-header-title h5 {
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+  max-width: 250px;
+}
+
+/* =========================================================
+   OVERLAY
+========================================================= */
+
+.sidebar-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  background: rgba(0, 0, 0, 0.4);
+
+  visibility: hidden;
+
+  opacity: 0;
+
+  transition: all 0.3s ease;
+
+  z-index: 997;
+
+  backdrop-filter: blur(2px);
+}
+
+.sidebar-overlay.active {
+  visibility: visible;
+
+  opacity: 1;
+}
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
 
 .sidebar::-webkit-scrollbar {
   width: 6px;
@@ -677,6 +959,7 @@ const backupDatabase = async () => {
 
 .sidebar::-webkit-scrollbar-thumb {
   background: #334155;
+
   border-radius: 20px;
 }
 
@@ -684,74 +967,63 @@ const backupDatabase = async () => {
   background: #475569;
 }
 
-/* ================= Overlay ================= */
+/* =========================================================
+   MOBILE
+========================================================= */
 
-.sidebar-overlay {
-  backdrop-filter: blur(2px);
+@media (max-width: 768px) {
+  .sidebar {
+    left: -100%;
+
+    width: 260px;
+
+    box-shadow: 8px 0 25px rgba(0, 0, 0, 0.25);
+  }
+
+  .sidebar.active {
+    left: 0;
+  }
 }
 
-/* ================= Mobile Header ================= */
+/* =========================================================
+   DESKTOP
+========================================================= */
 
-.mobile-header {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+@media (min-width: 769px) {
+  .mobile-header {
+    display: none !important;
+  }
 }
 
-/* ================= Animation ================= */
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
 
-.sidebar a,
-.student-btn,
-.dropdown-item,
-.btn-danger {
-  transition: all 0.25s ease;
-}
+@media (max-width: 400px) {
+  .sidebar {
+    width: 250px;
+  }
 
-/* ================= Divider ================= */
+  .mobile-header {
+    padding: 11px 13px;
+  }
 
-.sidebar hr {
-  border-color: rgba(255, 255, 255, 0.08);
-}
+  .mobile-header-title h5 {
+    font-size: 15px;
 
-/* ================= Small Polish ================= */
+    max-width: 210px;
+  }
 
-.logo-icon,
-.student-btn,
-.sidebar a,
-.btn-danger {
-  user-select: none;
-}
-.sidebar a {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+  .logo-icon {
+    width: 46px;
 
-.sidebar a i {
-  width: 22px;
-  text-align: center;
-  font-size: 16px;
-}
+    height: 46px;
 
-.student-btn span {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+    flex-basis: 46px;
+  }
 
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.dropdown-item i {
-  width: 20px;
-  text-align: center;
-}
-
-.logout-btn {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
+  .logo-title {
+    font-size: 15px;
+  }
 }
 </style>

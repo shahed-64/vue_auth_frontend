@@ -23,6 +23,12 @@ const router = createRouter({
       meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
     },
     {
+      path: '/Institure-Info',
+      name: 'InstututeInfo',
+      component: () => import('../views/InstituteInformationView.vue'),
+      meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
+    },
+    {
       path: '/shift',
       name: 'shiftView',
       component: () => import('../views/ShifPagetView.vue'),

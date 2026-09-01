@@ -1,63 +1,82 @@
 <template>
   <div>
     <!-- ================= MOBILE HEADER ================= -->
-
     <div class="mobile-topbar d-md-none">
-      <button class="menu-btn" @click="toggleMenu">
+      <button type="button" class="menu-btn" @click="toggleMenu">
         <i class="fa-solid fa-bars"></i>
       </button>
 
       <div class="mobile-brand">
-        <h5>Coaching MS</h5>
+        <h5>
+          {{ institute?.institute_name || 'Coaching MS' }}
+        </h5>
+
         <small>Management System</small>
       </div>
     </div>
 
     <!-- ================= SIDEBAR ================= -->
-
     <div :class="['sidebar', { open: isOpen }]">
-      <!-- Logo -->
-
+      <!-- ================= INSTITUTE LOGO ================= -->
       <div class="sidebar-logo">
         <div class="logo-box">
-          <i class="fa-solid fa-graduation-cap"></i>
+          <!-- Dynamic Institute Logo -->
+          <img
+            v-if="institute?.logo"
+            :src="getLogoUrl(institute.logo)"
+            :alt="institute?.institute_name || 'Institute Logo'"
+            class="institute-logo"
+          />
+
+          <!-- Default Logo -->
+          <i v-else class="fa-solid fa-graduation-cap"></i>
         </div>
 
         <div class="logo-text">
-          <h4>Coaching MS</h4>
-          <span>Management System</span>
+          <h4>
+            {{ institute?.institute_name || 'Coaching MS' }}
+          </h4>
+
+          <span> Management System </span>
         </div>
       </div>
 
       <!-- ================= MENU ================= -->
-
       <div class="sidebar-menu">
-        <!-- Dashboard -->
-
-        <router-link to="/account/dashboard" class="menu-item" active-class="active-menu">
+        <!-- ================= DASHBOARD ================= -->
+        <router-link
+          to="/account/dashboard"
+          class="menu-item"
+          active-class="active-menu"
+          @click="closeMenu"
+        >
           <i class="fa-solid fa-chart-line"></i>
-
           <span>Dashboard</span>
         </router-link>
 
-        <!-- Student Payment -->
-
-        <router-link to="/student/payment" class="menu-item" active-class="active-menu">
+        <!-- ================= STUDENT PAYMENT ================= -->
+        <router-link
+          to="/student/payment"
+          class="menu-item"
+          active-class="active-menu"
+          @click="closeMenu"
+        >
           <i class="fa-solid fa-money-bill-wave"></i>
-
           <span>Student Payment</span>
         </router-link>
 
-        <!-- Others Payment -->
-
-        <router-link to="/others-payment" class="menu-item" active-class="active-menu">
+        <!-- ================= OTHERS PAYMENT ================= -->
+        <router-link
+          to="/others-payment"
+          class="menu-item"
+          active-class="active-menu"
+          @click="closeMenu"
+        >
           <i class="fa-solid fa-wallet"></i>
-
           <span>Others Payment</span>
         </router-link>
 
-        <!-- Payment Collapse -->
-
+        <!-- ================= PAYMENT COLLAPSE ================= -->
         <div class="payment-wrapper">
           <button
             class="payment-toggle"
@@ -67,7 +86,6 @@
           >
             <div class="toggle-left">
               <i class="fa-solid fa-file-invoice-dollar"></i>
-
               <span>Payments</span>
             </div>
 
@@ -75,89 +93,186 @@
           </button>
 
           <div class="collapse" id="paymentMenu">
-            <router-link to="/payment/history" class="submenu-item" active-class="active-menu">
+            <!-- Payment History -->
+            <router-link
+              to="/payment/history"
+              class="submenu-item"
+              active-class="active-menu"
+              @click="closeMenu"
+            >
               <i class="fa-solid fa-clock-rotate-left"></i>
-
               <span>Payment History</span>
             </router-link>
 
-            <router-link to="/payment/single" class="submenu-item" active-class="active-menu">
+            <!-- Single Student Payment -->
+            <router-link
+              to="/payment/single"
+              class="submenu-item"
+              active-class="active-menu"
+              @click="closeMenu"
+            >
               <i class="fa-solid fa-user-check"></i>
-
               <span>Single Student Payment</span>
             </router-link>
           </div>
         </div>
 
-        <!-- Expense -->
-
-        <router-link to="/expense" class="menu-item" active-class="active-menu">
+        <!-- ================= EXPENSE ================= -->
+        <router-link to="/expense" class="menu-item" active-class="active-menu" @click="closeMenu">
           <i class="fa-solid fa-money-check-dollar"></i>
-
           <span>Expense</span>
         </router-link>
 
-        <!-- Main Dashboard -->
-
+        <!-- ================= MAIN DASHBOARD ================= -->
         <router-link
           v-if="role === 'Manager'"
           to="/dashboard"
           class="menu-item"
           active-class="active-menu"
+          @click="closeMenu"
         >
           <i class="fa-solid fa-gauge-high"></i>
           <span>Main Dashboard</span>
         </router-link>
       </div>
 
-      <!-- Footer -->
-
+      <!-- ================= FOOTER ================= -->
       <div class="logout-section">
-        <button @click="logout" class="btn btn-danger w-100">Logout</button>
+        <button type="button" @click="logout" class="logout-btn">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Logout</span>
+        </button>
       </div>
     </div>
 
-    <!-- Overlay -->
-
-    <div v-if="isOpen" class="sidebar-overlay d-md-none" @click="toggleMenu"></div>
+    <!-- ================= OVERLAY ================= -->
+    <div v-if="isOpen" class="sidebar-overlay d-md-none" @click="closeMenu"></div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import api from '@/services/api'
+
+// ============================================================
+// ROUTER
+// ============================================================
 
 const router = useRouter()
+
+// ============================================================
+// SIDEBAR
+// ============================================================
+
 const isOpen = ref(false)
+
+// ============================================================
+// USER ROLE
+// ============================================================
+
 const role = localStorage.getItem('role')
+
+// ============================================================
+// INSTITUTE
+// ============================================================
+
+const institute = ref(null)
+
+// ============================================================
+// FETCH INSTITUTE INFORMATION
+// ============================================================
+
+const fetchInstitute = async () => {
+  try {
+    const response = await api.get('/institute-info')
+
+    institute.value = response.data.data
+  } catch (error) {
+    console.error('Failed to fetch institute information:', error)
+  }
+}
+
+// ============================================================
+// LOGO URL
+// ============================================================
+
+const getLogoUrl = (logo) => {
+  if (!logo) {
+    return ''
+  }
+
+  // Already full URL
+  if (logo.startsWith('http://') || logo.startsWith('https://')) {
+    return logo
+  }
+
+  // Laravel storage path
+  if (logo.startsWith('/storage/')) {
+    return logo
+  }
+
+  return `/storage/${logo}`
+}
+
+// ============================================================
+// TOGGLE SIDEBAR
+// ============================================================
+
 const toggleMenu = () => {
   isOpen.value = !isOpen.value
 }
 
+// ============================================================
+// CLOSE SIDEBAR
+// ============================================================
+
+const closeMenu = () => {
+  isOpen.value = false
+}
+
+// ============================================================
+// LOGOUT
+// ============================================================
+
 const logout = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('role')
-  router.push('/login')
+
   isOpen.value = false
+
+  router.push('/login')
 }
+
+// ============================================================
+// MOUNT
+// ============================================================
+
+onMounted(() => {
+  fetchInstitute()
+})
 </script>
 
 <style scoped>
-/* ==========================================
-            SIDEBAR
-========================================== */
+/* =========================================================
+   SIDEBAR
+========================================================= */
 
 .sidebar {
   width: 260px;
+
   min-height: 100vh;
 
   position: fixed;
+
   top: 0;
+
   left: 0;
 
   background: #111827;
 
   display: flex;
+
   flex-direction: column;
 
   padding: 22px 18px;
@@ -167,17 +282,17 @@ const logout = () => {
   z-index: 1000;
 
   transition: 0.35s;
-  display: flex;
-  flex-direction: column;
 }
 
-/* ==========================================
-            LOGO
-========================================== */
+/* =========================================================
+   SIDEBAR LOGO
+========================================================= */
 
 .sidebar-logo {
   display: flex;
+
   align-items: center;
+
   gap: 14px;
 
   padding-bottom: 22px;
@@ -187,28 +302,62 @@ const logout = () => {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* =========================================================
+   LOGO BOX
+========================================================= */
+
 .logo-box {
   width: 52px;
+
   height: 52px;
 
-  background: #2563eb;
+  background-color: transparent !important;
 
   border-radius: 14px;
 
   display: flex;
+
   justify-content: center;
+
   align-items: center;
 
   color: #fff;
 
   font-size: 24px;
 
-  box-shadow: 0 10px 18px rgba(37, 99, 235, 0.35);
+  overflow: hidden;
+
+  flex-shrink: 0;
 }
+
+/* =========================================================
+   INSTITUTE LOGO
+========================================================= */
+
+.institute-logo {
+  width: 100%;
+
+  height: 100%;
+
+  object-fit: contain;
+
+  padding: 5px;
+
+  border-radius: 12px;
+
+  display: block;
+}
+
+/* =========================================================
+   LOGO TEXT
+========================================================= */
 
 .logo-text {
   display: flex;
+
   flex-direction: column;
+
+  min-width: 0;
 }
 
 .logo-text h4 {
@@ -219,25 +368,31 @@ const logout = () => {
   font-size: 18px;
 
   font-weight: 700;
+
+  line-height: 1.3;
+
+  word-break: break-word;
 }
 
 .logo-text span {
   color: #94a3b8;
 
   font-size: 13px;
+
+  margin-top: 2px;
 }
 
-/* ==========================================
-            MENU WRAPPER
-========================================== */
+/* =========================================================
+   MENU WRAPPER
+========================================================= */
 
 .sidebar-menu {
   flex: 1;
 }
 
-/* ==========================================
-            MOBILE HEADER
-========================================== */
+/* =========================================================
+   MOBILE HEADER
+========================================================= */
 
 .mobile-topbar {
   display: none;
@@ -263,7 +418,10 @@ const logout = () => {
 
 .mobile-brand {
   display: flex;
+
   flex-direction: column;
+
+  min-width: 0;
 }
 
 .mobile-brand h5 {
@@ -272,6 +430,14 @@ const logout = () => {
   font-size: 18px;
 
   font-weight: 700;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+  max-width: 250px;
 }
 
 .mobile-brand small {
@@ -288,14 +454,19 @@ const logout = () => {
   font-size: 24px;
 
   cursor: pointer;
+
+  padding: 0;
 }
-/* ==========================================
-            MENU
-========================================== */
+
+/* =========================================================
+   MENU ITEM
+========================================================= */
 
 .menu-item {
   display: flex;
+
   align-items: center;
+
   gap: 14px;
 
   width: 100%;
@@ -345,9 +516,9 @@ const logout = () => {
   color: #60a5fa;
 }
 
-/* ==========================================
-          ACTIVE MENU
-========================================== */
+/* =========================================================
+   ACTIVE MENU
+========================================================= */
 
 .active-menu {
   background: #2563eb !important;
@@ -361,9 +532,15 @@ const logout = () => {
   color: #fff !important;
 }
 
-/* ==========================================
-        PAYMENT COLLAPSE
-========================================== */
+/* =========================================================
+   PAYMENT COLLAPSE
+========================================================= */
+
+.payment-wrapper {
+  width: 100%;
+
+  margin-bottom: 8px;
+}
 
 .payment-toggle {
   width: 100%;
@@ -387,10 +564,16 @@ const logout = () => {
   cursor: pointer;
 
   transition: 0.25s;
+
+  font-size: 15px;
+
+  font-weight: 500;
 }
 
 .payment-toggle:hover {
   background: rgba(255, 255, 255, 0.08);
+
+  color: #fff;
 }
 
 .toggle-left {
@@ -413,9 +596,9 @@ const logout = () => {
   color: #60a5fa;
 }
 
-/* ==========================================
-            SUB MENU
-========================================== */
+/* =========================================================
+   SUB MENU
+========================================================= */
 
 #paymentMenu {
   margin-top: 8px;
@@ -468,17 +651,22 @@ const logout = () => {
 
   color: #fff !important;
 }
-/* ==========================================
-            SIDEBAR FOOTER
-========================================== */
 
-.sidebar-footer {
+/* =========================================================
+   SIDEBAR FOOTER
+========================================================= */
+
+.logout-section {
   margin-top: auto;
 
   padding-top: 20px;
 
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
+
+/* =========================================================
+   LOGOUT BUTTON
+========================================================= */
 
 .logout-btn {
   width: 100%;
@@ -520,9 +708,9 @@ const logout = () => {
   box-shadow: 0 10px 20px rgba(239, 68, 68, 0.35);
 }
 
-/* ==========================================
-              SCROLLBAR
-========================================== */
+/* =========================================================
+   SCROLLBAR
+========================================================= */
 
 .sidebar::-webkit-scrollbar {
   width: 6px;
@@ -542,11 +730,11 @@ const logout = () => {
   background: #475569;
 }
 
-/* ==========================================
-              OVERLAY
-========================================== */
+/* =========================================================
+   OVERLAY
+========================================================= */
 
-.overlay {
+.sidebar-overlay {
   position: fixed;
 
   inset: 0;
@@ -558,9 +746,9 @@ const logout = () => {
   z-index: 999;
 }
 
-/* ==========================================
-              MOBILE
-========================================== */
+/* =========================================================
+   MOBILE
+========================================================= */
 
 @media (max-width: 767px) {
   .mobile-topbar {
@@ -582,9 +770,9 @@ const logout = () => {
   }
 }
 
-/* ==========================================
-              DESKTOP
-========================================== */
+/* =========================================================
+   DESKTOP
+========================================================= */
 
 @media (min-width: 768px) {
   .sidebar {
@@ -592,32 +780,52 @@ const logout = () => {
   }
 }
 
-/* ==========================================
-            SMOOTH EFFECT
-========================================== */
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
 
-.menu-item,
-.submenu-item,
-.payment-toggle,
-.logout-btn {
-  transition: all 0.25s ease;
+@media (max-width: 400px) {
+  .mobile-topbar {
+    padding: 12px 14px;
+  }
+
+  .mobile-brand h5 {
+    font-size: 16px;
+
+    max-width: 210px;
+  }
+
+  .logo-box {
+    width: 46px;
+
+    height: 46px;
+  }
+
+  .logo-text h4 {
+    font-size: 15px;
+  }
+
+  .logo-text span {
+    font-size: 11px;
+  }
 }
 
-/* ==========================================
-            SMALL POLISH
-========================================== */
-
-.menu-item:active,
-.payment-toggle:active,
-.logout-btn:active {
-  transform: scale(0.98);
-}
+/* =========================================================
+   BOX SIZING
+========================================================= */
 
 .sidebar * {
   box-sizing: border-box;
 }
-.logout-section {
-  margin-top: auto;
-  padding-top: 20px;
+
+/* =========================================================
+   ACTIVE / CLICK EFFECT
+========================================================= */
+
+.menu-item:active,
+.submenu-item:active,
+.payment-toggle:active,
+.logout-btn:active {
+  transform: scale(0.98);
 }
 </style>

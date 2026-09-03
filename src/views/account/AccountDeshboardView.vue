@@ -266,7 +266,7 @@ import { isLoading } from '../../utils/loading'
 import api from '@/services/api'
 
 // Local Safe Avatar (Fallback SVG)
-const defaultAvatar = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="%23cbd5e1"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-3.8-1.04-4.83-2.61.03-1.6 3.22-2.48 4.83-2.48s4.8 1.88 4.83 2.48C15.8 18.96 14.03 20 12 20z"/></svg>`
+const defaultAvatar = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="%23cbd5e1"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.5-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-3.8-1.04-4.83-2.61.03-1.6 3.22-2.48 4.83-2.48s4.8 1.88 4.83 2.48C15.8 18.96 14.03 20 12 20z"/></svg>`
 
 // Dashboard States
 const totalPaidAmount = ref(0)
@@ -283,6 +283,7 @@ const runningMonthUnpaidStudents = ref(0)
 const rawOtherPayments = ref([])
 const thisMonthCollection = ref(0)
 const todayExpense = ref(0)
+
 const currentUser = ref({
   name: '',
   role: '',
@@ -292,14 +293,17 @@ const currentUser = ref({
 // Correct Image URL Builder
 const getImageUrl = (path) => {
   if (!path) return defaultAvatar
+
   if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:image')) {
     return path
   }
 
   const cleanPath = path.replace(/^\/+/, '')
+
   if (cleanPath.startsWith('storage/')) {
     return `http://127.0.0.1:8000/${cleanPath}`
   }
+
   return `http://127.0.0.1:8000/storage/${cleanPath}`
 }
 
@@ -309,14 +313,18 @@ const onImageError = (e) => {
   e.target.src = defaultAvatar
 }
 
+// ========================================
 // Admission + Exam Fee
+// ========================================
 const admissionExamCollection = computed(() => {
   return payments.value.reduce((total, payment) => {
     return total + Number(payment.admission_fee || 0) + Number(payment.exam_fee || 0)
   }, 0)
 })
 
+// ========================================
 // Current Cash
+// ========================================
 const currentCash = computed(() => {
   return (
     Number(totalPaidAmount.value) +
@@ -326,14 +334,19 @@ const currentCash = computed(() => {
   )
 })
 
+// ========================================
 // This Month Collection
+// ========================================
 
+// ========================================
 // Today's Collection
+// ========================================
 const todayCollection = computed(() => {
   const todayStr = new Date().toISOString().slice(0, 10)
 
   const mainPaymentsToday = payments.value.reduce((total, payment) => {
     if (!payment.payment_date) return total
+
     if (payment.payment_date.slice(0, 10) === todayStr) {
       return (
         total +
@@ -342,42 +355,65 @@ const todayCollection = computed(() => {
         Number(payment.exam_fee || 0)
       )
     }
+
     return total
   }, 0)
 
   const otherPaymentsToday = rawOtherPayments.value.reduce((total, payment) => {
     const paymentDateStr = (payment.created_at || payment.date || '').slice(0, 10)
+
     if (paymentDateStr === todayStr) {
       return total + Number(payment.total_amount || 0)
     }
+
     return total
   }, 0)
 
   return mainPaymentsToday + otherPaymentsToday
 })
 
+// ========================================
 // Get Dashboard Data
+// ========================================
 const getDashboardData = async () => {
   try {
     const response = await api.get('/payments')
+
     console.log('FULL RESPONSE:', response.data)
     console.log('PAYMENTS:', response.data.payments)
+
     const data = response.data
 
+    // ========================================
     // Dashboard Statistics & Data
-    totalPaidAmount.value =
-      Number(data.total_paid_amount || 0) +
-      (data.payments || []).reduce((sum, p) => {
-        return sum + Number(p.admission_fee || 0) + Number(p.exam_fee || 0)
-      }, 0)
+    // ========================================
+
+    // IMPORTANT:
+    // Backend total_paid_amount কে এখানে আর
+    // admission_fee + exam_fee দিয়ে যোগ করা হচ্ছে না।
+    // কারণ admission/exam fee নিচে আলাদাভাবে
+    // admissionExamCollection এর মাধ্যমে হিসাব করা হচ্ছে।
+    totalPaidAmount.value = Number(data.total_paid_amount || 0)
+
     totalDueAmount.value = data.total_due_amount || 0
+
     totalStudents.value = data.total_students || 0
+
     dueStudents.value = data.due_students || 0
+
     recentPayments.value = data.recent_payments || []
+
     monthlyPayments.value = data.monthly_payments || []
+
     thisMonthDue.value = data.this_month_due || 0
+
     runningMonthUnpaidStudents.value = data.running_month_unpaid_students || 0
+
     payments.value = data.payments || []
+
+    // ========================================
+    // This Month Collection
+    // ========================================
     thisMonthCollection.value =
       Number(data.this_month_collection || 0) +
       payments.value.reduce((total, payment) => {
@@ -393,12 +429,17 @@ const getDashboardData = async () => {
         return total
       }, 0)
 
+    // ========================================
     // Logged-in User Info Handling
+    // ========================================
     const loggedUser = data.user || data.manager || data.logged_in_user || data.accountant
+
     if (loggedUser) {
       currentUser.value = {
         name: loggedUser.name || loggedUser.full_name || loggedUser.username || 'Administrator',
+
         role: loggedUser.role || loggedUser.user_type || loggedUser.designation || 'System Admin',
+
         image: getImageUrl(
           loggedUser.image || loggedUser.profile_photo || loggedUser.avatar || loggedUser.photo,
         ),
@@ -409,7 +450,9 @@ const getDashboardData = async () => {
   }
 }
 
-// today's expense
+// ========================================
+// Total Expense + Today's Expense
+// ========================================
 const getTotalExpense = async () => {
   try {
     const response = await api.get('/expenses')
@@ -436,7 +479,9 @@ const getTotalExpense = async () => {
   }
 }
 
+// ========================================
 // Get Staff Dashboard Data & User Images
+// ========================================
 const getDashboardimages = async () => {
   try {
     // ১. প্রথমে LocalStorage থেকে ইউজারের ডেটা চেক করা
@@ -447,9 +492,12 @@ const getDashboardimages = async () => {
 
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser)
+
       currentUser.value = {
         name: parsedUser.name || parsedUser.full_name || parsedUser.username || 'Administrator',
+
         role: parsedUser.role || parsedUser.user_type || parsedUser.designation || 'System Admin',
+
         image: getImageUrl(
           parsedUser.image || parsedUser.profile_photo || parsedUser.avatar || parsedUser.photo,
         ),
@@ -458,6 +506,7 @@ const getDashboardimages = async () => {
 
     // ২. API থেকে স্টাফ ড্যাশবোর্ড ডেটা ফেচ করা
     const response = await api.get('/staff/dashboard')
+
     const resData = response.data
 
     totalStudents.value = resData.total_students || totalStudents.value
@@ -465,9 +514,12 @@ const getDashboardimages = async () => {
     // ৩. API রেসপন্সে যদি ইউজার প্রোফাইলের তথ্য থাকে
     if (resData.user) {
       const u = resData.user
+
       currentUser.value = {
         name: u.name || u.full_name || u.username || 'Administrator',
-        role: u.role || u.user_type || 'System Admin',
+
+        role: u.role || u.user_type || u.designation || 'System Admin',
+
         image: getImageUrl(u.image || u.profile_photo || u.avatar || u.photo),
       }
     }
@@ -476,13 +528,15 @@ const getDashboardimages = async () => {
   }
 }
 
-// Total Expense
-
+// ========================================
 // Other Payments
+// ========================================
 const getTotalOtherPayment = async () => {
   try {
     const response = await api.get('/other-payments')
+
     rawOtherPayments.value = response.data.data || []
+
     totalOtherPayment.value = rawOtherPayments.value.reduce((total, payment) => {
       return total + Number(payment.total_amount || 0)
     }, 0)
@@ -491,6 +545,9 @@ const getTotalOtherPayment = async () => {
   }
 }
 
+// ========================================
+// Mounted
+// ========================================
 onMounted(() => {
   getDashboardData()
   getDashboardimages()
@@ -498,7 +555,6 @@ onMounted(() => {
   getTotalOtherPayment()
 })
 </script>
-
 <style scoped>
 .dashboard-content {
   margin-left: 250px;

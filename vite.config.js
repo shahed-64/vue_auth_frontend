@@ -2,8 +2,9 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
+
 export default defineConfig({
-  base: '/app/',
+  base: '/',
 
   plugins: [
     vue(),
@@ -21,17 +22,17 @@ export default defineConfig({
         background_color: '#ffffff',
 
         display: 'standalone',
-        start_url: '/app/',
-        scope: '/app/',
+        start_url: '/',
+        scope: '/',
 
         icons: [
           {
-            src: '/app/pwa-192x192.png',
+            src: '/pwa-192x192.png',
             sizes: '192x192',
             type: 'image/png',
           },
           {
-            src: '/app/pwa-512x512.png',
+            src: '/pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
           },

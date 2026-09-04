@@ -147,7 +147,9 @@ const openAddModal = () => {
 const openEditModal = (sectionItem) => {
   isEditMode.value = true
   currentSectionID.value = sectionItem.id
+
   form.value.section_name = sectionItem.section_name || sectionItem.name || ''
+
   showModal.value = true
 }
 
@@ -155,7 +157,7 @@ const fetchSections = async () => {
   try {
     const response = await api.get('/sections')
 
-    // Flexible data handling based on API response structure
+    // API response handle
     if (Array.isArray(response.data)) {
       sections.value = response.data
     } else if (response.data.data && Array.isArray(response.data.data)) {
@@ -166,13 +168,16 @@ const fetchSections = async () => {
       sections.value = []
     }
   } catch (error) {
-    showAlert('Failed to fetch sections.', true)
+    console.error('Failed to fetch sections:', error)
+
+    showAlert(error.response?.data?.message || 'Failed to fetch sections.', true)
   }
 }
 
 const saveSection = async () => {
   try {
     let response
+
     if (isEditMode.value) {
       response = await api.put(`/sections/${currentSectionID.value}`, form.value)
     } else {
@@ -181,10 +186,13 @@ const saveSection = async () => {
 
     if (response.status === 200 || response.status === 201 || response.data.status) {
       showAlert(response.data.message || 'Saved successfully!')
-      fetchSections()
+
+      await fetchSections()
       closeModal()
     }
   } catch (error) {
+    console.error('Failed to save section:', error)
+
     showAlert(error.response?.data?.message || 'Something went wrong!', true)
   }
 }
@@ -194,21 +202,29 @@ const closeModal = () => {
 }
 
 const deleteSection = async (id) => {
-  if (confirm('Are you sure you want to delete this section?')) {
-    try {
-      await api.delete(`/sections/${id}`)
-      sections.value = sections.value.filter((s) => s.id !== id)
-      showAlert('Section deleted successfully!')
-      fetchSections()
-    } catch (error) {
-      showAlert('Failed to delete section.', true)
-    }
+  if (!confirm('Are you sure you want to delete this section?')) {
+    return
+  }
+
+  try {
+    await api.delete(`/sections/${id}`)
+
+    sections.value = sections.value.filter((s) => s.id !== id)
+
+    showAlert('Section deleted successfully!')
+
+    await fetchSections()
+  } catch (error) {
+    console.error('Failed to delete section:', error)
+
+    showAlert(error.response?.data?.message || 'Failed to delete section.', true)
   }
 }
 
 const showAlert = (msg, error = false) => {
   message.value = msg
   isError.value = error
+
   setTimeout(() => {
     message.value = ''
   }, 3000)
@@ -218,7 +234,6 @@ onMounted(() => {
   fetchSections()
 })
 </script>
-
 <style scoped>
 .body {
   width: 86%;

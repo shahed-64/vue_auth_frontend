@@ -341,72 +341,53 @@
 
 <script setup>
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
-
-import axios from 'axios'
-
 import dashPageView from './dashPageView.vue'
+import api from '@/services/api'
 
-/*
-|--------------------------------------------------------------------------
-| State
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | State
+ * |--------------------------------------------------------------------------
+ */
 
 const institute = ref(null)
-
 const isLoading = ref(false)
-
 const isSaving = ref(false)
-
 const showModal = ref(false)
-
 const isEditing = ref(false)
-
 const selectedLogo = ref(null)
-
 const logoPreview = ref('')
 
-/*
-|--------------------------------------------------------------------------
-| Form
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | Form
+ * |--------------------------------------------------------------------------
+ */
 
 const form = reactive({
   institute_name: '',
-
   established_year: '',
-
   location: '',
-
   contact: '',
-
   logo: null,
 })
 
-/*
-|--------------------------------------------------------------------------
-| Reset Form
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | Reset Form
+ * |--------------------------------------------------------------------------
+ */
 
 const resetForm = () => {
   form.institute_name = ''
-
   form.established_year = ''
-
   form.location = ''
-
   form.contact = ''
-
   form.logo = null
 
   selectedLogo.value = null
 
-  /*
-  | Remove previous preview URL
-  */
-
+  // Remove previous preview URL
   if (logoPreview.value && logoPreview.value.startsWith('blob:')) {
     URL.revokeObjectURL(logoPreview.value)
   }
@@ -414,17 +395,17 @@ const resetForm = () => {
   logoPreview.value = ''
 }
 
-/*
-|--------------------------------------------------------------------------
-| Fetch Institute
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | Fetch Institute
+ * |--------------------------------------------------------------------------
+ */
 
 const fetchInstitute = async () => {
   isLoading.value = true
 
   try {
-    const response = await axios.get('/api/institute-info')
+    const response = await api.get('/institute-info')
 
     institute.value = response.data.data || null
   } catch (error) {
@@ -436,25 +417,24 @@ const fetchInstitute = async () => {
   }
 }
 
-/*
-|--------------------------------------------------------------------------
-| Open Create Modal
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | Open Create Modal
+ * |--------------------------------------------------------------------------
+ */
 
 const openCreateModal = () => {
   resetForm()
 
   isEditing.value = false
-
   showModal.value = true
 }
 
-/*
-|--------------------------------------------------------------------------
-| Open Edit Modal
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | Open Edit Modal
+ * |--------------------------------------------------------------------------
+ */
 
 const openEditModal = () => {
   if (!institute.value) {
@@ -462,35 +442,27 @@ const openEditModal = () => {
   }
 
   form.institute_name = institute.value.institute_name || ''
-
   form.established_year = institute.value.established_year || ''
-
   form.location = institute.value.location || ''
-
   form.contact = institute.value.contact || ''
 
-  /*
-  | Existing logo থাকবে,
-  | কিন্তু নতুন logo select না করা পর্যন্ত
-  | backend-এ কোনো logo পাঠানো হবে না।
-  */
-
+  // Existing logo থাকবে,
+  // কিন্তু নতুন logo select না করা পর্যন্ত
+  // backend-এ কোনো logo পাঠানো হবে না.
   form.logo = null
-
   selectedLogo.value = null
 
   logoPreview.value = institute.value.logo || ''
 
   isEditing.value = true
-
   showModal.value = true
 }
 
-/*
-|--------------------------------------------------------------------------
-| Logo Change
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | Logo Change
+ * |--------------------------------------------------------------------------
+ */
 
 const handleLogoChange = (event) => {
   const file = event.target.files?.[0]
@@ -499,54 +471,37 @@ const handleLogoChange = (event) => {
     return
   }
 
-  /*
-  | Image validation
-  */
-
+  // Image validation
   if (!file.type.startsWith('image/')) {
     alert('Please select a valid image file.')
-
     event.target.value = ''
-
     return
   }
 
-  /*
-  | 2MB validation
-  */
-
+  // 2MB validation
   if (file.size > 2 * 1024 * 1024) {
     alert('Logo size must be less than 2MB.')
-
     event.target.value = ''
-
     return
   }
 
-  /*
-  | Remove previous blob URL
-  */
-
+  // Remove previous blob URL
   if (logoPreview.value && logoPreview.value.startsWith('blob:')) {
     URL.revokeObjectURL(logoPreview.value)
   }
 
   selectedLogo.value = file
-
   form.logo = file
 
-  /*
-  | New preview
-  */
-
+  // New preview
   logoPreview.value = URL.createObjectURL(file)
 }
 
-/*
-|--------------------------------------------------------------------------
-| Close Modal
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | Close Modal
+ * |--------------------------------------------------------------------------
+ */
 
 const closeModal = () => {
   if (isSaving.value) {
@@ -556,64 +511,57 @@ const closeModal = () => {
   showModal.value = false
 }
 
-/*
-|--------------------------------------------------------------------------
-| Save Institute
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | Save Institute
+ * |--------------------------------------------------------------------------
+ */
 
 const saveInstitute = async () => {
   if (isSaving.value) {
     return
   }
 
-  /*
-  | Validation
-  */
-
+  // Validation
   if (!form.institute_name.trim()) {
     alert('Institute name is required.')
-
     return
   }
 
   isSaving.value = true
 
   try {
-    /*
-    |--------------------------------------------------------------------------
-    | FormData
-    |--------------------------------------------------------------------------
-    */
+    /**
+     * --------------------------------------------------------------------------
+     * | FormData
+     * --------------------------------------------------------------------------
+     */
 
     const formData = new FormData()
 
     formData.append('institute_name', form.institute_name)
-
     formData.append('established_year', form.established_year || '')
-
     formData.append('location', form.location || '')
-
     formData.append('contact', form.contact || '')
 
-    /*
-    |--------------------------------------------------------------------------
-    | Logo
-    |--------------------------------------------------------------------------
-    */
+    /**
+     * --------------------------------------------------------------------------
+     * | Logo
+     * --------------------------------------------------------------------------
+     */
 
     if (selectedLogo.value) {
       formData.append('logo', selectedLogo.value)
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | CREATE
-    |--------------------------------------------------------------------------
-    */
+    /**
+     * --------------------------------------------------------------------------
+     * | CREATE
+     * --------------------------------------------------------------------------
+     */
 
     if (!isEditing.value) {
-      const response = await axios.post('/api/institute-info', formData, {
+      const response = await api.post('/institute-info', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -623,19 +571,18 @@ const saveInstitute = async () => {
 
       alert('Institute created successfully.')
     } else {
-      /*
-    |--------------------------------------------------------------------------
-    | UPDATE
-    |--------------------------------------------------------------------------
-    */
-      /*
-      | Laravel PUT + FormData issue avoid করার জন্য
-      | POST + _method ব্যবহার করছি।
-      */
+      /**
+       * ------------------------------------------------------------------------
+       * | UPDATE
+       * ------------------------------------------------------------------------
+       *
+       * Laravel PUT + FormData issue avoid করার জন্য
+       * POST + _method ব্যবহার করছি.
+       */
 
       formData.append('_method', 'PUT')
 
-      const response = await axios.post(`/api/institute-info/${institute.value.id}`, formData, {
+      const response = await api.post(`/institute-info/${institute.value.id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -646,43 +593,43 @@ const saveInstitute = async () => {
       alert('Institute updated successfully.')
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Close
-    |--------------------------------------------------------------------------
-    */
+    /**
+     * --------------------------------------------------------------------------
+     * | Close
+     * --------------------------------------------------------------------------
+     */
 
     showModal.value = false
-
     selectedLogo.value = null
   } catch (error) {
     console.error('Failed to save institute:', error)
 
-    /*
-    |--------------------------------------------------------------------------
-    | Validation Errors
-    |--------------------------------------------------------------------------
-    */
+    /**
+     * --------------------------------------------------------------------------
+     * | Validation Errors
+     * --------------------------------------------------------------------------
+     */
 
     if (error.response?.data?.errors) {
       const errors = error.response.data.errors
-
       const firstError = Object.values(errors)[0]?.[0]
 
       alert(firstError || 'Please check the form.')
     } else if (error.response?.data?.message) {
-      /*
-    |--------------------------------------------------------------------------
-    | Backend Message
-    |--------------------------------------------------------------------------
-    */
+      /**
+       * ------------------------------------------------------------------------
+       * | Backend Message
+       * ------------------------------------------------------------------------
+       */
+
       alert(error.response.data.message)
     } else {
-      /*
-    |--------------------------------------------------------------------------
-    | Other Error
-    |--------------------------------------------------------------------------
-    */
+      /**
+       * ------------------------------------------------------------------------
+       * | Other Error
+       * ------------------------------------------------------------------------
+       */
+
       alert('Something went wrong. Please try again.')
     }
   } finally {
@@ -690,11 +637,11 @@ const saveInstitute = async () => {
   }
 }
 
-/*
-|--------------------------------------------------------------------------
-| Delete Institute
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | Delete Institute
+ * |--------------------------------------------------------------------------
+ */
 
 const deleteInstitute = async () => {
   if (!institute.value) {
@@ -708,7 +655,7 @@ const deleteInstitute = async () => {
   }
 
   try {
-    await axios.delete(`/api/institute-info/${institute.value.id}`)
+    await api.delete(`/institute-info/${institute.value.id}`)
 
     institute.value = null
 
@@ -726,21 +673,21 @@ const deleteInstitute = async () => {
   }
 }
 
-/*
-|--------------------------------------------------------------------------
-| Lifecycle
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | Lifecycle
+ * |--------------------------------------------------------------------------
+ */
 
 onMounted(() => {
   fetchInstitute()
 })
 
-/*
-|--------------------------------------------------------------------------
-| Cleanup Preview URL
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | Cleanup Preview URL
+ * |--------------------------------------------------------------------------
+ */
 
 onBeforeUnmount(() => {
   if (logoPreview.value && logoPreview.value.startsWith('blob:')) {
@@ -748,7 +695,6 @@ onBeforeUnmount(() => {
   }
 })
 </script>
-
 <style scoped>
 /*
 |--------------------------------------------------------------------------

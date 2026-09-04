@@ -1,297 +1,276 @@
 <template>
-  <div class="container mt-4" v-if="payment">
-    <div class="receipt-box p-4 border rounded bg-white">
-<<<<<<< HEAD
-      <!-- =====================================================
-           HEADER
-      ====================================================== -->
+  <LoadingSpinner v-if="isLoading" />
 
-      <div class="receipt-header d-flex justify-content-between align-items-center mb-4">
-        <!-- Institute -->
-        <div class="institute-info d-flex align-items-center gap-3">
-          <!-- Institute Logo -->
-          <div class="receipt-logo">
-            <img
-              v-if="institute?.logo"
-              :src="getLogoUrl(institute.logo)"
-              :alt="institute?.institute_name || 'Institute Logo'"
-              class="institute-logo"
-            />
-
-            <!-- Default Icon -->
-            <i v-else class="fa-solid fa-graduation-cap"></i>
+  <div v-else-if="payment" class="receipt-page">
+    <div class="receipt-container">
+      <!-- Receipt -->
+      <div class="receipt-box">
+        <!-- Institute Header -->
+        <div class="receipt-header">
+          <div class="institute-logo-wrapper" v-if="getLogoUrl(institute?.logo)">
+            <img :src="getLogoUrl(institute?.logo)" alt="Institute Logo" class="institute-logo" />
           </div>
 
-          <!-- Institute Name -->
-          <div>
-            <h4 class="institute-name mb-1">
+          <div class="institute-info">
+            <h1>
               {{ institute?.institute_name || 'Coaching MS' }}
-            </h4>
+            </h1>
 
-            <h5 class="receipt-title mb-0">MONEY RECEIPT</h5>
+            <p v-if="institute?.established_year">Estd. {{ institute.established_year }}</p>
+
+            <p v-if="institute?.location">
+              {{ institute.location }}
+            </p>
+
+            <p v-if="institute?.contact">Contact: {{ institute.contact }}</p>
           </div>
         </div>
 
-        <!-- Receipt Info -->
-        <div class="text-end">
-          <p class="mb-0">
-            <b>Receipt ID:</b>
-            #{{ payment.id }}
-          </p>
-
-          <p class="mb-0">
-            <b>Date:</b>
-            {{ payment.payment_date }}
-          </p>
-=======
-      <!-- HEADER -->
-      <div class="d-flex justify-content-between mb-4">
-        <div>
-          <h4>B@tchPoint</h4>
-          <h5>MONEY RECEIPT</h5>
+        <div class="receipt-title">
+          <h2>MONEY RECEIPT</h2>
         </div>
 
-        <div class="text-end">
-          <p class="mb-0"><b>Receipt ID:</b> #{{ payment.id }}</p>
-          <p class="mb-0"><b>Date:</b> {{ payment.payment_date }}</p>
->>>>>>> 64d30f5f98655572445e8294219453b5bbe1bc6b
+        <!-- Receipt Information -->
+        <div class="receipt-meta">
+          <div>
+            <strong>Receipt ID:</strong>
+            {{ payment.id }}
+          </div>
+
+          <div>
+            <strong>Date:</strong>
+            {{ formatDate(payment.payment_date) }}
+          </div>
         </div>
-      </div>
 
-      <hr />
+        <hr />
 
-<<<<<<< HEAD
-      <!-- =====================================================
-           STUDENT INFO
-      ====================================================== -->
+        <!-- Student Information -->
+        <div class="section-title">Student Information</div>
 
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <h6>Student Info</h6>
+        <div class="student-info-grid">
+          <div>
+            <strong>Name:</strong>
+            {{ payment.student?.full_name || 'N/A' }}
+          </div>
 
-          <p>
-            <b>Name:</b>
-            {{ payment.student?.full_name }}
-          </p>
+          <div>
+            <strong>Student ID:</strong>
+            {{ payment.student?.student_id || 'N/A' }}
+          </div>
 
-          <p>
-            <b>Class:</b>
+          <div>
+            <strong>Class:</strong>
             {{ payment.student?.class_info?.class_name || 'N/A' }}
-          </p>
-          <p>
-            <b>Section:</b>
+          </div>
+
+          <div>
+            <strong>Section:</strong>
             {{ payment.student?.section?.section_name || 'N/A' }}
-          </p>
-          <p>
-            <b>ID:</b>
-            {{ payment.student?.student_id }}
-          </p>
-=======
-      <!-- STUDENT INFO -->
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <h6>Student Info</h6>
-          <p>Name: {{ payment.student?.full_name }}</p>
-          <p>Class: {{ payment.student?.batch_name }}</p>
-          <p>ID: {{ payment.student?.student_id }}</p>
->>>>>>> 64d30f5f98655572445e8294219453b5bbe1bc6b
+          </div>
+
+          <div>
+            <strong>Phone:</strong>
+            {{ payment.student?.phone || 'N/A' }}
+          </div>
+
+          <div>
+            <strong>Month:</strong>
+            {{ payment.month || 'N/A' }}
+          </div>
         </div>
 
-        <div class="col-md-6">
-          <h6>Payment Info</h6>
-<<<<<<< HEAD
+        <hr />
 
-          <p>
-            <b>Month:</b>
-            {{ payment.month }}
-          </p>
+        <!-- Payment Information -->
+        <div class="section-title">Payment Information</div>
 
-          <p>
-            <b>Method:</b>
-            {{ payment.payment_method }}
-          </p>
+        <table class="payment-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th class="amount-column">Amount</th>
+            </tr>
+          </thead>
 
-          <p>
-            <b>Status:</b>
+          <tbody>
+            <!-- Monthly Fee -->
+            <tr>
+              <td>
+                Monthly Fee
+                <span v-if="payment.month"> ({{ payment.month }}) </span>
+              </td>
 
-            <span class="badge bg-success">
-              {{ payment.status }}
+              <td class="amount-column">৳{{ formatAmount(payment.paid_amount) }}</td>
+            </tr>
+
+            <!-- Admission Fee -->
+            <tr v-if="Number(payment.admission_fee) > 0">
+              <td>Admission Fee</td>
+
+              <td class="amount-column">৳{{ formatAmount(payment.admission_fee) }}</td>
+            </tr>
+
+            <!-- Exam Fee -->
+            <tr v-if="Number(payment.exam_fee) > 0">
+              <td>Exam Fee</td>
+
+              <td class="amount-column">৳{{ formatAmount(payment.exam_fee) }}</td>
+            </tr>
+
+            <!-- Total -->
+            <tr class="total-row">
+              <td>
+                <strong>Total Paid</strong>
+              </td>
+
+              <td class="amount-column">
+                <strong> ৳{{ formatAmount(totalPaid) }} </strong>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Payment Details -->
+        <div class="payment-details">
+          <div>
+            <strong>Payment Method:</strong>
+            {{ payment.payment_method || 'N/A' }}
+          </div>
+
+          <div>
+            <strong>Status:</strong>
+
+            <span
+              class="status-badge"
+              :class="payment.status === 'paid' ? 'status-paid' : 'status-due'"
+            >
+              {{ payment.status || 'N/A' }}
             </span>
-=======
-          <p>Month: {{ payment.month }}</p>
-          <p>Method: {{ payment.payment_method }}</p>
-          <p>
-            Status:
-            <span class="badge bg-success">{{ payment.status }}</span>
->>>>>>> 64d30f5f98655572445e8294219453b5bbe1bc6b
-          </p>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="receipt-footer">
+          <p>Thank you for your payment.</p>
+
+          <p>This is a computer-generated receipt.</p>
         </div>
       </div>
 
-<<<<<<< HEAD
-      <!-- =====================================================
-           PAYMENT TABLE
-      ====================================================== -->
-
-      <table class="table table-bordered payment-table">
-        <thead>
-          <tr>
-            <th>Description</th>
-
-            <th width="35%">Amount</th>
-=======
-      <!-- TABLE -->
-      <table class="table table-bordered">
-        <thead>
-          <tr>
-            <th>Description</th>
-            <th>Amount</th>
->>>>>>> 64d30f5f98655572445e8294219453b5bbe1bc6b
-          </tr>
-        </thead>
-
-        <tbody>
-<<<<<<< HEAD
-          <!-- Monthly Fee -->
-          <tr>
-            <td>Monthly Fee</td>
-
-            <td>৳ {{ payment.amount }}</td>
-          </tr>
-
-          <!-- Paid Amount -->
-          <tr>
-            <td>
-              <strong> Paid Amount </strong>
-            </td>
-
-            <td>
-              <strong> ৳ {{ payment.paid_amount }} </strong>
-            </td>
-          </tr>
-
-          <!-- Admission Fee -->
-          <tr v-if="payment.admission_fee">
-            <td>Admission Fee</td>
-
-            <td>৳ {{ payment.admission_fee }}</td>
-          </tr>
-
-          <!-- Exam Fee -->
-          <tr v-if="payment.exam_fee">
-            <td>Exam Fee</td>
-
-            <td>৳ {{ payment.exam_fee }}</td>
-=======
-          <tr>
-            <td>Monthly Fee</td>
-            <td>৳ {{ payment.amount }}</td>
-          </tr>
-
-          <tr>
-            <td>Paid Amount</td>
-            <td>৳ {{ payment.paid_amount }}</td>
->>>>>>> 64d30f5f98655572445e8294219453b5bbe1bc6b
-          </tr>
-        </tbody>
-      </table>
-
-<<<<<<< HEAD
-      <!-- =====================================================
-           TOTAL
-      ====================================================== -->
-
-      <div class="d-flex justify-content-between mt-3">
-        <h5>Total Paid</h5>
-
-        <h4 class="text-primary">
-          ৳
-
-          {{
-            Number(payment.paid_amount || 0) +
-            Number(payment.admission_fee || 0) +
-            Number(payment.exam_fee || 0)
-          }}
-        </h4>
-      </div>
-
-      <!-- =====================================================
-           ACTION BUTTONS
-      ====================================================== -->
-
-      <div class="text-center mt-4 no-print">
-        <button class="btn btn-primary" @click="printPage">
-          <i class="fa-solid fa-print me-1"></i>
+      <!-- Action Buttons -->
+      <div class="receipt-actions no-print">
+        <button type="button" class="btn btn-primary" @click="printReceipt">
+          <i class="bi bi-printer"></i>
           Print / Save PDF
         </button>
 
-        <button class="btn btn-success ms-2" @click="sendWhatsApp">
-          <i class="fa-brands fa-whatsapp me-1"></i>
+        <button type="button" class="btn btn-success" @click="sendWhatsApp">
+          <i class="bi bi-whatsapp"></i>
           Send WhatsApp
         </button>
 
-        <router-link to="/payment/history" class="btn btn-info ms-2">
-          <span> Back </span>
-        </router-link>
+        <RouterLink to="/payment/history" class="btn btn-secondary">
+          <i class="bi bi-arrow-left"></i>
+          Back
+        </RouterLink>
       </div>
     </div>
   </div>
 
-  <!-- =====================================================
-       LOADING
-  ====================================================== -->
+  <!-- Loading / Not Found -->
+  <div v-else class="empty-state">
+    <h4>Payment not found</h4>
 
-  <div v-else class="text-center py-5">
-    <div class="spinner-border text-primary mb-3" role="status"></div>
-
-    <p class="text-muted">Loading Payment Receipt...</p>
+    <RouterLink to="/payment/history" class="btn btn-primary mt-3">
+      Back to Payment History
+    </RouterLink>
   </div>
-=======
-      <!-- TOTAL -->
-      <div class="d-flex justify-content-between mt-3">
-        <h5>Total Paid</h5>
-        <h4 class="text-primary">৳ {{ payment.paid_amount }}</h4>
-      </div>
-
-      <!-- ACTION -->
-      <div class="text-center mt-4 no-print">
-        <button class="btn btn-primary" @click="printPage">Print / Save PDF</button>
-
-        <button class="btn btn-success ms-2" @click="sendWhatsApp">Send WhatsApp</button>
-      </div>
-    </div>
-  </div>
->>>>>>> 64d30f5f98655572445e8294219453b5bbe1bc6b
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-<<<<<<< HEAD
 import api from '@/services/api'
-
-// ============================================================
-// ROUTE
-// ============================================================
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
+import { isLoading } from '@/utils/loading'
 
 const route = useRoute()
 
-// ============================================================
-// PAYMENT
-// ============================================================
-
 const payment = ref(null)
-
-// ============================================================
-// INSTITUTE
-// ============================================================
-
 const institute = ref(null)
 
-// ============================================================
-// FETCH INSTITUTE INFORMATION
-// ============================================================
+/*
+|--------------------------------------------------------------------------
+| Format Amount
+|--------------------------------------------------------------------------
+*/
+const formatAmount = (amount) => {
+  return Number(amount || 0).toFixed(2)
+}
 
+/*
+|--------------------------------------------------------------------------
+| Format Date
+|--------------------------------------------------------------------------
+*/
+const formatDate = (date) => {
+  if (!date) {
+    return 'N/A'
+  }
+
+  const parsedDate = new Date(date)
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return date
+  }
+
+  return parsedDate.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+/*
+|--------------------------------------------------------------------------
+| Total Paid
+|--------------------------------------------------------------------------
+*/
+const totalPaid = computed(() => {
+  return (
+    Number(payment.value?.paid_amount || 0) +
+    Number(payment.value?.admission_fee || 0) +
+    Number(payment.value?.exam_fee || 0)
+  )
+})
+
+/*
+|--------------------------------------------------------------------------
+| Institute Logo URL
+|--------------------------------------------------------------------------
+*/
+const getLogoUrl = (logo) => {
+  if (!logo) {
+    return ''
+  }
+
+  if (logo.startsWith('http://') || logo.startsWith('https://')) {
+    return logo
+  }
+
+  if (logo.startsWith('/storage/')) {
+    return logo
+  }
+
+  return `/storage/${logo}`
+}
+
+/*
+|--------------------------------------------------------------------------
+| Fetch Institute Information
+|--------------------------------------------------------------------------
+*/
 const fetchInstitute = async () => {
   try {
     const response = await api.get('/institute-info')
@@ -302,432 +281,404 @@ const fetchInstitute = async () => {
   }
 }
 
-// ============================================================
-// LOGO URL
-// ============================================================
-
-const getLogoUrl = (logo) => {
-  if (!logo) {
-    return ''
-  }
-
-  // Full URL
-  if (logo.startsWith('http://') || logo.startsWith('https://')) {
-    return logo
-  }
-
-  // Already storage path
-  if (logo.startsWith('/storage/')) {
-    return logo
-  }
-
-  // Laravel storage
-  return `/storage/${logo}`
-}
-
-// ============================================================
-// LOAD PAYMENT
-// ============================================================
-
+/*
+|--------------------------------------------------------------------------
+| Fetch Payment
+|--------------------------------------------------------------------------
+*/
 const getPayment = async (id) => {
-  console.log('REQUEST ID:', id)
-
   try {
-    const res = await api.get(`/payments/${id}`)
+    const response = await api.get(`/payments/${id}`)
 
-    console.log('API RESPONSE:', res.data)
-
-    payment.value = res.data.payment
+    payment.value = response.data.payment
   } catch (error) {
-    console.error('Failed to load payment:', error)
+    console.error('Failed to fetch payment:', error)
+
+    payment.value = null
   }
 }
 
-// ============================================================
-// PRINT
-// ============================================================
-
-=======
-
-const route = useRoute()
-const payment = ref(null)
-
-import api from '@/services/api'
-/* LOAD PAYMENT */
-const getPayment = async (id) => {
-  console.log('REQUEST ID:', id)
-
-  const res = await api.get(`/payments/${id}`)
-
-  console.log('API RESPONSE:', res.data)
-
-  payment.value = res.data.payment
-}
-
-/* PRINT */
->>>>>>> 64d30f5f98655572445e8294219453b5bbe1bc6b
-const printPage = () => {
+/*
+|--------------------------------------------------------------------------
+| Print Receipt
+|--------------------------------------------------------------------------
+*/
+const printReceipt = () => {
   window.print()
 }
 
-<<<<<<< HEAD
-// ============================================================
-// WHATSAPP
-// ============================================================
-
+/*
+|--------------------------------------------------------------------------
+| Send Receipt via WhatsApp
+|--------------------------------------------------------------------------
+*/
 const sendWhatsApp = async () => {
   try {
     if (!payment.value) {
       return
     }
 
-    const id = payment.value.id
+    const phoneNumber = payment.value.student?.phone
 
-    // Get receipt PDF URL
-    const res = await api.get(`/payments/${id}/receipt`)
-
-    const pdfUrl = res.data.url
-
-    const p = payment.value
-
-    // ========================================================
-    // PHONE
-    // ========================================================
-
-    let phone = p.student?.phone
-
-    if (!phone) {
-      alert('Phone missing')
-
+    if (!phoneNumber) {
+      alert('Student phone number is not available.')
       return
     }
 
-    // Bangladesh phone format
-    phone = '880' + phone.replace(/^0+/, '')
+    /*
+     * Get receipt PDF URL from backend
+     */
+    const response = await api.get(`/payments/${payment.value.id}/receipt`)
 
-    // ========================================================
-    // INSTITUTE NAME
-    // ========================================================
+    const pdfUrl = response.data?.url || response.data?.pdf_url || response.data?.receipt_url
+
+    /*
+     * Normalize Bangladesh phone number
+     */
+    let phone = String(phoneNumber).replace(/\D/g, '')
+
+    if (phone.startsWith('0')) {
+      phone = phone.replace(/^0+/, '')
+    }
+
+    if (!phone.startsWith('880')) {
+      phone = `880${phone}`
+    }
 
     const instituteName = institute.value?.institute_name || 'Coaching MS'
 
-    // ========================================================
-    // TOTAL
-    // ========================================================
+    const message = `
+Assalamu Alaikum,
 
-    const totalPaid =
-      Number(p.paid_amount || 0) + Number(p.admission_fee || 0) + Number(p.exam_fee || 0)
+${instituteName}
 
-    // ========================================================
-    // WHATSAPP MESSAGE
-    // ========================================================
+Payment Receipt
 
-    const message = `Hello ${p.student?.full_name || ''},
+Receipt ID: ${payment.value.id}
+Student: ${payment.value.student?.full_name || 'N/A'}
+Student ID: ${payment.value.student?.student_id || 'N/A'}
+Month: ${payment.value.month || 'N/A'}
 
-Your payment receipt from ${instituteName} is ready.
+Total Paid: ৳${formatAmount(totalPaid.value)}
+Payment Status: ${payment.value.status || 'N/A'}
 
-📌 Receipt ID: ${p.id}
+${pdfUrl ? `Receipt PDF: ${pdfUrl}` : ''}
 
-📅 Month: ${p.month}
-
-💰 Total Paid: ৳${totalPaid}
-
-📊 Status: ${p.status}
-
-👉 Download Receipt:
-
-${pdfUrl}`
-
-    // ========================================================
-    // WHATSAPP LINK
-    // ========================================================
+Thank you.
+`.trim()
 
     const waLink = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
 
     window.open(waLink, '_blank')
-  } catch (err) {
-    console.error('WHATSAPP ERROR:', err)
+  } catch (error) {
+    console.error('Failed to send WhatsApp receipt:', error)
 
-    alert('WhatsApp send failed')
+    alert('Unable to prepare WhatsApp receipt.')
   }
 }
 
-// ============================================================
-// INITIAL LOAD
-// ============================================================
-
-onMounted(() => {
-  fetchInstitute()
-
-  getPayment(route.params.id)
+/*
+|--------------------------------------------------------------------------
+| Mounted
+|--------------------------------------------------------------------------
+*/
+onMounted(async () => {
+  await fetchInstitute()
+  await getPayment(route.params.id)
 })
 
-// ============================================================
-// ROUTE CHANGE DETECT
-// ============================================================
-
+/*
+|--------------------------------------------------------------------------
+| Watch Route ID
+|--------------------------------------------------------------------------
+*/
 watch(
   () => route.params.id,
-
-  (newId) => {
-    if (newId) {
-      payment.value = null
-
-=======
-/* WHATSAPP */
-const sendWhatsApp = async () => {
-  try {
-    const id = payment.value.id
-
-    const res = await api.get(`/payments/${id}/whatsapp`)
-
-    let phone = res.data.phone
-    const message = res.data.message
-
-    phone = phone.replace(/^0/, '')
-
-    phone = '880' + phone
-
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
-
-    window.open(url, '_blank')
-  } catch (err) {
-    console.log(err)
-    alert('WhatsApp failed')
-  }
-}
-
-/* INITIAL LOAD */
-onMounted(() => {
-  getPayment(route.params.id)
-})
-
-/* 🔥 IMPORTANT FIX: route change detect */
-watch(
-  () => route.params.id,
-  (newId) => {
-    if (newId) {
-      payment.value = null
->>>>>>> 64d30f5f98655572445e8294219453b5bbe1bc6b
-      getPayment(newId)
+  async (newId) => {
+    if (!newId) {
+      return
     }
+
+    payment.value = null
+
+    await getPayment(newId)
   },
 )
 </script>
 
-<<<<<<< HEAD
 <style scoped>
-/* =========================================================
-   RECEIPT BOX
-========================================================= */
+.receipt-page {
+  min-height: 100vh;
+  background: #f5f6f8;
+  padding: 30px 15px;
+}
+
+.receipt-container {
+  max-width: 850px;
+  margin: 0 auto;
+}
 
 .receipt-box {
-  max-width: 800px;
-
-  margin: auto;
-
-  background: #fff;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 35px;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
 }
 
-/* =========================================================
-   HEADER
-========================================================= */
+/* Institute Header */
 
 .receipt-header {
-  min-height: 75px;
-}
-
-/* =========================================================
-   INSTITUTE INFO
-========================================================= */
-
-.institute-info {
-  min-width: 0;
-}
-
-/* =========================================================
-   RECEIPT LOGO
-========================================================= */
-
-.receipt-logo {
-  width: 62px;
-
-  height: 62px;
-
-  border-radius: 12px;
-
-  background: #f1f5f9;
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
+  gap: 20px;
+  text-align: center;
+}
 
-  overflow: hidden;
-
+.institute-logo-wrapper {
   flex-shrink: 0;
-
-  border: 1px solid #e2e8f0;
 }
 
 .institute-logo {
-  width: 100%;
-
-  height: 100%;
-
+  width: 90px;
+  height: 90px;
   object-fit: contain;
-
-  padding: 5px;
+  border-radius: 8px;
 }
 
-.receipt-logo i {
+.institute-info h1 {
+  margin: 0;
   font-size: 28px;
-
-  color: #2563eb;
-}
-
-/* =========================================================
-   INSTITUTE NAME
-========================================================= */
-
-.institute-name {
-  color: #198754;
-
   font-weight: 700;
-
-  font-size: 22px;
-
-  line-height: 1.2;
-
-  word-break: break-word;
 }
 
-/* =========================================================
-   RECEIPT TITLE
-========================================================= */
+.institute-info p {
+  margin: 3px 0;
+  color: #555;
+  font-size: 14px;
+}
+
+/* Receipt Title */
 
 .receipt-title {
-  color: #495057;
+  text-align: center;
+  margin-top: 25px;
+}
 
+.receipt-title h2 {
+  display: inline-block;
+  margin: 0;
+  padding: 8px 25px;
+  border: 2px solid #222;
+  border-radius: 5px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* Receipt Meta */
+
+.receipt-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 25px;
+  font-size: 14px;
+}
+
+/* Section */
+
+.section-title {
   font-size: 17px;
-
-  font-weight: 600;
-
-  letter-spacing: 0.5px;
+  font-weight: 700;
+  margin-bottom: 15px;
 }
 
-/* =========================================================
-   PAYMENT TABLE
-========================================================= */
+/* Student Info */
+
+.student-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 30px;
+  font-size: 14px;
+}
+
+.student-info-grid strong {
+  margin-right: 5px;
+}
+
+/* Payment Table */
+
+.payment-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.payment-table th,
+.payment-table td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  font-size: 14px;
+}
 
 .payment-table th {
-  background: #f8f9fa;
+  background: #f5f5f5;
+  font-weight: 700;
+}
 
+.amount-column {
+  text-align: right;
+}
+
+.total-row td {
+  background: #f8f8f8;
+  font-size: 15px;
+}
+
+/* Payment Details */
+
+.payment-details {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
   font-weight: 600;
+  text-transform: capitalize;
 }
 
-.payment-table td,
-.payment-table th {
-  vertical-align: middle;
+.status-paid {
+  background: #d1e7dd;
+  color: #0f5132;
 }
 
-/* =========================================================
-   PRINT
-========================================================= */
+.status-due {
+  background: #f8d7da;
+  color: #842029;
+}
+
+/* Footer */
+
+.receipt-footer {
+  text-align: center;
+  margin-top: 35px;
+  padding-top: 15px;
+  border-top: 1px dashed #bbb;
+  color: #777;
+  font-size: 12px;
+}
+
+.receipt-footer p {
+  margin: 3px 0;
+}
+
+/* Actions */
+
+.receipt-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.receipt-actions .btn {
+  min-width: 150px;
+}
+
+/* Empty */
+
+.empty-state {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Print */
 
 @media print {
   @page {
-    size: A4 portrait;
-
-    margin: 10mm;
+    size: A4;
+    margin: 15mm;
   }
 
   body {
-    background: #fff !important;
+    background: #ffffff !important;
   }
 
-  .container {
-    width: 100% !important;
-
-    max-width: 100% !important;
-
-    margin: 0 !important;
-
+  .receipt-page {
+    background: #ffffff !important;
     padding: 0 !important;
   }
 
+  .receipt-container {
+    max-width: 100%;
+  }
+
   .receipt-box {
-    max-width: 100% !important;
-
-    width: 100% !important;
-
-    border: 1px solid #000 !important;
-
-    box-shadow: none !important;
-
-    margin: 0 !important;
-
-    padding: 20px !important;
+    border: none;
+    box-shadow: none;
+    padding: 0;
   }
 
   .no-print {
     display: none !important;
   }
-
-  .receipt-logo {
-    border: 1px solid #ddd;
-  }
-
-  .institute-name {
-    color: #000 !important;
-  }
 }
 
-/* =========================================================
-   MOBILE
-========================================================= */
+/* Mobile */
 
-@media (max-width: 576px) {
+@media (max-width: 600px) {
+  .receipt-page {
+    padding: 15px 8px;
+  }
+
   .receipt-box {
-    padding: 18px !important;
+    padding: 20px 15px;
   }
 
   .receipt-header {
-    align-items: flex-start !important;
+    flex-direction: column;
+    gap: 10px;
   }
 
-  .receipt-logo {
-    width: 50px;
-
-    height: 50px;
+  .institute-logo {
+    width: 75px;
+    height: 75px;
   }
 
-  .receipt-logo i {
+  .institute-info h1 {
     font-size: 22px;
   }
 
-  .institute-name {
-    font-size: 17px;
+  .receipt-meta {
+    flex-direction: column;
+    gap: 5px;
   }
 
-  .receipt-title {
-    font-size: 14px;
+  .student-info-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 
-  .receipt-header > .text-end {
-    font-size: 12px;
-=======
-<style>
-.receipt-box {
-  max-width: 800px;
-  margin: auto;
-}
+  .payment-details {
+    flex-direction: column;
+    gap: 10px;
+  }
 
-@media print {
-  .no-print {
-    display: none;
->>>>>>> 64d30f5f98655572445e8294219453b5bbe1bc6b
+  .receipt-actions {
+    flex-direction: column;
+  }
+
+  .receipt-actions .btn {
+    width: 100%;
   }
 }
 </style>

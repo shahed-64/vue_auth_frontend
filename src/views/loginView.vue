@@ -26,6 +26,8 @@
               {{ errorMsg }}
             </p>
           </form>
+          <h5>Login Email: manager@coaching.com</h5>
+          <h5>Login Password: 12345678</h5>
         </div>
       </div>
     </div>

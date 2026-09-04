@@ -1,15 +1,16 @@
 import axios from 'axios'
+
 import { startLoading, stopLoading } from '../utils/loading'
 
 const api = axios.create({
-  baseURL: `${window.location.origin}/api`,
+  baseURL: import.meta.env.VITE_API_URL,
   headers: {
     Accept: 'application/json',
     'Content-Type': 'application/json',
   },
 })
 
-// Request Interceptor (API কল শুরু হলে লোডার অন হবে)
+// Request Interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
@@ -19,7 +20,6 @@ api.interceptors.request.use(
     }
 
     startLoading()
-
     return config
   },
   (error) => {
@@ -28,7 +28,7 @@ api.interceptors.request.use(
   },
 )
 
-// Response Interceptor (API কল শেষ বা ফেল করলে লোডার অফ হবে)
+// Response Interceptor
 api.interceptors.response.use(
   (response) => {
     stopLoading()

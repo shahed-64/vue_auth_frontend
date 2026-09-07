@@ -8,14 +8,12 @@ const router = createRouter({
       path: '/',
       redirect: '/login',
     },
-
     {
       path: '/login',
       name: 'loginView',
       component: () => import('../views/loginView.vue'),
       meta: { guest: true },
     },
-
     {
       path: '/dashboard',
       name: 'dashboardView',
@@ -88,28 +86,24 @@ const router = createRouter({
       component: () => import('../views/StaffAttendanceView.vue'),
       meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
     },
-
     {
       path: '/account/dashboard',
       name: 'AccountDashboard',
       component: () => import('@/views/account/AccountDeshboardView.vue'),
       meta: { requiresAuth: true, role: ['Accountant', 'Manager'] },
     },
-
     {
       path: '/payment/history',
       name: 'PaymentHistory',
       component: () => import('@/views/account/PaymentHistoryView.vue'),
       meta: { requiresAuth: true, role: ['Accountant', 'Manager'] },
     },
-
     {
       path: '/paymentPDF/:id',
       name: 'paymentPDF',
       component: () => import('@/views/account/PaymentPdfView.vue'),
       meta: { requiresAuth: true, role: ['Accountant', 'Manager'] },
     },
-
     {
       path: '/singlePayment/:id',
       name: 'singlePayment',
@@ -128,7 +122,6 @@ const router = createRouter({
       component: () => import('@/views/account/StudentPaymentView.vue'),
       meta: { requiresAuth: true, role: ['Accountant', 'Manager'] },
     },
-
     {
       path: '/dash-page',
       name: 'dashPageView',
@@ -141,7 +134,6 @@ const router = createRouter({
       component: () => import('../views/ClassGroupView.vue'),
       meta: { requiresAuth: true },
     },
-
     {
       path: '/others-payment',
       name: 'othersPayment',
@@ -153,11 +145,6 @@ const router = createRouter({
       name: 'expense',
       component: () => import('@/views/account/ExpenseDashboardView.vue'),
       meta: { requiresAuth: true },
-    },
-    {
-      path: '/:pathMatch(.*)*',
-      name: 'NotFound',
-      component: () => import('../views/NotFoundView.vue'),
     },
     {
       path: '/teacherView',
@@ -207,35 +194,41 @@ const router = createRouter({
       component: () => import('../views/HolidaysView.vue'),
       meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
     },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'NotFound',
+      component: () => import('../views/NotFoundView.vue'),
+    },
   ],
 })
 
-/* 🔥 SECURE & ORIGINAL LOGIC GUARD (LOOP PREVENTED) */
+/* 🔥 SAFE & INFINITE-LOOP-FREE GLOBAL GUARD */
 router.beforeEach((to) => {
   const token = localStorage.getItem('token')
   const role = localStorage.getItem('role')
 
-  // Login Required
+  // 1. Check if authentication is required
   if (to.meta.requiresAuth && !token) {
-    return '/login'
+    return { name: 'loginView' }
   }
 
-  // Guest Route (Already Logged In)
+  // 2. Check if already logged in and trying to access guest routes (like login)
   if (to.meta.guest && token) {
-    if (role === 'Accountant') {
-      return to.path === '/account/dashboard' ? true : '/account/dashboard'
+    if (to.name === 'loginView') {
+      return role === 'Accountant' ? { name: 'AccountDashboard' } : { name: 'dashboardView' }
     }
-
-    return to.path === '/dashboard' ? true : '/dashboard'
   }
 
-  // Role Permission
-  if (to.meta.role && !to.meta.role.includes(role)) {
-    if (role === 'Accountant') {
-      return to.path === '/account/dashboard' ? true : '/account/dashboard'
-    }
+  // 3. Check role permissions safely (preventing loops if target is already the fallback)
+  if (to.meta.role && token) {
+    if (!to.meta.role.includes(role)) {
+      const targetRoute = role === 'Accountant' ? 'AccountDashboard' : 'dashboardView'
 
-    return to.path === '/dashboard' ? true : '/dashboard'
+      // Prevent infinite redirection if we are already trying to go to the fallback route
+      if (to.name !== targetRoute) {
+        return { name: targetRoute }
+      }
+    }
   }
 
   return true

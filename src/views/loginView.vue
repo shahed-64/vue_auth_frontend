@@ -106,13 +106,22 @@ const login = async () => {
     })
 
     const token = res.data.token
+    const role = res.data.role || res.data.staff?.role || 'Admin'
+
     if (!token) {
       errorMsg.value = 'Token not received from server'
       return
     }
 
     localStorage.setItem('token', token)
-    router.push('/dashboard')
+    localStorage.setItem('role', role)
+
+    // Redirect based on role
+    if (role === 'Accountant') {
+      router.push('/account/dashboard')
+    } else {
+      router.push('/dashboard')
+    }
   } catch (error) {
     errorMsg.value = error.response?.data?.message || 'Login failed'
   }
@@ -165,25 +174,6 @@ const login = async () => {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.logo-box {
-  width: 36px;
-  height: 36px;
-  background: #111827;
-  color: #fff;
-  font-size: 15px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-}
-
-.logo-title {
-  font-size: 17px;
-  font-weight: 700;
-  color: #1f2937;
 }
 
 /* Header */

@@ -11,11 +11,11 @@
 
         <form @submit.prevent="login">
           <div class="input-group-custom">
-            <label>Email or Staff ID*</label>
+            <label> Staff Email ID*</label>
             <input
               v-model="email"
               type="text"
-              placeholder="manager@school.edu"
+              placeholder="manager@school.com"
               autocomplete="email"
             />
           </div>
@@ -36,11 +36,6 @@
             {{ errorMsg }}
           </p>
         </form>
-
-        <div class="social-logins">
-          <button type="button" class="social-btn"> Apple</button>
-          <button type="button" class="social-btn">G Google</button>
-        </div>
 
         <div class="footer-note">
           Need Help?

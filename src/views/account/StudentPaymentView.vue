@@ -1,5 +1,4 @@
 <template>
-  <LoadingSpinner v-if="isLoading" />
   <RouterView />
   <!-- Sidebar -->
   <AccountMenuView />
@@ -391,8 +390,6 @@ import AccountMenuView from './AccountMenuView.vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
 
-import LoadingSpinner from '../../components/LoadingSpinner.vue'
-import { isLoading } from '../../utils/loading'
 const router = useRouter()
 const availableMonths = ref([])
 const students = ref([])

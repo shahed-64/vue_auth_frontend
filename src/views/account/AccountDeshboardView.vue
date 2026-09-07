@@ -1,5 +1,4 @@
 <template>
-  <LoadingSpinner v-if="isLoading" />
   <RouterView />
   <!-- Sidebar -->
   <AccountMenuView />
@@ -261,8 +260,6 @@
 import AccountMenuView from './AccountMenuView.vue'
 import MonthlyPaymentChart from '@/components/MonthlyPaymentChart.vue'
 import { ref, computed, onMounted } from 'vue'
-import LoadingSpinner from '../../components/LoadingSpinner.vue'
-import { isLoading } from '../../utils/loading'
 import api from '@/services/api'
 
 // Local Safe Avatar (Fallback SVG)

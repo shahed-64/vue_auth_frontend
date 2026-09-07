@@ -1,5 +1,4 @@
 <template>
-  <LoadingSpinner v-if="isLoading" />
   <RouterView />
   <AccountMenuView />
 
@@ -354,9 +353,6 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import api from '@/services/api'
 import AccountMenuView from './AccountMenuView.vue'
-
-import LoadingSpinner from '../../components/LoadingSpinner.vue'
-import { isLoading } from '../../utils/loading'
 
 // State
 const expenses = ref([])

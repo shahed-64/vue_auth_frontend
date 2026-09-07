@@ -1,5 +1,4 @@
 <template>
-  <LoadingSpinner v-if="isLoading" />
   <RouterView />
   <AccountMenuView />
 
@@ -381,9 +380,6 @@ import { ref, computed, onMounted } from 'vue'
 import AccountMenuView from './AccountMenuView.vue'
 import api from '@/services/api'
 import { getImageUrl } from '@/utils/img'
-
-import LoadingSpinner from '../../components/LoadingSpinner.vue'
-import { isLoading } from '../../utils/loading'
 
 /* =========================
    Search & State

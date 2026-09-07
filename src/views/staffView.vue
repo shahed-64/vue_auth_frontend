@@ -1,5 +1,4 @@
 <template>
-  <LoadingSpinner v-if="isLoading" />
   <RouterView />
   <dashPageView />
 
@@ -418,8 +417,6 @@ import dashPageView from './dashPageView.vue'
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import api from '@/services/api'
 
-import LoadingSpinner from '../components/LoadingSpinner.vue'
-import { isLoading } from '../utils/loading'
 // =======================
 // STATES
 // =======================

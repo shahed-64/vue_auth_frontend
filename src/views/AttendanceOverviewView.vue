@@ -1,9 +1,8 @@
 <template>
+  <dashPageView />
   <div class="dashboard-layout bg-light min-vh-100 d-flex">
     <!-- Left Sidebar -->
-    <aside class="sidebar-wrapper">
-      <dashPageView />
-    </aside>
+    <aside class="sidebar-wrapper"></aside>
 
     <!-- Main Content -->
     <div class="main-wrapper flex-grow-1 min-vh-100 d-flex flex-column">

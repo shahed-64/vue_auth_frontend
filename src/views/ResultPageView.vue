@@ -104,7 +104,7 @@
                     :
 
                     <span class="badge bg-success fs-6">
-                      {{ resultData.gpa }}
+                      {{ gpaWithAdditional }}
                     </span>
                   </td>
                 </tr>
@@ -468,6 +468,62 @@ const additionalSubjects = computed(() => {
   }
 
   return []
+})
+
+// ============================================================
+// GPA WITH ADDITIONAL SUBJECT
+// ============================================================
+
+const gpaWithAdditional = computed(() => {
+  if (!resultData.value) {
+    return '-'
+  }
+
+  const main = mainSubjects.value
+  const additional = additionalSubjects.value
+
+  if (!main.length) {
+    return '-'
+  }
+
+  let mainPointTotal = 0
+  let validMainSubjects = 0
+
+  // Main subjects GPA
+  main.forEach((subject) => {
+    const grade = calculateGrade(subject.marks)
+
+    if (grade.point !== '-') {
+      mainPointTotal += Number(grade.point)
+      validMainSubjects++
+    }
+  })
+
+  if (validMainSubjects === 0) {
+    return '-'
+  }
+
+  // Additional subject bonus
+  let additionalBonus = 0
+
+  additional.forEach((subject) => {
+    const grade = calculateAdditionalGrade(subject.marks)
+
+    if (grade.point !== '-') {
+      const point = Number(grade.point)
+
+      // Additional GP থেকে 2 বাদ দিয়ে bonus
+      if (point > 2) {
+        additionalBonus += point - 2
+      }
+    }
+  })
+
+  // Final GPA
+  const finalGpa = (mainPointTotal + additionalBonus) / validMainSubjects
+
+  // Maximum GPA 5.00
+  return Math.min(finalGpa, 5).toFixed(2)
 })
 
 // ============================================================

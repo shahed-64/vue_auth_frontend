@@ -4,13 +4,13 @@
       <div class="login-left-form">
         <div class="logo-container"></div>
 
-        <div class="form-header">
+        <div class="form-header form-animate">
           <h2>Welcome Back!</h2>
           <p>Sign in to your account to continue</p>
         </div>
 
         <form @submit.prevent="login">
-          <div class="input-group-custom">
+          <div class="input-group-custom form-animate">
             <label> Staff Email ID*</label>
             <input
               v-model="email"
@@ -20,7 +20,7 @@
             />
           </div>
 
-          <div class="input-group-custom">
+          <div class="input-group-custom form-animate">
             <label>Password*</label>
             <input
               v-model="password"
@@ -30,7 +30,7 @@
             />
           </div>
 
-          <button type="submit" class="login-button">Log In</button>
+          <button type="submit" class="login-button form-animate">Log In</button>
 
           <p v-if="errorMsg" class="error-message">
             {{ errorMsg }}
@@ -39,7 +39,7 @@
 
         <div class="footer-note">
           Need Help?
-          <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer">Contact Support</a>
+          <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer"> Contact Support </a>
         </div>
       </div>
 
@@ -48,6 +48,7 @@
 
         <div class="floating-announcement">
           <span class="dot"></span>
+
           <div>
             <strong>Task Review With Team</strong>
             <p>10:00AM-10:30AM</p>
@@ -56,12 +57,23 @@
 
         <div class="floating-calendar">
           <div class="cal-days">
-            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span
-            ><span>Fri</span><span>Sat</span>
+            <span>Sun</span>
+            <span>Mon</span>
+            <span>Tue</span>
+            <span>Wed</span>
+            <span>Thu</span>
+            <span>Fri</span>
+            <span>Sat</span>
           </div>
+
           <div class="cal-dates">
-            <span>22</span><span>23</span><span>24</span><span>25</span><span>26</span
-            ><span>27</span><span>28</span>
+            <span>22</span>
+            <span>23</span>
+            <span>24</span>
+            <span>25</span>
+            <span>26</span>
+            <span>27</span>
+            <span>28</span>
           </div>
         </div>
 
@@ -87,14 +99,17 @@ const errorMsg = ref('')
 
 // WhatsApp Support Link Setup
 const whatsappNumber = '8801753787564'
+
 const whatsappMessage = encodeURIComponent(
   'Hello, I need help with School/Coaching Management login.',
 )
+
 const whatsappUrl = ref(`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`)
 
 const login = async () => {
   try {
     errorMsg.value = ''
+
     const res = await api.post('/login', {
       email: email.value,
       password: password.value,
@@ -125,7 +140,7 @@ const login = async () => {
 
 <style scoped>
 /* =========================================
-   MAIN BACKDROP & CONTAINER
+    MAIN BACKDROP & CONTAINER
 ========================================= */
 
 .login-page {
@@ -143,17 +158,33 @@ const login = async () => {
   display: flex;
   width: 1040px;
   height: 620px;
-  background: #fbf9f4;
+  /* ছবির সাথে মিল রেখে বক্সের ব্যাকগ্রাউন্ড গ্রেডিয়েন্ট */
+  background: linear-gradient(135deg, #fefefe 0%, #f9f5e8 50%, #f3ebd0 100%);
   border-radius: 28px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
   overflow: hidden;
   padding: 32px;
   gap: 32px;
   box-sizing: border-box;
+
+  /* Premium entrance animation */
+  animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes cardEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(25px) scale(0.98);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* =========================================
-   LEFT SIDE (FORM SECTION)
+    LEFT SIDE (FORM SECTION)
 ========================================= */
 
 .login-left-form {
@@ -164,14 +195,20 @@ const login = async () => {
   padding: 5px 5px;
 }
 
-/* Logo */
+/* =========================================
+    LOGO
+========================================= */
+
 .logo-container {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-/* Header */
+/* =========================================
+    HEADER
+========================================= */
+
 .form-header h2 {
   margin: 0 0 6px;
   color: #111827;
@@ -186,7 +223,28 @@ const login = async () => {
   font-size: 14px;
 }
 
-/* Inputs */
+/* =========================================
+    ✨ SMOOTH FADE-IN (লাফালাফি ছাড়াই একসাথে)
+========================================= */
+
+.form-animate {
+  opacity: 0;
+  animation: smoothFadeIn 1s ease-in-out forwards;
+}
+
+@keyframes smoothFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* =========================================
+    INPUTS
+========================================= */
+
 .input-group-custom {
   margin-bottom: 18px;
 }
@@ -210,15 +268,19 @@ const login = async () => {
   font-size: 15px;
   outline: none;
   box-sizing: border-box;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
 }
 
 .input-group-custom input:focus {
   border-color: #facc15;
   box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.15);
+  transform: translateY(-1px);
 }
 
-/* Submit Button */
+/* =========================================
+    SUBMIT BUTTON
+========================================= */
+
 .login-button {
   width: 100%;
   height: 50px;
@@ -229,15 +291,24 @@ const login = async () => {
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.3s ease;
   margin-top: 10px;
 }
 
 .login-button:hover {
   background: #facc15;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -10px rgba(250, 204, 21, 0.5);
 }
 
-/* Social Logins */
+.login-button:active {
+  transform: translateY(0);
+}
+
+/* =========================================
+    SOCIAL LOGINS
+========================================= */
+
 .social-logins {
   display: flex;
   gap: 12px;
@@ -258,13 +329,19 @@ const login = async () => {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  transition: all 0.2s ease;
 }
 
 .social-btn:hover {
   background: #f9fafb;
+  transform: translateY(-2px);
+  border-color: #9ca3af;
 }
 
-/* Footer & Error */
+/* =========================================
+    FOOTER & ERROR
+========================================= */
+
 .footer-note {
   font-size: 13px;
   color: #6b7280;
@@ -286,7 +363,7 @@ const login = async () => {
 }
 
 /* =========================================
-   RIGHT SIDE (PICTURE BANNER SECTION)
+    RIGHT SIDE (PICTURE BANNER SECTION)
 ========================================= */
 
 .login-right-visual {
@@ -309,7 +386,10 @@ const login = async () => {
   z-index: 2;
 }
 
-/* Close Button Corner */
+/* =========================================
+    CLOSE BUTTON CORNER
+========================================= */
+
 .close-badge {
   top: 14px;
   right: 14px;
@@ -324,9 +404,17 @@ const login = async () => {
   font-weight: bold;
   color: #333;
   cursor: pointer;
+  transition: transform 0.2s;
 }
 
-/* Floating Announcement Box */
+.close-badge:hover {
+  transform: scale(1.1);
+}
+
+/* =========================================
+    FLOATING ANNOUNCEMENT
+========================================= */
+
 .floating-announcement {
   top: 20px;
   left: 20px;
@@ -339,6 +427,7 @@ const login = async () => {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   font-size: 10px;
   color: #111;
+  animation: floatSlow 4s ease-in-out infinite;
 }
 
 .floating-announcement .dot {
@@ -354,7 +443,10 @@ const login = async () => {
   color: #4b5563;
 }
 
-/* Floating Glass Calendar Widget */
+/* =========================================
+    FLOATING GLASS CALENDAR WIDGET
+========================================= */
+
 .floating-calendar {
   bottom: 100px;
   left: 20px;
@@ -381,7 +473,10 @@ const login = async () => {
   margin-top: 4px;
 }
 
-/* Floating Tasks Widget */
+/* =========================================
+    FLOATING TASKS WIDGET
+========================================= */
+
 .floating-tasks {
   bottom: 20px;
   left: 20px;
@@ -392,6 +487,7 @@ const login = async () => {
   color: #1f2937;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   width: 170px;
+  animation: floatSlow 5s ease-in-out infinite alternate;
 }
 
 .floating-tasks strong {
@@ -406,8 +502,19 @@ const login = async () => {
   font-size: 9px;
 }
 
+@keyframes floatSlow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
 /* =========================================
-   RESPONSIVE DESIGN
+    RESPONSIVE DESIGN
 ========================================= */
 
 @media (max-width: 900px) {
@@ -417,6 +524,7 @@ const login = async () => {
     width: 100%;
     max-width: 440px;
   }
+
   .login-right-visual {
     height: 320px;
     width: 100%;

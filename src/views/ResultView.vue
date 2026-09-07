@@ -1,6 +1,4 @@
 <template>
-  <LoadingSpinner v-if="isLoading" />
-
   <RouterView />
 
   <dashPageView />
@@ -21,7 +19,6 @@
                   {{ totalStudents }}
                 </h4>
               </div>
-
               <div class="icon-box bg-success-subtle text-success rounded-3 p-3">🎓</div>
             </div>
           </div>
@@ -37,7 +34,6 @@
                   {{ publishedResults }}
                 </h4>
               </div>
-
               <div class="icon-box bg-primary-subtle text-primary rounded-3 p-3">📄</div>
             </div>
           </div>
@@ -51,7 +47,6 @@
                 <p class="text-muted mb-1 small fw-bold">Pass Rate</p>
                 <h4 class="fw-bold text-dark mb-0">{{ passRate }}%</h4>
               </div>
-
               <div class="icon-box bg-warning-subtle text-warning rounded-3 p-3">📈</div>
             </div>
           </div>
@@ -67,7 +62,6 @@
                   {{ totalGpaFive }}
                 </h4>
               </div>
-
               <div class="icon-box bg-info-subtle text-info rounded-3 p-3">⭐</div>
             </div>
           </div>
@@ -181,7 +175,6 @@
   <!-- =========================================================
        ADD RESULT MODAL
   ========================================================== -->
-
   <div
     v-if="isAddModalOpen"
     class="modal fade show d-block"
@@ -204,7 +197,6 @@
             <!-- =================================================
                  STUDENT / YEAR / EXAM
             ================================================== -->
-
             <div class="row">
               <!-- Student -->
               <div class="col-md-4 mb-3 position-relative">
@@ -380,7 +372,6 @@
             <!-- =========================================================
                  STUDENT CLASS & GROUP INFO
             ========================================================== -->
-
             <div v-if="form.student_id && selectedStudent" class="mb-4">
               <div class="card border-0 bg-light rounded-3">
                 <div class="card-body py-3">
@@ -427,7 +418,6 @@
             <!-- =========================================================
                  SUBJECT MARKS
             ========================================================== -->
-
             <h6 class="fw-bold text-dark mb-3">Subject Marks</h6>
 
             <!-- NO STUDENT -->
@@ -439,7 +429,6 @@
             <!-- NO SUBJECT -->
             <div v-else-if="currentSubjects.length === 0" class="alert alert-warning">
               <i class="bi bi-exclamation-triangle me-2"></i>
-
               No subjects are assigned to this student's class/group.
             </div>
 
@@ -448,7 +437,6 @@
               <!-- =======================================================
                    MAIN SUBJECTS
               ======================================================== -->
-
               <div v-if="mainSubjects.length" class="mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <h6 class="fw-bold text-primary mb-0">
@@ -495,7 +483,6 @@
               <!-- =======================================================
                    ADDITIONAL SUBJECT
               ======================================================== -->
-
               <div v-if="additionalSubjects.length" class="mt-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <h6 class="fw-bold text-success mb-0">
@@ -545,7 +532,6 @@
             <!-- =================================================
                  MODAL FOOTER
             ================================================== -->
-
             <div class="modal-footer border-0 px-0 pb-0 pt-3">
               <button
                 type="button"
@@ -574,34 +560,28 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-
 import dashPageView from './dashPageView.vue'
-import LoadingSpinner from '../components/LoadingSpinner.vue'
 import api from '@/services/api'
-import { isLoading } from '../utils/loading'
 
-/*
-|--------------------------------------------------------------------------
-| STATE
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | STATE
+ * |--------------------------------------------------------------------------
+ */
 
 const resultsList = ref([])
 const studentsList = ref([])
 const examinationsList = ref([])
-
 const currentSubjects = ref([])
-
 const search = ref('')
-
 const isAddModalOpen = ref(false)
 const isSaving = ref(false)
 
-/*
-|--------------------------------------------------------------------------
-| SEARCH STATES
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | SEARCH STATES
+ * |--------------------------------------------------------------------------
+ */
 
 const studentSearchText = ref('')
 const yearSearchText = ref('')
@@ -611,11 +591,11 @@ const isStudentDropdownOpen = ref(false)
 const isYearDropdownOpen = ref(false)
 const isExamDropdownOpen = ref(false)
 
-/*
-|--------------------------------------------------------------------------
-| FORM
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | FORM
+ * |--------------------------------------------------------------------------
+ */
 
 const form = reactive({
   student_id: '',
@@ -624,11 +604,11 @@ const form = reactive({
   subjects: [],
 })
 
-/*
-|--------------------------------------------------------------------------
-| SELECTED STUDENT
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | SELECTED STUDENT
+ * |--------------------------------------------------------------------------
+ */
 
 const selectedStudent = computed(() => {
   if (!form.student_id) {
@@ -638,15 +618,11 @@ const selectedStudent = computed(() => {
   return studentsList.value.find((student) => student.id == form.student_id) || null
 })
 
-/*
-|--------------------------------------------------------------------------
-| GET STUDENT GROUP NAME
-|--------------------------------------------------------------------------
-|
-| Group-এর data backend থেকে বিভিন্ন structure-এ আসতে পারে।
-| এখানে শুধু Group check করা হচ্ছে।
-|
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | GET STUDENT GROUP NAME
+ * |--------------------------------------------------------------------------
+ */
 
 const getStudentGroupName = (student) => {
   if (!student) {
@@ -662,38 +638,37 @@ const getStudentGroupName = (student) => {
   )
 }
 
-/*
-|--------------------------------------------------------------------------
-| MAIN SUBJECTS
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | MAIN SUBJECTS
+ * |--------------------------------------------------------------------------
+ */
 
 const mainSubjects = computed(() => {
   return currentSubjects.value.filter((subject) => !subject.is_additional)
 })
 
-/*
-|--------------------------------------------------------------------------
-| ADDITIONAL SUBJECTS
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | ADDITIONAL SUBJECTS
+ * |--------------------------------------------------------------------------
+ */
 
 const additionalSubjects = computed(() => {
   return currentSubjects.value.filter((subject) => subject.is_additional)
 })
 
-/*
-|--------------------------------------------------------------------------
-| FETCH RESULTS + STUDENTS
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | FETCH RESULTS + STUDENTS
+ * |--------------------------------------------------------------------------
+ */
 
 const fetchData = async () => {
   try {
     const response = await api.get('/results')
 
     resultsList.value = response.data.results || []
-
     studentsList.value = response.data.students || []
 
     console.log('Students:', studentsList.value)
@@ -702,11 +677,11 @@ const fetchData = async () => {
   }
 }
 
-/*
-|--------------------------------------------------------------------------
-| FETCH EXAMINATIONS
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | FETCH EXAMINATIONS
+ * |--------------------------------------------------------------------------
+ */
 
 const fetchExaminations = async () => {
   try {
@@ -720,11 +695,11 @@ const fetchExaminations = async () => {
   }
 }
 
-/*
-|--------------------------------------------------------------------------
-| SEARCHABLE STUDENTS
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | SEARCHABLE STUDENTS
+ * |--------------------------------------------------------------------------
+ */
 
 const searchableStudents = computed(() => {
   const text = studentSearchText.value.toLowerCase().trim()
@@ -744,11 +719,11 @@ const searchableStudents = computed(() => {
   })
 })
 
-/*
-|--------------------------------------------------------------------------
-| SEARCHABLE EXAMINATIONS
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | SEARCHABLE EXAMINATIONS
+ * |--------------------------------------------------------------------------
+ */
 
 const searchableExaminations = computed(() => {
   const text = examSearchText.value.toLowerCase().trim()
@@ -764,11 +739,11 @@ const searchableExaminations = computed(() => {
   })
 })
 
-/*
-|--------------------------------------------------------------------------
-| SEARCHABLE YEARS
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | SEARCHABLE YEARS
+ * |--------------------------------------------------------------------------
+ */
 
 const searchableYears = computed(() => {
   const map = new Map()
@@ -794,11 +769,11 @@ const searchableYears = computed(() => {
   })
 })
 
-/*
-|--------------------------------------------------------------------------
-| SELECT STUDENT
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | SELECT STUDENT
+ * |--------------------------------------------------------------------------
+ */
 
 const selectStudent = (student) => {
   form.student_id = student.id
@@ -807,62 +782,41 @@ const selectStudent = (student) => {
 
   isStudentDropdownOpen.value = false
 
-  /*
-  |--------------------------------------------------------------------------
-  | IMPORTANT
-  |--------------------------------------------------------------------------
-  | Student select করার সাথে সাথে
-  |
-  | Student
-  |    ↓
-  | Group
-  |    ↓
-  | Group Subjects
-  |    ↓
-  | Result Subjects
-  |
-  | load হবে।
-  |--------------------------------------------------------------------------
-  */
-
   loadStudentSubjects()
 }
 
-/*
-|--------------------------------------------------------------------------
-| CLEAR STUDENT
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | CLEAR STUDENT
+ * |--------------------------------------------------------------------------
+ */
 
 const clearStudentSelection = () => {
   form.student_id = ''
-
   studentSearchText.value = ''
 
   currentSubjects.value = []
-
   form.subjects = []
 
   isStudentDropdownOpen.value = true
 }
 
-/*
-|--------------------------------------------------------------------------
-| LOAD STUDENT SUBJECTS
-|--------------------------------------------------------------------------
-|
-| Course এখানে ব্যবহার করা হচ্ছে না।
-|
-| Subject source:
-|
-| 1. Student Class Subjects
-| 2. Student Group Subjects
-|
-| Group Subjects-এর মধ্যে যেগুলো additional হিসেবে backend
-| থেকে আসবে সেগুলো Additional Subject হিসেবে দেখাবে।
-|
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | LOAD STUDENT SUBJECTS
+ * |--------------------------------------------------------------------------
+ * |
+ * | Subject source:
+ * |
+ * | 1. Student Class Subjects       -> Main Subject
+ * | 2. group_subject_mappings       -> Main Subject
+ * | 3. Student Group Subjects       -> Additional Subject
+ * |
+ * | IMPORTANT:
+ * | Existing group_subjects logic is kept.
+ * |
+ * |--------------------------------------------------------------------------
+ */
 
 const loadStudentSubjects = () => {
   const student = studentsList.value.find((item) => item.id == form.student_id)
@@ -879,13 +833,25 @@ const loadStudentSubjects = () => {
   console.log('GROUP:', student.group)
   console.log('GROUP NAME:', getStudentGroupName(student))
   console.log('GROUP SUBJECTS:', student.group_subjects)
+  console.log('MAPPED GROUP SUBJECTS:', student.mapped_group_subjects)
   console.log('====================================')
 
   /*
-  |--------------------------------------------------------------------------
-  | CLASS SUBJECTS
-  |--------------------------------------------------------------------------
-  */
+   * ==========================================================
+   * 1. CLASS SUBJECTS
+   * ==========================================================
+   *
+   * Class-এর subject থেকে আমরা শুধু সেই subject রাখব
+   * যেগুলো group mapping-এর সাথে compatible।
+   *
+   * যদি group mapping থাকে:
+   *
+   * Science:
+   * Physics, Chemistry, Biology
+   *
+   * তাহলে Science student-এর Main-এ এই mapped subjects
+   * অবশ্যই থাকবে।
+   */
 
   let classSubjects = []
 
@@ -898,10 +864,14 @@ const loadStudentSubjects = () => {
   }
 
   /*
-  |--------------------------------------------------------------------------
-  | GROUP SUBJECTS
-  |--------------------------------------------------------------------------
-  */
+   * ==========================================================
+   * 2. EXISTING GROUP SUBJECTS
+   * ==========================================================
+   *
+   * এগুলো Additional Subject.
+   *
+   * এই logic change করা হয়নি।
+   */
 
   let groupSubjects = []
 
@@ -910,92 +880,175 @@ const loadStudentSubjects = () => {
   }
 
   /*
-  |--------------------------------------------------------------------------
-  | NORMALIZE CLASS SUBJECTS
-  |--------------------------------------------------------------------------
-  */
+   * ==========================================================
+   * 3. GROUP SUBJECT MAPPINGS
+   * ==========================================================
+   *
+   * Backend থেকে student's own group অনুযায়ী
+   * mapped subjects আসবে।
+   *
+   * এগুলো Main Subject।
+   */
 
-  const normalizedClassSubjects = classSubjects.map((subject) => {
-    return {
-      unique_key: `main_${subject.id}`,
+  let mappedGroupSubjects = []
 
-      id: subject.id,
-
-      name: subject.name || subject.subject_name || subject.subject?.name || 'Unknown Subject',
-
-      code: subject.code || subject.subject_code || subject.subject?.code || null,
-
-      is_additional: false,
-
-      marks: '',
-    }
-  })
+  if (Array.isArray(student.mapped_group_subjects)) {
+    mappedGroupSubjects = student.mapped_group_subjects
+  }
 
   /*
-  |--------------------------------------------------------------------------
-  | NORMALIZE GROUP SUBJECTS
-  |--------------------------------------------------------------------------
-  |
-  | Backend যদি is_additional পাঠায় সেটা respect করবে।
-  |
-  | যদি Group mapping-এর data-তে is_additional না থাকে,
-  | তাহলে default false থাকবে।
-  |
-  |--------------------------------------------------------------------------
-  */
+   * ==========================================================
+   * 4. MAPPED SUBJECT ID SET
+   * ==========================================================
+   */
+
+  const mappedSubjectIds = new Set(
+    mappedGroupSubjects.map((subject) => Number(subject.id)).filter((id) => !Number.isNaN(id)),
+  )
+
+  /*
+   * ==========================================================
+   * 5. GROUP SUBJECT ID SET
+   * ==========================================================
+   *
+   * Existing Additional subjects.
+   */
+
+  const additionalSubjectIds = new Set(
+    groupSubjects.map((subject) => Number(subject.id)).filter((id) => !Number.isNaN(id)),
+  )
+
+  /*
+   * ==========================================================
+   * 6. NORMALIZE CLASS SUBJECTS
+   * ==========================================================
+   *
+   * এখানে গুরুত্বপূর্ণ filtering হচ্ছে।
+   *
+   * যদি কোনো subject group_subjects-এ Additional হিসেবে থাকে,
+   * তাহলে সেটা Main-এ থাকবে না।
+   *
+   * আর যদি mapped_group_subjects-এ থাকে,
+   * তাহলে সেটা Main হিসেবে থাকবে।
+   */
+
+  const normalizedClassSubjects = classSubjects
+    .filter((subject) => {
+      const subjectId = Number(subject.id)
+
+      // Additional subject হলে class subject থেকে বাদ
+      if (additionalSubjectIds.has(subjectId)) {
+        return false
+      }
+
+      return true
+    })
+    .map((subject) => {
+      return {
+        unique_key: `main_${subject.id}`,
+        id: subject.id,
+        name: subject.name || subject.subject_name || subject.subject?.name || 'Unknown Subject',
+        code: subject.code || subject.subject_code || subject.subject?.code || null,
+        is_additional: false,
+        marks: '',
+      }
+    })
+
+  /*
+   * ==========================================================
+   * 7. NORMALIZE GROUP MAPPED SUBJECTS
+   * ==========================================================
+   *
+   * group_subject_mappings থেকে আসা subjects
+   * Main Subject হিসেবে থাকবে।
+   */
+
+  const normalizedMappedGroupSubjects = mappedGroupSubjects
+    .filter((subject) => {
+      const subjectId = Number(subject.id)
+
+      return !Number.isNaN(subjectId) && !additionalSubjectIds.has(subjectId)
+    })
+    .map((subject) => {
+      return {
+        unique_key: `mapped_group_${subject.id}`,
+        id: subject.id,
+        name: subject.name || subject.subject_name || subject.subject?.name || 'Unknown Subject',
+        code: subject.code || subject.subject_code || subject.subject?.code || null,
+        is_additional: false,
+        marks: '',
+      }
+    })
+
+  /*
+   * ==========================================================
+   * 8. NORMALIZE EXISTING GROUP SUBJECTS
+   * ==========================================================
+   *
+   * Existing group_subjects = Additional Subject
+   *
+   * এই অংশ আগের মতোই রাখা হয়েছে।
+   */
 
   const normalizedGroupSubjects = groupSubjects.map((subject) => {
     return {
       unique_key: `group_${subject.id}`,
-
       id: subject.id,
-
       name: subject.name || subject.subject_name || subject.subject?.name || 'Unknown Subject',
-
       code: subject.code || subject.subject_code || subject.subject?.code || null,
-
       is_additional:
         subject.is_additional === true ||
         subject.is_additional === 1 ||
         subject.is_additional === '1',
-
       marks: '',
     }
   })
 
   /*
-  |--------------------------------------------------------------------------
-  | MERGE
-  |--------------------------------------------------------------------------
-  */
+   * ==========================================================
+   * 9. MERGE SUBJECTS
+   * ==========================================================
+   */
 
-  const mergedSubjects = [...normalizedClassSubjects, ...normalizedGroupSubjects]
+  const mergedSubjects = [
+    ...normalizedClassSubjects,
+    ...normalizedMappedGroupSubjects,
+    ...normalizedGroupSubjects,
+  ]
 
   /*
-  |--------------------------------------------------------------------------
-  | REMOVE DUPLICATE SUBJECTS
-  |--------------------------------------------------------------------------
-  |
-  | একই subject class + group দুই জায়গায় থাকলে
-  | Group mapping priority পাবে।
-  |
-  |--------------------------------------------------------------------------
-  */
+   * ==========================================================
+   * 10. REMOVE DUPLICATES
+   * ==========================================================
+   *
+   * Same subject একাধিক জায়গায় থাকলে একবারই দেখাবে।
+   *
+   * Additional Subject priority পাবে।
+   */
 
   const subjectMap = new Map()
 
   mergedSubjects.forEach((subject) => {
-    const existing = subjectMap.get(subject.id)
+    const subjectId = Number(subject.id)
+
+    const existing = subjectMap.get(subjectId)
 
     if (!existing) {
-      subjectMap.set(subject.id, subject)
+      subjectMap.set(subjectId, subject)
       return
     }
 
+    // Additional Subject priority
     if (subject.is_additional && !existing.is_additional) {
-      subjectMap.set(subject.id, subject)
+      subjectMap.set(subjectId, subject)
     }
   })
+
+  /*
+   * ==========================================================
+   * 11. FINAL SUBJECTS
+   * ==========================================================
+   */
 
   currentSubjects.value = Array.from(subjectMap.values())
 
@@ -1006,19 +1059,18 @@ const loadStudentSubjects = () => {
   console.log('ADDITIONAL SUBJECTS:', additionalSubjects.value)
 
   /*
-  |--------------------------------------------------------------------------
-  | SYNC FORM
-  |--------------------------------------------------------------------------
-  */
+   * ==========================================================
+   * 12. SYNC FORM
+   * ==========================================================
+   */
 
   syncFormSubjects()
 }
-
-/*
-|--------------------------------------------------------------------------
-| UPDATE SUBJECT MARKS
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | UPDATE SUBJECT MARKS
+ * |--------------------------------------------------------------------------
+ */
 
 const updateSubjectMarks = (subjectKey, marks) => {
   const subject = currentSubjects.value.find((item) => item.unique_key === subjectKey)
@@ -1032,11 +1084,11 @@ const updateSubjectMarks = (subjectKey, marks) => {
   syncFormSubjects()
 }
 
-/*
-|--------------------------------------------------------------------------
-| SYNC FORM SUBJECTS
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | SYNC FORM SUBJECTS
+ * |--------------------------------------------------------------------------
+ */
 
 const syncFormSubjects = () => {
   form.subjects = currentSubjects.value.map((subject) => ({
@@ -1048,11 +1100,11 @@ const syncFormSubjects = () => {
   }))
 }
 
-/*
-|--------------------------------------------------------------------------
-| SELECT EXAM
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | SELECT EXAM
+ * |--------------------------------------------------------------------------
+ */
 
 const selectExam = (exam) => {
   form.exam_type = exam.examination_type
@@ -1062,25 +1114,24 @@ const selectExam = (exam) => {
   isExamDropdownOpen.value = false
 }
 
-/*
-|--------------------------------------------------------------------------
-| CLEAR EXAM
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | CLEAR EXAM
+ * |--------------------------------------------------------------------------
+ */
 
 const clearExamSelection = () => {
   form.exam_type = ''
-
   examSearchText.value = ''
 
   isExamDropdownOpen.value = true
 }
 
-/*
-|--------------------------------------------------------------------------
-| SELECT YEAR
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | SELECT YEAR
+ * |--------------------------------------------------------------------------
+ */
 
 const selectYear = (exam) => {
   form.exam_year = exam.examination_year
@@ -1090,73 +1141,63 @@ const selectYear = (exam) => {
   isYearDropdownOpen.value = false
 }
 
-/*
-|--------------------------------------------------------------------------
-| CLEAR YEAR
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | CLEAR YEAR
+ * |--------------------------------------------------------------------------
+ */
 
 const clearYearSelection = () => {
   form.exam_year = ''
-
   yearSearchText.value = ''
 
   isYearDropdownOpen.value = true
 }
 
-/*
-|--------------------------------------------------------------------------
-| CLOSE MODAL
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | CLOSE MODAL
+ * |--------------------------------------------------------------------------
+ */
 
 const closeAddModal = () => {
   isAddModalOpen.value = false
 
   isStudentDropdownOpen.value = false
-
   isYearDropdownOpen.value = false
-
   isExamDropdownOpen.value = false
 }
 
-/*
-|--------------------------------------------------------------------------
-| OPEN MODAL
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | OPEN MODAL
+ * |--------------------------------------------------------------------------
+ */
 
 const openAddModal = () => {
   form.student_id = ''
-
   form.exam_year = ''
-
   form.exam_type = ''
-
   form.subjects = []
 
   studentSearchText.value = ''
-
   yearSearchText.value = ''
-
   examSearchText.value = ''
 
   currentSubjects.value = []
 
   isStudentDropdownOpen.value = false
-
   isYearDropdownOpen.value = false
-
   isExamDropdownOpen.value = false
 
   isAddModalOpen.value = true
 }
 
-/*
-|--------------------------------------------------------------------------
-| SAVE RESULT
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | SAVE RESULT
+ * |--------------------------------------------------------------------------
+ */
 
 const saveNewResult = async () => {
   if (!form.student_id) {
@@ -1179,21 +1220,15 @@ const saveNewResult = async () => {
     return
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | Make sure latest marks are synced
-  |--------------------------------------------------------------------------
-  */
-
+  /**
+   * Make sure latest marks are synced
+   */
   syncFormSubjects()
 
   const payload = {
     student_id: Number(form.student_id),
-
     exam_year: form.exam_year,
-
     exam_type: form.exam_type,
-
     subjects: form.subjects,
   }
 
@@ -1236,11 +1271,11 @@ const saveNewResult = async () => {
   }
 }
 
-/*
-|--------------------------------------------------------------------------
-| FILTER RESULTS
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | FILTER RESULTS
+ * |--------------------------------------------------------------------------
+ */
 
 const filteredResults = computed(() => {
   const keyword = search.value.toLowerCase().trim()
@@ -1267,11 +1302,11 @@ const filteredResults = computed(() => {
   })
 })
 
-/*
-|--------------------------------------------------------------------------
-| GRADE POINT
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | GRADE POINT
+ * |--------------------------------------------------------------------------
+ */
 
 const getPoint = (marks) => {
   if (marks === null || marks === undefined || marks === '') {
@@ -1281,33 +1316,26 @@ const getPoint = (marks) => {
   const m = Number(marks)
 
   if (m >= 80) return 5.0
-
   if (m >= 70) return 4.0
-
   if (m >= 60) return 3.5
-
   if (m >= 50) return 3.0
-
   if (m >= 40) return 2.0
-
   if (m >= 33) return 1.0
 
   return 0.0
 }
 
-/*
-|--------------------------------------------------------------------------
-| CALCULATE RESULT
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | CALCULATE RESULT
+ * |--------------------------------------------------------------------------
+ */
 
 const calculateResultDetails = (result) => {
   const subjects = result.result_subjects || result.resultSubjects || []
 
   let totalPoints = 0
-
   let subjectCount = 0
-
   let hasFailed = false
 
   subjects.forEach((resultSubject) => {
@@ -1324,7 +1352,6 @@ const calculateResultDetails = (result) => {
     }
 
     totalPoints += point
-
     subjectCount++
 
     if (point === 0) {
@@ -1343,16 +1370,15 @@ const calculateResultDetails = (result) => {
 
   return {
     gpa: Number(gpa.toFixed(2)),
-
     status: 'Pass',
   }
 }
 
-/*
-|--------------------------------------------------------------------------
-| DASHBOARD COUNTS
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | DASHBOARD COUNTS
+ * |--------------------------------------------------------------------------
+ */
 
 const totalStudents = computed(() => {
   return resultsList.value.length
@@ -1382,25 +1408,23 @@ const totalGpaFive = computed(() => {
   }).length
 })
 
-/*
-|--------------------------------------------------------------------------
-| CLOSE DROPDOWNS
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | CLOSE DROPDOWNS
+ * |--------------------------------------------------------------------------
+ */
 
 const closeDropdowns = () => {
   isStudentDropdownOpen.value = false
-
   isYearDropdownOpen.value = false
-
   isExamDropdownOpen.value = false
 }
 
-/*
-|--------------------------------------------------------------------------
-| ON MOUNT
-|--------------------------------------------------------------------------
-*/
+/**
+ * |--------------------------------------------------------------------------
+ * | ON MOUNT
+ * |--------------------------------------------------------------------------
+ */
 
 onMounted(async () => {
   await Promise.all([fetchData(), fetchExaminations()])

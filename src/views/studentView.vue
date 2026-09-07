@@ -1,6 +1,4 @@
 <template>
-  <LoadingSpinner v-if="isLoading" />
-
   <RouterView />
 
   <dashPageView />
@@ -68,7 +66,7 @@
               <th>Class</th>
               <th>Group</th>
               <th>Email</th>
-              <th>Course</th>
+              <!-- <th>Course</th> -->
               <th width="180">Action</th>
             </tr>
           </thead>
@@ -120,9 +118,9 @@
               </td>
 
               <!-- COURSE -->
-              <td>
+              <!-- <td>
                 {{ item.course_name || 'N/A' }}
-              </td>
+              </td> -->
 
               <!-- ACTION -->
               <td>
@@ -314,7 +312,7 @@
             </div>
 
             <!-- COURSE -->
-            <div class="mb-3">
+            <!-- <div class="mb-3">
               <label class="form-label"> Course </label>
 
               <input
@@ -323,7 +321,7 @@
                 class="form-control"
                 placeholder="Enter course name"
               />
-            </div>
+            </div> -->
 
             <!-- ================= CLASS GROUP ================= -->
             <div class="mb-3">
@@ -386,9 +384,9 @@
 
             <!-- ADMISSION DATE -->
             <div class="mb-3">
-              <label class="form-label"> Admission Date </label>
+              <!-- <label class="form-label"> Admission Date </label> -->
 
-              <input v-model="form.admission_date" type="date" class="form-control" />
+              <input hidden v-model="form.admission_date" type="date" class="form-control" />
             </div>
 
             <!-- MONTHLY FEE -->
@@ -680,10 +678,6 @@ import api from '@/services/api'
 import * as bootstrap from 'bootstrap'
 
 import 'bootstrap/dist/css/bootstrap.min.css'
-
-import LoadingSpinner from '../components/LoadingSpinner.vue'
-
-import { isLoading } from '../utils/loading'
 
 import { getImageUrl } from '@/utils/img'
 

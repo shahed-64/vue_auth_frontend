@@ -1,5 +1,4 @@
 <template>
-  <LoadingSpinner v-if="isLoading" />
   <RouterView />
   <dashPageView />
 
@@ -153,8 +152,6 @@
 import { ref, onMounted } from 'vue'
 import api from '../services/api'
 import dashPageView from './dashPageView.vue'
-import LoadingSpinner from '../components/LoadingSpinner.vue'
-import { isLoading } from '../utils/loading'
 
 const shifts = ref([])
 const loading = ref(false)

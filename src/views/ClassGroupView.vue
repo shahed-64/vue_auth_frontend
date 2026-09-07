@@ -8,7 +8,9 @@
     <div class="row mb-4 align-items-center">
       <div class="col">
         <h2 class="fw-bold text-dark mb-1">Class Group Management</h2>
-        <p class="text-muted mb-0">Manage student groups and assign optional subjects easily.</p>
+        <p class="text-muted mb-0">
+          Manage student groups and assign optional and group subjects easily.
+        </p>
       </div>
 
       <div class="col-auto">
@@ -48,6 +50,7 @@
                 <th class="py-3 ps-4">#ID</th>
                 <th class="py-3">Group Name</th>
                 <th class="py-3">Optional Subjects</th>
+                <th class="py-3">Group Subjects</th>
                 <th class="py-3 text-end pe-4">Actions</th>
               </tr>
             </thead>
@@ -55,16 +58,15 @@
             <tbody>
               <!-- LOADING -->
               <tr v-if="loadingGroups">
-                <td colspan="4" class="text-center py-5 text-muted">
+                <td colspan="5" class="text-center py-5 text-muted">
                   <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-
                   Loading groups...
                 </td>
               </tr>
 
               <!-- EMPTY -->
               <tr v-else-if="groups.length === 0">
-                <td colspan="4" class="text-center py-5 text-muted">
+                <td colspan="5" class="text-center py-5 text-muted">
                   <i class="bi bi-collection fs-3 d-block mb-2"></i>
                   No groups found.
                 </td>
@@ -82,7 +84,7 @@
                   {{ group.group_name || 'N/A' }}
                 </td>
 
-                <!-- SUBJECTS -->
+                <!-- OPTIONAL SUBJECTS -->
                 <td>
                   <div
                     v-if="group.subjects && group.subjects.length"
@@ -100,6 +102,28 @@
                   </div>
 
                   <span v-else class="text-muted small"> No optional subjects assigned </span>
+                </td>
+
+                <!-- GROUP SUBJECTS -->
+                <td>
+                  <div
+                    v-if="group.groupSubjectMappings && group.groupSubjectMappings.length"
+                    class="d-flex flex-wrap gap-1"
+                  >
+                    <span
+                      v-for="mapping in group.groupSubjectMappings"
+                      :key="mapping.id"
+                      class="badge bg-success-subtle text-success border border-success-subtle"
+                    >
+                      {{ mapping.subject?.name }}
+
+                      <span v-if="mapping.subject?.code" class="ms-1">
+                        ({{ mapping.subject.code }})
+                      </span>
+                    </span>
+                  </div>
+
+                  <span v-else class="text-muted small"> No group subjects assigned </span>
                 </td>
 
                 <!-- ACTIONS -->
@@ -147,8 +171,8 @@
               <p class="text-muted small mb-0">
                 {{
                   isEditMode
-                    ? 'Update group information and assigned optional subjects.'
-                    : 'Create a group and assign optional subjects.'
+                    ? 'Update group information and assigned subjects.'
+                    : 'Create a group and assign subjects.'
                 }}
               </p>
             </div>
@@ -180,7 +204,85 @@
               </div>
 
               <!-- =================================================
-                   SUBJECT SECTION
+                   GROUP SUBJECTS
+              ================================================== -->
+              <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <div>
+                    <label class="form-label fw-semibold text-secondary mb-0">
+                      Group Subjects
+                    </label>
+
+                    <div class="small text-muted">
+                      Subjects specifically assigned to this group.
+                    </div>
+                  </div>
+
+                  <span class="badge bg-success-subtle text-success">
+                    {{ form.group_subject_ids.length }} Selected
+                  </span>
+                </div>
+
+                <div class="border rounded-3 p-3 group-subject-selection-box">
+                  <!-- LOADING -->
+                  <div v-if="subjectsLoading" class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+
+                    Loading subjects...
+                  </div>
+
+                  <!-- NO SUBJECT -->
+                  <div v-else-if="subjects.length === 0" class="text-center py-4 text-muted">
+                    <i class="bi bi-book fs-3 d-block mb-2"></i>
+
+                    No group subjects available.
+                  </div>
+
+                  <!-- GROUP SUBJECT CHECKBOXES -->
+                  <div v-else class="row g-2">
+                    <div
+                      v-for="subject in subjects"
+                      :key="subject.id"
+                      class="col-12 col-sm-6 col-md-4"
+                    >
+                      <div
+                        class="form-check subject-check-card border rounded-3 p-3"
+                        :class="{
+                          'selected-group-subject': form.group_subject_ids.includes(
+                            Number(subject.id),
+                          ),
+                        }"
+                      >
+                        <input
+                          class="form-check-input ms-0 me-2"
+                          type="checkbox"
+                          :id="'group-subject-' + subject.id"
+                          :value="Number(subject.id)"
+                          v-model="form.group_subject_ids"
+                        />
+
+                        <label
+                          class="form-check-label fw-semibold"
+                          :for="'group-subject-' + subject.id"
+                        >
+                          {{ subject.name }}
+
+                          <span v-if="subject.code" class="d-block text-muted small mt-1">
+                            {{ subject.code }}
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-text mt-2">
+                  Select subjects that belong specifically to this group.
+                </div>
+              </div>
+
+              <!-- =================================================
+                   OPTIONAL SUBJECTS
               ================================================== -->
               <div>
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -244,7 +346,7 @@
                 </div>
 
                 <div class="form-text mt-2">
-                  Select all optional subjects that should be available for this group.
+                  Select optional subjects that should be available for this group.
                 </div>
               </div>
             </div>
@@ -287,7 +389,6 @@ import dashPageView from './dashPageView.vue'
 ========================================================= */
 
 const groups = ref([])
-
 const loadingGroups = ref(false)
 
 /* =========================================================
@@ -295,7 +396,6 @@ const loadingGroups = ref(false)
 ========================================================= */
 
 const subjects = ref([])
-
 const subjectsLoading = ref(false)
 
 /* =========================================================
@@ -303,11 +403,8 @@ const subjectsLoading = ref(false)
 ========================================================= */
 
 const showModal = ref(false)
-
 const isEditMode = ref(false)
-
 const currentGroupID = ref(null)
-
 const saving = ref(false)
 
 /* =========================================================
@@ -317,6 +414,7 @@ const saving = ref(false)
 const form = ref({
   group_name: '',
   subject_ids: [],
+  group_subject_ids: [],
 })
 
 /* =========================================================
@@ -324,7 +422,6 @@ const form = ref({
 ========================================================= */
 
 const message = ref('')
-
 const isError = ref(false)
 
 /* =========================================================
@@ -333,12 +430,12 @@ const isError = ref(false)
 
 const openAddModal = async () => {
   isEditMode.value = false
-
   currentGroupID.value = null
 
   form.value = {
     group_name: '',
     subject_ids: [],
+    group_subject_ids: [],
   }
 
   message.value = ''
@@ -354,13 +451,16 @@ const openAddModal = async () => {
 
 const openEditModal = async (group) => {
   isEditMode.value = true
-
   currentGroupID.value = group.id
 
   form.value.group_name = group.group_name || ''
 
   form.value.subject_ids = Array.isArray(group.subjects)
     ? group.subjects.map((subject) => Number(subject.id))
+    : []
+
+  form.value.group_subject_ids = Array.isArray(group.groupSubjectMappings)
+    ? group.groupSubjectMappings.map((mapping) => Number(mapping.subject_id))
     : []
 
   message.value = ''
@@ -412,6 +512,8 @@ const fetchSubjects = async () => {
       subjects.value = response.data
     } else if (response.data && Array.isArray(response.data.data)) {
       subjects.value = response.data.data
+    } else if (response.data && Array.isArray(response.data.subjects)) {
+      subjects.value = response.data.subjects
     } else {
       subjects.value = []
     }
@@ -437,7 +539,6 @@ const saveGroup = async () => {
 
   if (!form.value.group_name.trim()) {
     showAlert('Please enter group name.', true)
-
     return
   }
 
@@ -447,8 +548,14 @@ const saveGroup = async () => {
     const payload = {
       group_name: form.value.group_name.trim(),
 
+      /* Existing Optional Subjects */
       subject_ids: form.value.subject_ids.map((id) => Number(id)),
+
+      /* Group Subjects */
+      group_subject_ids: form.value.group_subject_ids.map((id) => Number(id)),
     }
+
+    console.log('Group save payload:', payload)
 
     /* =====================================================
        UPDATE
@@ -460,19 +567,22 @@ const saveGroup = async () => {
       if (response.status === 200 || response.data?.success) {
         showAlert(response.data?.message || 'Group updated successfully!')
 
+        /* AUTO CLOSE MODAL */
         closeModal()
 
         await fetchGroups()
       }
     } else {
       /* =====================================================
-       CREATE
-    ====================================================== */
+         CREATE
+      ====================================================== */
+
       const response = await api.post('/class_group', payload)
 
       if (response.status === 201 || response.status === 200 || response.data?.success) {
         showAlert(response.data?.message || 'Group created successfully!')
 
+        /* AUTO CLOSE MODAL */
         closeModal()
 
         await fetchGroups()
@@ -510,14 +620,13 @@ const closeModal = () => {
   }
 
   showModal.value = false
-
   isEditMode.value = false
-
   currentGroupID.value = null
 
   form.value = {
     group_name: '',
     subject_ids: [],
+    group_subject_ids: [],
   }
 }
 
@@ -544,12 +653,11 @@ const deleteGroup = async (id) => {
 }
 
 /* =========================================================
-   ALERT
+   SHOW ALERT
 ========================================================= */
 
 const showAlert = (msg, error = false) => {
   message.value = msg
-
   isError.value = error
 
   setTimeout(() => {
@@ -580,11 +688,10 @@ onMounted(() => {
    SUBJECT SELECTION BOX
 ========================================================= */
 
-.subject-selection-box {
+.subject-selection-box,
+.group-subject-selection-box {
   background-color: #f8f9fa;
-
   max-height: 320px;
-
   overflow-y: auto;
 }
 
@@ -594,15 +701,10 @@ onMounted(() => {
 
 .subject-check-card {
   background-color: #ffffff;
-
   cursor: pointer;
-
   transition: all 0.2s ease;
-
   min-height: 70px;
-
   display: flex;
-
   align-items: flex-start;
 }
 
@@ -612,18 +714,25 @@ onMounted(() => {
 
 .subject-check-card:hover {
   border-color: #86b7fe !important;
-
   background-color: #f8fbff;
 }
 
 /* =========================================================
-   SELECTED
+   OPTIONAL SUBJECT SELECTED
 ========================================================= */
 
 .subject-check-card.selected-subject {
   border-color: #0d6efd !important;
-
   background-color: rgba(13, 110, 253, 0.06);
+}
+
+/* =========================================================
+   GROUP SUBJECT SELECTED
+========================================================= */
+
+.subject-check-card.selected-group-subject {
+  border-color: #198754 !important;
+  background-color: rgba(25, 135, 84, 0.06);
 }
 
 /* =========================================================
@@ -632,7 +741,6 @@ onMounted(() => {
 
 .subject-check-card .form-check-input {
   margin-top: 3px;
-
   cursor: pointer;
 }
 
@@ -642,7 +750,6 @@ onMounted(() => {
 
 .subject-check-card .form-check-label {
   cursor: pointer;
-
   flex: 1;
 }
 
@@ -652,7 +759,6 @@ onMounted(() => {
 
 .table th {
   font-size: 0.8rem;
-
   letter-spacing: 0.03em;
 }
 
@@ -675,9 +781,7 @@ onMounted(() => {
 @media (max-width: 768px) {
   .body {
     width: 100%;
-
     margin-left: 0;
-
     padding: 15px;
   }
 }

@@ -1,5 +1,4 @@
 <template>
-  <LoadingSpinner v-if="isLoading" />
   <RouterView />
   <!-- Sidebar Component -->
   <dashPageView />
@@ -184,9 +183,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import Chart from 'chart.js/auto'
-import LoadingSpinner from '../components/LoadingSpinner.vue'
-import { isLoading } from '../utils/loading'
-// আপনার api.js ফাইলের সঠিক পাঠ (path) অনুযায়ী import ইমপোর্ট করুন
 import api from '@/services/api'
 import dashPageView from './dashPageView.vue'
 
@@ -213,14 +209,14 @@ let chart = null
 
 const getDashboardData = async () => {
   try {
-    // LocalStorage থেকে ইউজারের ডেটা পড়া (যদি আগে সেভ করা থাকে)
+    // LocalStorage
     const storedUser = localStorage.getItem('user')
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser)
       currentUser.value = { ...currentUser.value, ...parsedUser }
     }
 
-    // আপনার কাস্টম api (axios instance) দিয়ে কল করা হচ্ছে
+    //  api (axios instance)
     const response = await api.get('/staff/dashboard')
 
     totalStaff.value = response.data.total_staff
@@ -230,7 +226,7 @@ const getDashboardData = async () => {
     recentStaff.value = response.data.recent_staff
     monthlyCollection.value = response.data.monthly_collection
 
-    // API থেকে ইউজার প্রোফাইলের তথ্য পাঠালে তা ডাইনামিক করা
+    // API
     if (response.data.user) {
       currentUser.value = {
         name: response.data.user.name,

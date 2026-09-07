@@ -1,5 +1,4 @@
 <template>
-  <LoadingSpinner v-if="isLoading" />
   <RouterView />
   <AccountMenuView />
   <div class="box">
@@ -385,8 +384,6 @@
 import AccountMenuView from './AccountMenuView.vue'
 import { ref, computed, onMounted } from 'vue'
 import api from '@/services/api'
-import LoadingSpinner from '../../components/LoadingSpinner.vue'
-import { isLoading } from '../../utils/loading'
 /* =========================
    State
 ========================= */

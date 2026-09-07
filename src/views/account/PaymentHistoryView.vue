@@ -1,5 +1,4 @@
 <template>
-  <LoadingSpinner v-if="isLoading" />
   <RouterView />
   <div class="app-layout">
     <!-- Sidebar -->
@@ -354,8 +353,6 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import AccountMenuView from './AccountMenuView.vue'
 import api from '@/services/api'
-import LoadingSpinner from '../../components/LoadingSpinner.vue'
-import { isLoading } from '../../utils/loading'
 // Table & Main State
 const payments = ref([])
 const search = ref('')

@@ -210,7 +210,7 @@ const router = createRouter({
   ],
 })
 
-/* 🔥 CLEAN GLOBAL GUARD */
+/* 🔥 SECURE & ORIGINAL LOGIC GUARD (LOOP PREVENTED) */
 router.beforeEach((to) => {
   const token = localStorage.getItem('token')
   const role = localStorage.getItem('role')
@@ -223,19 +223,19 @@ router.beforeEach((to) => {
   // Guest Route (Already Logged In)
   if (to.meta.guest && token) {
     if (role === 'Accountant') {
-      return '/account/dashboard'
+      return to.path === '/account/dashboard' ? true : '/account/dashboard'
     }
 
-    return '/dashboard'
+    return to.path === '/dashboard' ? true : '/dashboard'
   }
 
   // Role Permission
   if (to.meta.role && !to.meta.role.includes(role)) {
     if (role === 'Accountant') {
-      return '/account/dashboard'
+      return to.path === '/account/dashboard' ? true : '/account/dashboard'
     }
 
-    return '/dashboard'
+    return to.path === '/dashboard' ? true : '/dashboard'
   }
 
   return true

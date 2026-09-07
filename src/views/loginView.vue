@@ -2,10 +2,7 @@
   <div class="login-page">
     <div class="login-card-wrapper">
       <div class="login-left-form">
-        <div class="logo-container">
-          <div class="logo-box">C</div>
-          <span class="logo-title">Crexfio</span>
-        </div>
+        <div class="logo-container"></div>
 
         <div class="form-header">
           <h2>Welcome Back!</h2>

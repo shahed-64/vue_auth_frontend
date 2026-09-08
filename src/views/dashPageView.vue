@@ -247,6 +247,10 @@
       <i class="fa-solid fa-square-poll-vertical"></i>
       <span>Result</span>
     </router-link>
+    <router-link to="/resultGrade" active-class="active-menu" @click="closeSidebar">
+      <i class="fa-solid fa-square-poll-vertical"></i>
+      <span>Result Grading</span>
+    </router-link>
 
     <!-- ================= SHIFT ================= -->
     <router-link to="/shift" active-class="active-menu" @click="closeSidebar">

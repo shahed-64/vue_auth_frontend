@@ -5,156 +5,142 @@
     <div class="receipt-container">
       <!-- Receipt -->
       <div class="receipt-box">
-        <!-- Institute Header -->
-        <div class="receipt-header">
-          <div class="institute-logo-wrapper" v-if="getLogoUrl(institute?.logo)">
-            <img :src="getLogoUrl(institute?.logo)" alt="Institute Logo" class="institute-logo" />
+        <!-- Top Header: Logo, Institute Info & Receipt Meta -->
+        <div class="receipt-top-header">
+          <div class="header-left">
+            <div class="institute-logo-wrapper" v-if="getLogoUrl(institute?.logo)">
+              <img :src="getLogoUrl(institute?.logo)" alt="Institute Logo" class="institute-logo" />
+            </div>
+            <div class="institute-info">
+              <h1>
+                {{ institute?.institute_name || 'Coaching MS' }}
+              </h1>
+              <div class="receipt-subtitle">
+                <span>— Money Receipt —</span>
+              </div>
+            </div>
           </div>
 
-          <div class="institute-info">
-            <h1>
-              {{ institute?.institute_name || 'Coaching MS' }}
-            </h1>
-
-            <p v-if="institute?.established_year">Estd. {{ institute.established_year }}</p>
-
-            <p v-if="institute?.location">
-              {{ institute.location }}
-            </p>
-
-            <p v-if="institute?.contact">Contact: {{ institute.contact }}</p>
-          </div>
-        </div>
-
-        <div class="receipt-title">
-          <h2>MONEY RECEIPT</h2>
-        </div>
-
-        <!-- Receipt Information -->
-        <div class="receipt-meta">
-          <div>
-            <strong>Receipt ID:</strong>
-            {{ payment.id }}
-          </div>
-
-          <div>
-            <strong>Date:</strong>
-            {{ formatDate(payment.payment_date) }}
+          <div class="receipt-meta">
+            <div>
+              <strong>Receipt No:</strong>
+              <span class="badge-receipt-id">#{{ payment.id }}</span>
+            </div>
+            <div>
+              <strong>Date:</strong>
+              {{ formatDate(payment.payment_date) }}
+            </div>
           </div>
         </div>
 
-        <hr />
+        <hr class="divider-line" />
 
-        <!-- Student Information -->
-        <div class="section-title">Student Information</div>
-
-        <div class="student-info-grid">
-          <div>
-            <strong>Name:</strong>
-            {{ payment.student?.full_name || 'N/A' }}
+        <!-- Info Cards Grid (Student Info & Payment Info Side-by-Side) -->
+        <div class="info-cards-grid">
+          <!-- Student Information Card -->
+          <div class="info-card">
+            <div class="card-header-title student-header">STUDENT INFO</div>
+            <div class="card-body">
+              <div class="info-row">
+                <span class="label">Name</span>
+                <span class="val">{{ payment.student?.full_name || 'N/A' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Class</span>
+                <span class="val">{{ payment.student?.class_info?.class_name || 'N/A' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Section</span>
+                <span class="val">{{ payment.student?.section?.section_name || 'N/A' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Phone</span>
+                <span class="val">{{ payment.student?.phone || 'N/A' }}</span>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <strong>Student ID:</strong>
-            {{ payment.student?.student_id || 'N/A' }}
-          </div>
-
-          <div>
-            <strong>Class:</strong>
-            {{ payment.student?.class_info?.class_name || 'N/A' }}
-          </div>
-
-          <div>
-            <strong>Section:</strong>
-            {{ payment.student?.section?.section_name || 'N/A' }}
-          </div>
-
-          <div>
-            <strong>Phone:</strong>
-            {{ payment.student?.phone || 'N/A' }}
-          </div>
-
-          <div>
-            <strong>Month:</strong>
-            {{ payment.month || 'N/A' }}
+          <!-- Payment Information Card -->
+          <div class="info-card">
+            <div class="card-header-title payment-header-tag">PAYMENT INFO</div>
+            <div class="card-body">
+              <div class="info-row">
+                <span class="label">Method</span>
+                <span class="val">{{ payment.payment_method || 'N/A' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Paid Month</span>
+                <span class="val">{{ payment.month || 'N/A' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Status</span>
+                <span class="val">
+                  <span
+                    class="status-badge"
+                    :class="payment.status === 'paid' ? 'status-paid' : 'status-due'"
+                  >
+                    {{ payment.status || 'N/A' }}
+                  </span>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <hr />
-
-        <!-- Payment Information -->
-        <div class="section-title">Payment Information</div>
-
+        <!-- Payment Table -->
         <table class="payment-table">
           <thead>
             <tr>
+              <th class="col-index">#</th>
               <th>Description</th>
               <th class="amount-column">Amount</th>
             </tr>
           </thead>
 
           <tbody>
-            <!-- Monthly Fee -->
+            <!-- 1. Monthly Fee (Database student table or model থেকে আসা আসল ফি) -->
             <tr>
-              <td>
-                Monthly Fee
-                <span v-if="payment.month"> ({{ payment.month }}) </span>
-              </td>
-
-              <td class="amount-column">৳{{ formatAmount(payment.paid_amount) }}</td>
-            </tr>
-
-            <!-- Admission Fee -->
-            <tr v-if="Number(payment.admission_fee) > 0">
-              <td>Admission Fee</td>
-
-              <td class="amount-column">৳{{ formatAmount(payment.admission_fee) }}</td>
-            </tr>
-
-            <!-- Exam Fee -->
-            <tr v-if="Number(payment.exam_fee) > 0">
-              <td>Exam Fee</td>
-
-              <td class="amount-column">৳{{ formatAmount(payment.exam_fee) }}</td>
-            </tr>
-
-            <!-- Total -->
-            <tr class="total-row">
-              <td>
-                <strong>Total Paid</strong>
-              </td>
-
+              <td class="col-index">1</td>
+              <td>Monthly Fee</td>
               <td class="amount-column">
-                <strong> ৳{{ formatAmount(totalPaid) }} </strong>
+                BDT {{ formatAmount(payment.student?.monthly_fee || payment.monthly_fee || 0) }}
               </td>
+            </tr>
+
+            <!-- 2. Paid Amount (সে এন্ট্রি বা পেমেন্টের বিপরীতে কত টাকা দিল) -->
+            <tr>
+              <td class="col-index">2</td>
+              <td>Paid Amount</td>
+              <td class="amount-column">BDT {{ formatAmount(payment.paid_amount) }}</td>
+            </tr>
+
+            <!-- 3. Admission Fee -->
+            <tr v-if="Number(payment.admission_fee) > 0">
+              <td class="col-index">3</td>
+              <td>Admission Fee</td>
+              <td class="amount-column">BDT {{ formatAmount(payment.admission_fee) }}</td>
+            </tr>
+
+            <!-- 4. Exam Fee -->
+            <tr v-if="Number(payment.exam_fee) > 0">
+              <td class="col-index">4</td>
+              <td>Exam Fee</td>
+              <td class="amount-column">BDT {{ formatAmount(payment.exam_fee) }}</td>
             </tr>
           </tbody>
         </table>
 
-        <!-- Payment Details -->
-        <div class="payment-details">
-          <div>
-            <strong>Payment Method:</strong>
-            {{ payment.payment_method || 'N/A' }}
-          </div>
-
-          <div>
-            <strong>Status:</strong>
-
-            <span
-              class="status-badge"
-              :class="payment.status === 'paid' ? 'status-paid' : 'status-due'"
-            >
-              {{ payment.status || 'N/A' }}
-            </span>
-          </div>
+        <!-- Total Paid Banner Box -->
+        <div class="total-paid-box">
+          <span class="total-title">TOTAL PAID</span>
+          <span class="total-amount">BDT {{ formatAmount(totalPaid) }}</span>
         </div>
 
         <!-- Footer -->
         <div class="receipt-footer">
-          <p>Thank you for your payment.</p>
-
-          <p>This is a computer-generated receipt.</p>
+          <div class="footer-decor-line">
+            <span>Thank you for your payment</span>
+          </div>
         </div>
       </div>
 
@@ -356,7 +342,6 @@ Payment Receipt
 
 Receipt ID: ${payment.value.id}
 Student: ${payment.value.student?.full_name || 'N/A'}
-Student ID: ${payment.value.student?.student_id || 'N/A'}
 Month: ${payment.value.month || 'N/A'}
 
 Total Paid: ৳${formatAmount(totalPaid.value)}
@@ -420,166 +405,245 @@ watch(
 
 .receipt-box {
   background: #ffffff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 35px;
-  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
-/* Institute Header */
+/* Top Header Layout */
+.receipt-top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
 
-.receipt-header {
+.header-left {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 20px;
-  text-align: center;
 }
 
 .institute-logo-wrapper {
   flex-shrink: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 4px;
+  background: #fff;
 }
 
 .institute-logo {
-  width: 90px;
-  height: 90px;
+  width: 75px;
+  height: 75px;
   object-fit: contain;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .institute-info h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 700;
+  color: #2563eb;
 }
 
-.institute-info p {
-  margin: 3px 0;
-  color: #555;
+.receipt-subtitle {
+  margin-top: 4px;
+  color: #3b82f6;
   font-size: 14px;
+  font-weight: 500;
 }
-
-/* Receipt Title */
-
-.receipt-title {
-  text-align: center;
-  margin-top: 25px;
-}
-
-.receipt-title h2 {
-  display: inline-block;
-  margin: 0;
-  padding: 8px 25px;
-  border: 2px solid #222;
-  border-radius: 5px;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-/* Receipt Meta */
 
 .receipt-meta {
+  text-align: right;
+  font-size: 14px;
+  color: #334155;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.badge-receipt-id {
+  background: #2563eb;
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.divider-line {
+  border: none;
+  border-top: 2px solid #2563eb;
+  margin: 20px 0 25px 0;
+}
+
+/* Info Cards Grid (Side-by-Side) */
+.info-cards-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.info-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.card-header-title {
+  padding: 10px 15px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.student-header {
+  background: #f1f5f9;
+  color: #2563eb;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.payment-header-tag {
+  background: #f0fdf4;
+  color: #16a34a;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.card-body {
+  padding: 12px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-row {
   display: flex;
   justify-content: space-between;
-  margin-top: 25px;
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
-/* Section */
-
-.section-title {
-  font-size: 17px;
-  font-weight: 700;
-  margin-bottom: 15px;
+.info-row .label {
+  color: #64748b;
+  font-weight: 600;
 }
 
-/* Student Info */
-
-.student-info-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px 30px;
-  font-size: 14px;
-}
-
-.student-info-grid strong {
-  margin-right: 5px;
+.info-row .val {
+  color: #1e293b;
+  font-weight: 500;
+  text-align: right;
 }
 
 /* Payment Table */
-
 .payment-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
+  margin-bottom: 25px;
 }
 
 .payment-table th,
 .payment-table td {
-  border: 1px solid #ddd;
-  padding: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 10px 14px;
   font-size: 14px;
 }
 
 .payment-table th {
-  background: #f5f5f5;
-  font-weight: 700;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+  text-align: left;
+}
+
+.col-index {
+  width: 50px;
+  text-align: center;
+}
+
+.payment-table td.col-index {
+  color: #64748b;
 }
 
 .amount-column {
   text-align: right;
 }
 
-.total-row td {
-  background: #f8f8f8;
-  font-size: 15px;
-}
-
-/* Payment Details */
-
-.payment-details {
+/* Total Paid Box */
+.total-paid-box {
+  border: 1px solid #bfdbfe;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 15px 20px;
   display: flex;
   justify-content: space-between;
-  margin-top: 20px;
-  font-size: 14px;
+  align-items: center;
+  margin-bottom: 30px;
 }
 
-.status-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: capitalize;
+.total-title {
+  color: #2563eb;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
-.status-paid {
-  background: #d1e7dd;
-  color: #0f5132;
-}
-
-.status-due {
-  background: #f8d7da;
-  color: #842029;
+.total-amount {
+  color: #2563eb;
+  font-size: 22px;
+  font-weight: 800;
 }
 
 /* Footer */
-
 .receipt-footer {
   text-align: center;
-  margin-top: 35px;
-  padding-top: 15px;
-  border-top: 1px dashed #bbb;
-  color: #777;
-  font-size: 12px;
+  color: #64748b;
+  font-size: 13px;
+  font-style: italic;
 }
 
-.receipt-footer p {
-  margin: 3px 0;
+.footer-decor-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  color: #2563eb;
+}
+
+.footer-decor-line::before,
+.footer-decor-line::after {
+  content: '';
+  height: 1px;
+  width: 80px;
+  background: #93c5fd;
+}
+
+.footer-decor-line span {
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status-paid {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-due {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 /* Actions */
-
 .receipt-actions {
   display: flex;
   justify-content: center;
@@ -592,7 +656,6 @@ watch(
 }
 
 /* Empty */
-
 .empty-state {
   min-height: 70vh;
   display: flex;
@@ -602,7 +665,6 @@ watch(
 }
 
 /* Print */
-
 @media print {
   @page {
     size: A4;
@@ -633,44 +695,22 @@ watch(
   }
 }
 
-/* Mobile */
-
-@media (max-width: 600px) {
-  .receipt-page {
-    padding: 15px 8px;
-  }
-
-  .receipt-box {
-    padding: 20px 15px;
-  }
-
-  .receipt-header {
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .receipt-top-header {
     flex-direction: column;
-    gap: 10px;
-  }
-
-  .institute-logo {
-    width: 75px;
-    height: 75px;
-  }
-
-  .institute-info h1 {
-    font-size: 22px;
+    gap: 15px;
   }
 
   .receipt-meta {
-    flex-direction: column;
-    gap: 5px;
+    text-align: left;
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
   }
 
-  .student-info-grid {
+  .info-cards-grid {
     grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  .payment-details {
-    flex-direction: column;
-    gap: 10px;
   }
 
   .receipt-actions {

@@ -5,6 +5,7 @@
         <!-- ===================================================== -->
         <!-- LOGO WATERMARK -->
         <!-- ===================================================== -->
+
         <div v-if="institute?.logo" class="logo-watermark">
           <img
             :src="getLogoUrl(institute.logo)"
@@ -15,6 +16,7 @@
         <!-- ===================================================== -->
         <!-- TOP HEADER -->
         <!-- ===================================================== -->
+
         <div class="text-center mb-4 position-relative z-1">
           <h3 class="header-title mb-1">
             {{ institute?.institute_name || 'Institute Name' }}
@@ -35,9 +37,11 @@
         <!-- ===================================================== -->
         <!-- STUDENT INFORMATION -->
         <!-- ===================================================== -->
+
         <table class="info-table mb-4 position-relative z-1">
           <tr>
             <!-- LEFT SIDE -->
+
             <td style="width: 55%; vertical-align: top">
               <table class="table table-sm table-borderless mb-0">
                 <tr>
@@ -67,6 +71,7 @@
             </td>
 
             <!-- RIGHT SIDE -->
+
             <td style="width: 45%; vertical-align: top">
               <table class="table table-sm table-borderless mb-0">
                 <tr>
@@ -76,6 +81,7 @@
                 </tr>
 
                 <!-- GROUP / SECTION -->
+
                 <tr>
                   <td class="fw-bold">
                     {{ isJuniorClass(resultData.class_name) ? 'Section' : 'Group' }}
@@ -102,7 +108,6 @@
 
                   <td>
                     :
-
                     <span class="badge bg-success fs-6">
                       {{ gpaWithAdditional }}
                     </span>
@@ -148,21 +153,25 @@
                 </td>
 
                 <!-- Marks -->
+
                 <td>
                   {{ subject.marks }}
                 </td>
 
                 <!-- Grade -->
+
                 <td>
-                  {{ calculateGrade(subject.marks).grade }}
+                  {{ calculateGrade(subject.marks, subject.full_mark).grade }}
                 </td>
 
                 <!-- Point -->
+
                 <td>
-                  {{ calculateGrade(subject.marks).point }}
+                  {{ calculateGrade(subject.marks, subject.full_mark).point }}
                 </td>
 
                 <!-- GPA Without Additional -->
+
                 <td
                   v-if="index === 0"
                   :rowspan="mainSubjects.length"
@@ -194,11 +203,11 @@
                   </td>
 
                   <td>
-                    {{ calculateAdditionalGrade(subject.marks).grade }}
+                    {{ calculateAdditionalGrade(subject.marks, subject.full_mark).grade }}
                   </td>
 
                   <td>
-                    {{ calculateAdditionalGrade(subject.marks).point }}
+                    {{ calculateAdditionalGrade(subject.marks, subject.full_mark).point }}
 
                     <br />
 
@@ -226,6 +235,7 @@
 
         <div class="row position-relative z-1 mb-5">
           <!-- Grading Table -->
+
           <div class="col-7">
             <table class="table table-bordered grade-table text-center mb-0">
               <tr class="table-secondary">
@@ -236,51 +246,32 @@
                 <th>Grade Point</th>
               </tr>
 
-              <tr>
-                <td>80-100</td>
-                <td>A+</td>
-                <td>5.00</td>
+              <!-- Dynamic Grading System -->
+
+              <tr v-for="grading in sortedGradingSystems" :key="grading.id">
+                <td>
+                  {{ getGradeRange(grading) }}
+                </td>
+
+                <td>
+                  {{ grading.grade }}
+                </td>
+
+                <td>
+                  {{ Number(grading.grade_point).toFixed(2) }}
+                </td>
               </tr>
 
-              <tr>
-                <td>70-79</td>
-                <td>A</td>
-                <td>4.00</td>
-              </tr>
+              <!-- No Grading System -->
 
-              <tr>
-                <td>60-69</td>
-                <td>A-</td>
-                <td>3.50</td>
-              </tr>
-
-              <tr>
-                <td>50-59</td>
-                <td>B</td>
-                <td>3.00</td>
-              </tr>
-
-              <tr>
-                <td>40-49</td>
-                <td>C</td>
-                <td>2.00</td>
-              </tr>
-
-              <tr>
-                <td>33-39</td>
-                <td>D</td>
-                <td>1.00</td>
-              </tr>
-
-              <tr>
-                <td>00-32</td>
-                <td>F</td>
-                <td>0.00</td>
+              <tr v-if="sortedGradingSystems.length === 0">
+                <td colspan="3" class="text-muted py-3">No grading system found.</td>
               </tr>
             </table>
           </div>
 
           <!-- Publication Date -->
+
           <div class="col-5 d-flex flex-column justify-content-center">
             <div class="p-3 border bg-light rounded text-center">
               <p class="mb-1 text-muted small">Date of Publication of Results</p>
@@ -383,6 +374,12 @@ const resultData = ref(null)
 const institute = ref(null)
 
 // ============================================================
+// GRADING SYSTEM DATA
+// ============================================================
+
+const gradingSystems = ref([])
+
+// ============================================================
 // FETCH INSTITUTE INFORMATION
 // ============================================================
 
@@ -394,6 +391,59 @@ const fetchInstitute = async () => {
   } catch (error) {
     console.error('Failed to fetch institute information:', error)
   }
+}
+
+// ============================================================
+// FETCH GRADING SYSTEM
+// ============================================================
+
+const fetchGradingSystems = async () => {
+  try {
+    const response = await api.get('/grading-systems')
+
+    gradingSystems.value = Array.isArray(response.data.data) ? response.data.data : []
+  } catch (error) {
+    console.error('Failed to fetch grading systems:', error)
+
+    gradingSystems.value = []
+  }
+}
+
+// ============================================================
+// SORTED GRADING SYSTEM
+// ============================================================
+
+const sortedGradingSystems = computed(() => {
+  return [...gradingSystems.value].sort(
+    (a, b) => Number(b.min_percentage) - Number(a.min_percentage),
+  )
+})
+
+// ============================================================
+// GRADE RANGE
+// ============================================================
+
+const getGradeRange = (grading) => {
+  const sorted = sortedGradingSystems.value
+
+  const index = sorted.findIndex((item) => item.id === grading.id)
+
+  const min = Number(grading.min_percentage)
+
+  // Highest grade
+  if (index === 0) {
+    return `${min}% - 100%`
+  }
+
+  const previous = sorted[index - 1]
+
+  if (!previous) {
+    return `${min}%+`
+  }
+
+  const upperLimit = Number(previous.min_percentage) - 0.01
+
+  return `${min}% - ${upperLimit.toFixed(2)}%`
 }
 
 // ============================================================
@@ -471,6 +521,57 @@ const additionalSubjects = computed(() => {
 })
 
 // ============================================================
+// NORMAL GRADE CALCULATOR
+// ============================================================
+
+const calculateGrade = (marks, fullMark = 100) => {
+  if (marks === null || marks === undefined || marks === '') {
+    return {
+      grade: '-',
+      point: '-',
+    }
+  }
+
+  const obtainedMarks = Number(marks)
+  const maximumMarks = Number(fullMark) || 100
+
+  if (isNaN(obtainedMarks) || maximumMarks <= 0) {
+    return {
+      grade: '-',
+      point: '-',
+    }
+  }
+
+  // Percentage calculation
+  const percentage = (obtainedMarks / maximumMarks) * 100
+
+  // Dynamic grading system
+  const grading = sortedGradingSystems.value.find(
+    (item) => percentage >= Number(item.min_percentage),
+  )
+
+  if (!grading) {
+    return {
+      grade: '-',
+      point: '-',
+    }
+  }
+
+  return {
+    grade: grading.grade,
+    point: Number(grading.grade_point).toFixed(2),
+  }
+}
+
+// ============================================================
+// ADDITIONAL SUBJECT GRADE
+// ============================================================
+
+const calculateAdditionalGrade = (marks, fullMark = 100) => {
+  return calculateGrade(marks, fullMark)
+}
+
+// ============================================================
 // GPA WITH ADDITIONAL SUBJECT
 // ============================================================
 
@@ -491,10 +592,11 @@ const gpaWithAdditional = computed(() => {
 
   // Main subjects GPA
   main.forEach((subject) => {
-    const grade = calculateGrade(subject.marks)
+    const grade = calculateGrade(subject.marks, subject.full_mark)
 
     if (grade.point !== '-') {
       mainPointTotal += Number(grade.point)
+
       validMainSubjects++
     }
   })
@@ -507,7 +609,7 @@ const gpaWithAdditional = computed(() => {
   let additionalBonus = 0
 
   additional.forEach((subject) => {
-    const grade = calculateAdditionalGrade(subject.marks)
+    const grade = calculateAdditionalGrade(subject.marks, subject.full_mark)
 
     if (grade.point !== '-') {
       const point = Number(grade.point)
@@ -550,7 +652,6 @@ const isJuniorClass = (className) => {
     'six',
     'seven',
     'eight',
-
     'class 1',
     'class 2',
     'class 3',
@@ -562,144 +663,6 @@ const isJuniorClass = (className) => {
   ]
 
   return juniorClasses.some((c) => className.toString().toLowerCase().includes(c))
-}
-
-// ============================================================
-// NORMAL GRADE CALCULATOR
-// ============================================================
-
-const calculateGrade = (marks) => {
-  if (marks === null || marks === undefined || marks === '') {
-    return {
-      grade: '-',
-      point: '-',
-    }
-  }
-
-  const m = Number(marks)
-
-  if (isNaN(m)) {
-    return {
-      grade: '-',
-      point: '-',
-    }
-  }
-
-  if (m >= 80) {
-    return {
-      grade: 'A+',
-      point: '5.00',
-    }
-  }
-
-  if (m >= 70) {
-    return {
-      grade: 'A',
-      point: '4.00',
-    }
-  }
-
-  if (m >= 60) {
-    return {
-      grade: 'A-',
-      point: '3.50',
-    }
-  }
-
-  if (m >= 50) {
-    return {
-      grade: 'B',
-      point: '3.00',
-    }
-  }
-
-  if (m >= 40) {
-    return {
-      grade: 'C',
-      point: '2.00',
-    }
-  }
-
-  if (m >= 33) {
-    return {
-      grade: 'D',
-      point: '1.00',
-    }
-  }
-
-  return {
-    grade: 'F',
-    point: '0.00',
-  }
-}
-
-// ============================================================
-// ADDITIONAL SUBJECT GRADE
-// ============================================================
-
-const calculateAdditionalGrade = (marks) => {
-  if (marks === null || marks === undefined || marks === '') {
-    return {
-      grade: '-',
-      point: '-',
-    }
-  }
-
-  const m = Number(marks)
-
-  if (isNaN(m)) {
-    return {
-      grade: '-',
-      point: '-',
-    }
-  }
-
-  if (m >= 80) {
-    return {
-      grade: 'A+',
-      point: '5.00',
-    }
-  }
-
-  if (m >= 70) {
-    return {
-      grade: 'A',
-      point: '4.00',
-    }
-  }
-
-  if (m >= 60) {
-    return {
-      grade: 'A-',
-      point: '3.50',
-    }
-  }
-
-  if (m >= 50) {
-    return {
-      grade: 'B',
-      point: '3.00',
-    }
-  }
-
-  if (m >= 40) {
-    return {
-      grade: 'C',
-      point: '2.00',
-    }
-  }
-
-  if (m >= 33) {
-    return {
-      grade: 'D',
-      point: '1.00',
-    }
-  }
-
-  return {
-    grade: 'F',
-    point: '0.00',
-  }
 }
 
 // ============================================================
@@ -716,7 +679,7 @@ const printMarksheet = () => {
 
 onMounted(() => {
   fetchInstitute()
-
+  fetchGradingSystems()
   fetchSingleResult()
 })
 </script>
@@ -728,9 +691,7 @@ onMounted(() => {
 
 .marksheet-wrapper {
   background-color: #f2f4f7;
-
   font-family: 'Arial', sans-serif;
-
   min-height: 100vh;
 }
 
@@ -740,13 +701,9 @@ onMounted(() => {
 
 .marksheet-container {
   max-width: 850px;
-
   border: 5px solid #198754;
-
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-
   position: relative;
-
   overflow: hidden;
 }
 
@@ -756,27 +713,16 @@ onMounted(() => {
 
 .logo-watermark {
   position: absolute;
-
   top: 50%;
-
   left: 50%;
-
   transform: translate(-50%, -50%);
-
   width: 430px;
-
   height: 430px;
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
   z-index: 0;
-
   pointer-events: none;
-
   user-select: none;
 }
 
@@ -786,13 +732,9 @@ onMounted(() => {
 
 .logo-watermark img {
   width: 100%;
-
   height: 100%;
-
   object-fit: contain;
-
   opacity: 0.055;
-
   filter: grayscale(100%);
 }
 
@@ -802,7 +744,6 @@ onMounted(() => {
 
 .header-title {
   color: #198754;
-
   font-weight: bold;
 }
 
@@ -812,7 +753,6 @@ onMounted(() => {
 
 .info-table {
   width: 100%;
-
   border-collapse: collapse;
 }
 
@@ -823,7 +763,6 @@ onMounted(() => {
 .table-bordered th,
 .table-bordered td {
   border-color: #dee2e6 !important;
-
   vertical-align: middle;
 }
 
@@ -834,7 +773,6 @@ onMounted(() => {
 .grade-table th,
 .grade-table td {
   font-size: 0.85rem;
-
   padding: 4px;
 }
 
@@ -853,7 +791,6 @@ onMounted(() => {
 @media print {
   @page {
     size: A4 portrait;
-
     margin: 10mm;
   }
 
@@ -863,23 +800,16 @@ onMounted(() => {
 
   .marksheet-wrapper {
     background-color: #fff;
-
     padding: 0 !important;
   }
 
   .marksheet-container {
     border: 3px solid #000;
-
     box-shadow: none;
-
     margin: 0;
-
     padding: 15px !important;
-
     width: 100%;
-
     max-width: 100%;
-
     overflow: hidden;
   }
 
@@ -887,13 +817,9 @@ onMounted(() => {
 
   .logo-watermark {
     display: flex !important;
-
     position: absolute;
-
     top: 50%;
-
     left: 50%;
-
     transform: translate(-50%, -50%);
   }
 
@@ -913,13 +839,11 @@ onMounted(() => {
 @media (max-width: 576px) {
   .marksheet-container {
     border-width: 3px;
-
     padding: 15px !important;
   }
 
   .logo-watermark {
     width: 300px;
-
     height: 300px;
   }
 

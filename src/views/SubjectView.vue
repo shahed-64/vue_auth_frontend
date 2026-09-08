@@ -157,6 +157,8 @@
 
                       <th scope="col">SUBJECT CODE</th>
 
+                      <th scope="col">FULL MARK</th>
+
                       <th scope="col">CREATED</th>
 
                       <th scope="col" class="text-end pe-3 pe-md-4">ACTION</th>
@@ -167,7 +169,7 @@
                   <tbody>
                     <!-- LOADING -->
                     <tr v-if="loading">
-                      <td colspan="5" class="text-center py-5 text-muted">
+                      <td colspan="6" class="text-center py-5 text-muted">
                         <div class="spinner-border spinner-border-sm me-2" role="status"></div>
 
                         Loading subjects...
@@ -197,7 +199,7 @@
 
                           <div>
                             <div class="fw-bold text-dark text-nowrap">
-                              {{ subject.subject_name }}
+                              {{ subject.name || '-' }}
                             </div>
 
                             <div class="text-muted small">Academic Subject</div>
@@ -209,6 +211,15 @@
                       <td>
                         <span class="badge bg-light text-dark border font-monospace px-2 py-1">
                           {{ subject.code || '-' }}
+                        </span>
+                      </td>
+
+                      <!-- FULL MARK -->
+                      <td>
+                        <span
+                          class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1"
+                        >
+                          {{ subject.full_mark ?? '-' }}
                         </span>
                       </td>
 
@@ -245,7 +256,7 @@
 
                     <!-- EMPTY -->
                     <tr v-if="!loading && filteredSubjects.length === 0">
-                      <td colspan="5" class="text-center py-5">
+                      <td colspan="6" class="text-center py-5">
                         <div class="empty-state">
                           <div class="empty-icon mb-3">
                             <i class="bi bi-book"></i>
@@ -286,7 +297,6 @@
   <!-- =========================================================
        ADD / EDIT SUBJECT MODAL
   ========================================================== -->
-
   <div
     v-if="showModal"
     class="modal fade show"
@@ -330,18 +340,18 @@
             <input
               ref="subjectNameInput"
               type="text"
-              v-model="form.subject_name"
+              v-model="form.name"
               class="form-control"
               :class="{
-                'is-invalid': errors.subject_name,
+                'is-invalid': errors.name,
               }"
               placeholder="e.g. Mathematics"
               maxlength="255"
               @keyup.enter="saveSubject"
             />
 
-            <div v-if="errors.subject_name" class="invalid-feedback">
-              {{ errors.subject_name }}
+            <div v-if="errors.name" class="invalid-feedback">
+              {{ errors.name }}
             </div>
           </div>
 
@@ -370,6 +380,33 @@
             </div>
 
             <div class="form-text">Use a unique code for each subject.</div>
+          </div>
+
+          <!-- FULL MARK -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              Full Mark
+              <span class="text-danger">*</span>
+            </label>
+
+            <input
+              type="number"
+              v-model="form.full_mark"
+              class="form-control"
+              :class="{
+                'is-invalid': errors.full_mark,
+              }"
+              placeholder="e.g. 100"
+              min="1"
+              step="1"
+              @keyup.enter="saveSubject"
+            />
+
+            <div v-if="errors.full_mark" class="invalid-feedback">
+              {{ errors.full_mark }}
+            </div>
+
+            <div class="form-text">Enter the maximum mark for this subject.</div>
           </div>
         </div>
 
@@ -411,21 +448,13 @@ import api from '@/services/api'
 ========================================================= */
 
 const subjects = ref([])
-
 const loading = ref(false)
-
 const saving = ref(false)
-
 const searchQuery = ref('')
-
 const showModal = ref(false)
-
 const editingSubject = ref(null)
-
 const formError = ref('')
-
 const errors = ref({})
-
 const subjectNameInput = ref(null)
 
 /* =========================================================
@@ -433,8 +462,9 @@ const subjectNameInput = ref(null)
 ========================================================= */
 
 const form = ref({
-  subject_name: '',
+  name: '',
   code: '',
+  full_mark: 100,
 })
 
 /* =========================================================
@@ -456,7 +486,6 @@ const fetchSubjects = async () => {
     }
   } catch (error) {
     console.error('Error fetching subjects:', error)
-
     subjects.value = []
   } finally {
     loading.value = false
@@ -475,7 +504,7 @@ const filteredSubjects = computed(() => {
   }
 
   return subjects.value.filter((subject) => {
-    const name = String(subject.subject_name || '').toLowerCase()
+    const name = String(subject.name || '').toLowerCase()
 
     const code = String(subject.code || '').toLowerCase()
 
@@ -489,12 +518,12 @@ const filteredSubjects = computed(() => {
 
 const resetForm = () => {
   form.value = {
-    subject_name: '',
+    name: '',
     code: '',
+    full_mark: 100,
   }
 
   errors.value = {}
-
   formError.value = ''
 }
 
@@ -522,13 +551,12 @@ const openEditModal = async (subject) => {
   editingSubject.value = subject
 
   errors.value = {}
-
   formError.value = ''
 
   form.value = {
-    subject_name: subject.subject_name || '',
-
+    name: subject.name || '',
     code: subject.code || '',
+    full_mark: subject.full_mark ?? 100,
   }
 
   showModal.value = true
@@ -548,7 +576,6 @@ const closeModal = () => {
   }
 
   showModal.value = false
-
   editingSubject.value = null
 
   resetForm()
@@ -563,14 +590,31 @@ const validateForm = () => {
 
   let valid = true
 
-  if (!form.value.subject_name || !form.value.subject_name.trim()) {
-    errors.value.subject_name = 'Subject name is required.'
+  /* Subject Name */
+  if (!form.value.name || !form.value.name.trim()) {
+    errors.value.name = 'Subject name is required.'
 
     valid = false
   }
 
+  /* Subject Code */
   if (!form.value.code || !form.value.code.trim()) {
     errors.value.code = 'Subject code is required.'
+
+    valid = false
+  }
+
+  /* Full Mark */
+  if (
+    form.value.full_mark === '' ||
+    form.value.full_mark === null ||
+    form.value.full_mark === undefined
+  ) {
+    errors.value.full_mark = 'Full mark is required.'
+
+    valid = false
+  } else if (Number(form.value.full_mark) < 1) {
+    errors.value.full_mark = 'Full mark must be at least 1.'
 
     valid = false
   }
@@ -592,21 +636,20 @@ const saveSubject = async () => {
   }
 
   saving.value = true
-
   formError.value = ''
-
   errors.value = {}
 
   try {
-    /*
-     * IMPORTANT:
-     * Backend expects subject_name,
-     * NOT name.
-     */
+    /* =====================================================
+       PAYLOAD
+    ====================================================== */
 
     const payload = {
-      name: form.value.subject_name.trim(),
+      name: form.value.name.trim(),
+
       code: form.value.code.trim().toUpperCase(),
+
+      full_mark: Number(form.value.full_mark),
     }
 
     /* =====================================================
@@ -622,9 +665,10 @@ const saveSubject = async () => {
         subjects.value.unshift(newSubject)
       }
     } else {
-      /* =====================================================
-       UPDATE
-    ====================================================== */
+      /* ===================================================
+         UPDATE
+      ==================================================== */
+
       const response = await api.put(`/subjects/${editingSubject.value.id}`, payload)
 
       const updatedSubject = response.data?.data || response.data
@@ -653,18 +697,16 @@ const saveSubject = async () => {
 
       errors.value = {}
 
-      /*
-       * Backend:
-       *
-       * subject_name => Subject name error
-       */
-
-      if (validationErrors.subject_name) {
-        errors.value.subject_name = validationErrors.subject_name[0]
+      if (validationErrors.name) {
+        errors.value.name = validationErrors.name[0]
       }
 
       if (validationErrors.code) {
         errors.value.code = validationErrors.code[0]
+      }
+
+      if (validationErrors.full_mark) {
+        errors.value.full_mark = validationErrors.full_mark[0]
       }
 
       formError.value = error.response.data?.message || 'Please check the highlighted fields.'
@@ -681,7 +723,7 @@ const saveSubject = async () => {
 ========================================================= */
 
 const deleteSubject = async (subject) => {
-  const subjectName = subject.subject_name || 'this subject'
+  const subjectName = subject.name || 'this subject'
 
   const confirmed = window.confirm(`Are you sure you want to delete "${subjectName}"?`)
 
@@ -738,25 +780,19 @@ onMounted(() => {
 
 .dashboard-layout {
   display: flex;
-
   width: 100%;
-
   overflow-x: hidden;
 }
 
 .sidebar-wrapper {
   flex-shrink: 0;
-
   min-width: 250px;
-
   z-index: 1000;
 }
 
 .main-wrapper {
   flex-grow: 1;
-
   width: calc(100% - 250px);
-
   overflow-y: auto;
 }
 
@@ -770,23 +806,16 @@ onMounted(() => {
 
 .summary-card:hover {
   transform: translateY(-2px);
-
   box-shadow: 0 0.125rem 0.4rem rgba(0, 0, 0, 0.08);
 }
 
 .summary-icon {
   width: 44px;
-
   height: 44px;
-
   border-radius: 10px;
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
   font-size: 1.25rem;
 }
 
@@ -809,7 +838,6 @@ onMounted(() => {
 
 .search-box-wrapper .form-control:focus {
   box-shadow: none;
-
   border-color: #86b7fe;
 }
 
@@ -819,21 +847,15 @@ onMounted(() => {
 
 .subject-table {
   border-collapse: separate;
-
   border-spacing: 0;
 }
 
 .subject-table thead th {
   border-bottom: 2px solid #e2e8f0 !important;
-
   font-size: 0.75rem;
-
   letter-spacing: 0.05em;
-
   padding-top: 0.85rem;
-
   padding-bottom: 0.85rem;
-
   white-space: nowrap;
 }
 
@@ -851,21 +873,13 @@ onMounted(() => {
 
 .subject-icon {
   width: 38px;
-
   height: 38px;
-
   min-width: 38px;
-
   border-radius: 8px;
-
   background-color: rgba(13, 110, 253, 0.08);
-
   color: #0d6efd;
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
 }
 
@@ -875,13 +889,9 @@ onMounted(() => {
 
 .action-btn {
   width: 34px;
-
   height: 34px;
-
   display: inline-flex;
-
   align-items: center;
-
   justify-content: center;
 }
 
@@ -895,23 +905,14 @@ onMounted(() => {
 
 .empty-icon {
   width: 58px;
-
   height: 58px;
-
   margin: 0 auto;
-
   border-radius: 50%;
-
   background-color: #f1f3f5;
-
   color: #6c757d;
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
   font-size: 1.5rem;
 }
 
@@ -950,7 +951,6 @@ onMounted(() => {
 
   .sidebar-wrapper {
     width: 100%;
-
     min-width: 100%;
   }
 

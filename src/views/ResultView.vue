@@ -15,10 +15,12 @@
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <p class="text-muted mb-1 small fw-bold">Exam Participants</p>
+
                 <h4 class="fw-bold text-dark mb-0">
                   {{ totalStudents }}
                 </h4>
               </div>
+
               <div class="icon-box bg-success-subtle text-success rounded-3 p-3">🎓</div>
             </div>
           </div>
@@ -30,10 +32,12 @@
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <p class="text-muted mb-1 small fw-bold">Published Results</p>
+
                 <h4 class="fw-bold text-dark mb-0">
                   {{ publishedResults }}
                 </h4>
               </div>
+
               <div class="icon-box bg-primary-subtle text-primary rounded-3 p-3">📄</div>
             </div>
           </div>
@@ -45,8 +49,10 @@
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <p class="text-muted mb-1 small fw-bold">Pass Rate</p>
+
                 <h4 class="fw-bold text-dark mb-0">{{ passRate }}%</h4>
               </div>
+
               <div class="icon-box bg-warning-subtle text-warning rounded-3 p-3">📈</div>
             </div>
           </div>
@@ -58,10 +64,12 @@
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <p class="text-muted mb-1 small fw-bold">Total GPA 5.00</p>
+
                 <h4 class="fw-bold text-dark mb-0">
                   {{ totalGpaFive }}
                 </h4>
               </div>
+
               <div class="icon-box bg-info-subtle text-info rounded-3 p-3">⭐</div>
             </div>
           </div>
@@ -112,10 +120,15 @@
             <thead class="table-light text-uppercase fs-7 text-muted">
               <tr>
                 <th class="py-3 ps-3" style="width: 8%">#</th>
+
                 <th class="py-3">Student ID</th>
+
                 <th class="py-3">Student Name</th>
+
                 <th class="py-3">Exam Info</th>
+
                 <th class="py-3">Exam Year</th>
+
                 <th class="py-3 text-center" style="width: 20%">Action / Receipt</th>
               </tr>
             </thead>
@@ -175,6 +188,7 @@
   <!-- =========================================================
        ADD RESULT MODAL
   ========================================================== -->
+
   <div
     v-if="isAddModalOpen"
     class="modal fade show d-block"
@@ -197,6 +211,7 @@
             <!-- =================================================
                  STUDENT / YEAR / EXAM
             ================================================== -->
+
             <div class="row">
               <!-- Student -->
               <div class="col-md-4 mb-3 position-relative">
@@ -372,6 +387,7 @@
             <!-- =========================================================
                  STUDENT CLASS & GROUP INFO
             ========================================================== -->
+
             <div v-if="form.student_id && selectedStudent" class="mb-4">
               <div class="card border-0 bg-light rounded-3">
                 <div class="card-body py-3">
@@ -418,6 +434,7 @@
             <!-- =========================================================
                  SUBJECT MARKS
             ========================================================== -->
+
             <h6 class="fw-bold text-dark mb-3">Subject Marks</h6>
 
             <!-- NO STUDENT -->
@@ -437,6 +454,7 @@
               <!-- =======================================================
                    MAIN SUBJECTS
               ======================================================== -->
+
               <div v-if="mainSubjects.length" class="mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <h6 class="fw-bold text-primary mb-0">
@@ -483,6 +501,7 @@
               <!-- =======================================================
                    ADDITIONAL SUBJECT
               ======================================================== -->
+
               <div v-if="additionalSubjects.length" class="mt-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <h6 class="fw-bold text-success mb-0">
@@ -532,6 +551,7 @@
             <!-- =================================================
                  MODAL FOOTER
             ================================================== -->
+
             <div class="modal-footer border-0 px-0 pb-0 pt-3">
               <button
                 type="button"
@@ -573,6 +593,7 @@ const resultsList = ref([])
 const studentsList = ref([])
 const examinationsList = ref([])
 const currentSubjects = ref([])
+
 const search = ref('')
 const isAddModalOpen = ref(false)
 const isSaving = ref(false)
@@ -672,6 +693,7 @@ const fetchData = async () => {
     studentsList.value = response.data.students || []
 
     console.log('Students:', studentsList.value)
+    console.log('Results:', resultsList.value)
   } catch (error) {
     console.error('Error fetching result data:', error)
   }
@@ -805,17 +827,6 @@ const clearStudentSelection = () => {
  * |--------------------------------------------------------------------------
  * | LOAD STUDENT SUBJECTS
  * |--------------------------------------------------------------------------
- * |
- * | Subject source:
- * |
- * | 1. Student Class Subjects       -> Main Subject
- * | 2. group_subject_mappings       -> Main Subject
- * | 3. Student Group Subjects       -> Additional Subject
- * |
- * | IMPORTANT:
- * | Existing group_subjects logic is kept.
- * |
- * |--------------------------------------------------------------------------
  */
 
 const loadStudentSubjects = () => {
@@ -836,21 +847,10 @@ const loadStudentSubjects = () => {
   console.log('MAPPED GROUP SUBJECTS:', student.mapped_group_subjects)
   console.log('====================================')
 
-  /*
+  /**
    * ==========================================================
    * 1. CLASS SUBJECTS
    * ==========================================================
-   *
-   * Class-এর subject থেকে আমরা শুধু সেই subject রাখব
-   * যেগুলো group mapping-এর সাথে compatible।
-   *
-   * যদি group mapping থাকে:
-   *
-   * Science:
-   * Physics, Chemistry, Biology
-   *
-   * তাহলে Science student-এর Main-এ এই mapped subjects
-   * অবশ্যই থাকবে।
    */
 
   let classSubjects = []
@@ -863,14 +863,10 @@ const loadStudentSubjects = () => {
     classSubjects = student.class_subjects
   }
 
-  /*
+  /**
    * ==========================================================
    * 2. EXISTING GROUP SUBJECTS
    * ==========================================================
-   *
-   * এগুলো Additional Subject.
-   *
-   * এই logic change করা হয়নি।
    */
 
   let groupSubjects = []
@@ -879,15 +875,10 @@ const loadStudentSubjects = () => {
     groupSubjects = student.group_subjects
   }
 
-  /*
+  /**
    * ==========================================================
    * 3. GROUP SUBJECT MAPPINGS
    * ==========================================================
-   *
-   * Backend থেকে student's own group অনুযায়ী
-   * mapped subjects আসবে।
-   *
-   * এগুলো Main Subject।
    */
 
   let mappedGroupSubjects = []
@@ -896,7 +887,7 @@ const loadStudentSubjects = () => {
     mappedGroupSubjects = student.mapped_group_subjects
   }
 
-  /*
+  /**
    * ==========================================================
    * 4. MAPPED SUBJECT ID SET
    * ==========================================================
@@ -906,37 +897,26 @@ const loadStudentSubjects = () => {
     mappedGroupSubjects.map((subject) => Number(subject.id)).filter((id) => !Number.isNaN(id)),
   )
 
-  /*
+  /**
    * ==========================================================
    * 5. GROUP SUBJECT ID SET
    * ==========================================================
-   *
-   * Existing Additional subjects.
    */
 
   const additionalSubjectIds = new Set(
     groupSubjects.map((subject) => Number(subject.id)).filter((id) => !Number.isNaN(id)),
   )
 
-  /*
+  /**
    * ==========================================================
    * 6. NORMALIZE CLASS SUBJECTS
    * ==========================================================
-   *
-   * এখানে গুরুত্বপূর্ণ filtering হচ্ছে।
-   *
-   * যদি কোনো subject group_subjects-এ Additional হিসেবে থাকে,
-   * তাহলে সেটা Main-এ থাকবে না।
-   *
-   * আর যদি mapped_group_subjects-এ থাকে,
-   * তাহলে সেটা Main হিসেবে থাকবে।
    */
 
   const normalizedClassSubjects = classSubjects
     .filter((subject) => {
       const subjectId = Number(subject.id)
 
-      // Additional subject হলে class subject থেকে বাদ
       if (additionalSubjectIds.has(subjectId)) {
         return false
       }
@@ -946,21 +926,23 @@ const loadStudentSubjects = () => {
     .map((subject) => {
       return {
         unique_key: `main_${subject.id}`,
+
         id: subject.id,
+
         name: subject.name || subject.subject_name || subject.subject?.name || 'Unknown Subject',
+
         code: subject.code || subject.subject_code || subject.subject?.code || null,
+
         is_additional: false,
+
         marks: '',
       }
     })
 
-  /*
+  /**
    * ==========================================================
    * 7. NORMALIZE GROUP MAPPED SUBJECTS
    * ==========================================================
-   *
-   * group_subject_mappings থেকে আসা subjects
-   * Main Subject হিসেবে থাকবে।
    */
 
   const normalizedMappedGroupSubjects = mappedGroupSubjects
@@ -972,39 +954,45 @@ const loadStudentSubjects = () => {
     .map((subject) => {
       return {
         unique_key: `mapped_group_${subject.id}`,
+
         id: subject.id,
+
         name: subject.name || subject.subject_name || subject.subject?.name || 'Unknown Subject',
+
         code: subject.code || subject.subject_code || subject.subject?.code || null,
+
         is_additional: false,
+
         marks: '',
       }
     })
 
-  /*
+  /**
    * ==========================================================
    * 8. NORMALIZE EXISTING GROUP SUBJECTS
    * ==========================================================
-   *
-   * Existing group_subjects = Additional Subject
-   *
-   * এই অংশ আগের মতোই রাখা হয়েছে।
    */
 
   const normalizedGroupSubjects = groupSubjects.map((subject) => {
     return {
       unique_key: `group_${subject.id}`,
+
       id: subject.id,
+
       name: subject.name || subject.subject_name || subject.subject?.name || 'Unknown Subject',
+
       code: subject.code || subject.subject_code || subject.subject?.code || null,
+
       is_additional:
         subject.is_additional === true ||
         subject.is_additional === 1 ||
         subject.is_additional === '1',
+
       marks: '',
     }
   })
 
-  /*
+  /**
    * ==========================================================
    * 9. MERGE SUBJECTS
    * ==========================================================
@@ -1016,14 +1004,10 @@ const loadStudentSubjects = () => {
     ...normalizedGroupSubjects,
   ]
 
-  /*
+  /**
    * ==========================================================
    * 10. REMOVE DUPLICATES
    * ==========================================================
-   *
-   * Same subject একাধিক জায়গায় থাকলে একবারই দেখাবে।
-   *
-   * Additional Subject priority পাবে।
    */
 
   const subjectMap = new Map()
@@ -1035,16 +1019,16 @@ const loadStudentSubjects = () => {
 
     if (!existing) {
       subjectMap.set(subjectId, subject)
+
       return
     }
 
-    // Additional Subject priority
     if (subject.is_additional && !existing.is_additional) {
       subjectMap.set(subjectId, subject)
     }
   })
 
-  /*
+  /**
    * ==========================================================
    * 11. FINAL SUBJECTS
    * ==========================================================
@@ -1058,7 +1042,7 @@ const loadStudentSubjects = () => {
 
   console.log('ADDITIONAL SUBJECTS:', additionalSubjects.value)
 
-  /*
+  /**
    * ==========================================================
    * 12. SYNC FORM
    * ==========================================================
@@ -1066,6 +1050,7 @@ const loadStudentSubjects = () => {
 
   syncFormSubjects()
 }
+
 /**
  * |--------------------------------------------------------------------------
  * | UPDATE SUBJECT MARKS
@@ -1223,12 +1208,16 @@ const saveNewResult = async () => {
   /**
    * Make sure latest marks are synced
    */
+
   syncFormSubjects()
 
   const payload = {
     student_id: Number(form.student_id),
+
     exam_year: form.exam_year,
+
     exam_type: form.exam_type,
+
     subjects: form.subjects,
   }
 
@@ -1370,6 +1359,7 @@ const calculateResultDetails = (result) => {
 
   return {
     gpa: Number(gpa.toFixed(2)),
+
     status: 'Pass',
   }
 }
@@ -1400,11 +1390,19 @@ const passRate = computed(() => {
   return ((passed / resultsList.value.length) * 100).toFixed(1)
 })
 
+/**
+ * |--------------------------------------------------------------------------
+ * | TOTAL GPA 5.00
+ * |--------------------------------------------------------------------------
+ */
+
 const totalGpaFive = computed(() => {
   return resultsList.value.filter((result) => {
     const details = calculateResultDetails(result)
 
-    return details.status === 'Pass' && details.gpa >= 5
+    const gpa = Number(details.gpa)
+
+    return details.status === 'Pass' && Number.isFinite(gpa) && gpa >= 5
   }).length
 })
 

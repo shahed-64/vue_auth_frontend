@@ -39,6 +39,7 @@
                 <th class="py-3 ps-4">#ID</th>
                 <th class="py-3">Examination Name</th>
                 <th class="py-3">Examination Year</th>
+                <th class="py-3">Exam Mark</th>
                 <th class="py-3 text-end pe-4">Actions</th>
               </tr>
             </thead>
@@ -60,8 +61,10 @@
                 <td class="fw-bold text-dark">{{ examination.examination_type }}</td>
                 <td class="fw-bold text-dark">{{ examination.examination_year }}</td>
                 <td>
-                  <!-- আগের মতো এভাবে সরাসরি না রেখে -->
                   <!-- <span>{{ examination.start_time }}</span> -->
+                </td>
+                <td class="fw-bold text-dark">
+                  {{ examination.exam_mark ?? 'Subject Mark' }}
                 </td>
                 <td></td>
                 <td class="text-end pe-4">
@@ -122,6 +125,22 @@
                   class="form-control form-control-lg fs-6"
                 />
               </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold text-secondary small"> Exam Mark </label>
+
+                <input
+                  type="number"
+                  v-model="form.exam_mark"
+                  min="1"
+                  step="0.01"
+                  placeholder="e.g. 20, 25"
+                  class="form-control form-control-lg fs-6"
+                />
+
+                <small class="text-muted">
+                  Optional — leave empty if this exam should use the subject's full mark.
+                </small>
+              </div>
             </div>
 
             <div class="modal-footer border-0 pt-0">
@@ -151,8 +170,8 @@ const currentExaminationId = ref(null)
 const form = ref({
   examination_type: '',
   examination_year: '',
+  exam_mark: '',
 })
-
 const message = ref('')
 const isError = ref(false)
 
@@ -171,20 +190,22 @@ const fetchExaminations = async () => {
   }
 }
 
-// মোডাল ওপেন (Add)
+// Model Open (Add)
 const openAddModal = () => {
   isEditMode.value = false
   form.value.examination_type = ''
   form.value.examination_year = ''
+  form.value.exam_mark = ''
   currentExaminationId.value = null
   showModal.value = true
 }
 
-// মোডাল ওপেন (Edit)
+// Model Open(Edit)
 const openEditModal = (examination) => {
   isEditMode.value = true
   form.value.examination_type = examination.examination_type
   form.value.examination_year = examination.examination_year
+  form.value.exam_mark = examination.exam_mark ?? ''
   currentExaminationId.value = examination.id
   showModal.value = true
 }

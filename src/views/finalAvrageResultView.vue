@@ -1,5 +1,6 @@
 <template>
   <dashPageView />
+
   <div class="final-result-page">
     <!-- Sidebar Space -->
     <div class="sidebar-space"></div>
@@ -31,6 +32,7 @@
 
       <!-- Summary Cards -->
       <div class="summary-grid">
+        <!-- Examinations -->
         <div class="summary-card">
           <div class="summary-icon blue">
             <i class="bi bi-journal-text"></i>
@@ -38,30 +40,41 @@
 
           <div>
             <div class="summary-label">Examinations</div>
+
             <div class="summary-value">
-              {{ finalResults.length }}
+              {{ selectedYearExaminationCount }}
             </div>
           </div>
         </div>
 
+        <!-- Total Percentage -->
         <div class="summary-card">
           <div class="summary-icon green">
             <i class="bi bi-percent"></i>
           </div>
 
           <div>
-            <div class="summary-label">Total Percentage</div>
+            <div class="summary-label">
+              Total Percentage
+              <span v-if="currentYear" style="font-size: 11px"> ({{ currentYear }}) </span>
+            </div>
+
             <div class="summary-value">{{ totalPercentage.toFixed(2) }}%</div>
           </div>
         </div>
 
+        <!-- Remaining -->
         <div class="summary-card">
           <div class="summary-icon orange">
             <i class="bi bi-hourglass-split"></i>
           </div>
 
           <div>
-            <div class="summary-label">Remaining</div>
+            <div class="summary-label">
+              Remaining
+              <span v-if="currentYear" style="font-size: 11px"> ({{ currentYear }}) </span>
+            </div>
+
             <div class="summary-value">{{ remainingPercentage.toFixed(2) }}%</div>
           </div>
         </div>
@@ -122,15 +135,21 @@
                   step="0.01"
                   class="form-control"
                   placeholder="Enter percentage"
-                  :disabled="loading || saving || remainingPercentage <= 0"
+                  :disabled="loading || saving || !form.examination_id || remainingPercentage <= 0"
                 />
 
                 <span>%</span>
               </div>
 
               <small class="input-hint">
-                Remaining percentage:
-                <strong> {{ remainingPercentage.toFixed(2) }}% </strong>
+                <template v-if="currentYear">
+                  Remaining percentage for
+                  <strong>{{ currentYear }}</strong
+                  >:
+                  <strong> {{ remainingPercentage.toFixed(2) }}% </strong>
+                </template>
+
+                <template v-else> Select an examination to see the remaining percentage. </template>
               </small>
             </div>
 
@@ -169,7 +188,14 @@
           <div class="card-header">
             <div>
               <h5>Percentage Distribution</h5>
-              <p>Final result configuration progress.</p>
+
+              <p>
+                <template v-if="currentYear">
+                  Final result configuration for {{ currentYear }}.
+                </template>
+
+                <template v-else> Select an examination to view year-wise progress. </template>
+              </p>
             </div>
 
             <div class="percentage-circle" :class="{ complete: isComplete }">
@@ -204,8 +230,12 @@
               <p>
                 {{
                   isComplete
-                    ? 'All examination percentages are correctly configured to 100%.'
-                    : 'Add examinations until the total percentage reaches 100%.'
+                    ? `All examination percentages for ${
+                        currentYear || 'this year'
+                      } are correctly configured to 100%.`
+                    : `Add examinations until the ${
+                        currentYear || 'selected year'
+                      } total percentage reaches 100%.`
                 }}
               </p>
             </div>
@@ -218,6 +248,7 @@
         <div class="card-header">
           <div>
             <h5>Final Result Examinations</h5>
+
             <p>Examinations included in the final result calculation.</p>
           </div>
 
@@ -294,7 +325,9 @@
 
                       <small>
                         {{ group.items.length }}
+
                         {{ group.items.length === 1 ? 'Examination' : 'Examinations' }}
+
                         included
                       </small>
                     </div>
@@ -381,6 +414,7 @@
 
               <span>
                 {{ editingGroup.items.length }}
+
                 {{ editingGroup.items.length === 1 ? 'Examination' : 'Examinations' }}
               </span>
             </div>
@@ -437,21 +471,24 @@
             <div>
               <span> Total Percentage </span>
 
-              <strong :class="editGroupTotal === 100 ? 'valid' : 'invalid'">
+              <strong :class="Math.abs(editGroupTotal - 100) < 0.001 ? 'valid' : 'invalid'">
                 {{ editGroupTotal.toFixed(2) }}%
               </strong>
             </div>
 
-            <div class="total-status" :class="editGroupTotal === 100 ? 'valid' : 'invalid'">
+            <div
+              class="total-status"
+              :class="Math.abs(editGroupTotal - 100) < 0.001 ? 'valid' : 'invalid'"
+            >
               <i
                 :class="
-                  editGroupTotal === 100
+                  Math.abs(editGroupTotal - 100) < 0.001
                     ? 'bi bi-check-circle-fill'
                     : 'bi bi-exclamation-circle-fill'
                 "
               ></i>
 
-              {{ editGroupTotal === 100 ? 'Complete' : 'Must equal 100%' }}
+              {{ Math.abs(editGroupTotal - 100) < 0.001 ? 'Complete' : 'Must equal 100%' }}
             </div>
           </div>
 
@@ -488,24 +525,22 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-
 import dashPageView from './dashPageView.vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
 
-/* =========================================================
-   Router
-========================================================= */
+// =========================================================
+// Router
+// =========================================================
 
 const router = useRouter()
 
-/* =========================================================
-   State
-========================================================= */
+// =========================================================
+// State
+// =========================================================
 
 const examinations = ref([])
 const finalResults = ref([])
-
 const loading = ref(false)
 const saving = ref(false)
 const updating = ref(false)
@@ -516,14 +551,16 @@ const editingGroup = ref(null)
 const editPercentages = reactive({})
 const editError = ref('')
 
+const activeYear = ref(null)
+
 const form = reactive({
   examination_id: '',
   percentage: '',
 })
 
-/* =========================================================
-   Navigate To Final Result PDF
-========================================================= */
+// =========================================================
+// Navigate To Final Result PDF
+// =========================================================
 
 const goToFinalResultPdf = () => {
   const latestGroup = groupedFinalResults.value[0]
@@ -535,9 +572,9 @@ const goToFinalResultPdf = () => {
   goToYearPdf(latestGroup.year)
 }
 
-/* =========================================================
-   Navigate To Specific Year Final Result PDF
-========================================================= */
+// =========================================================
+// Navigate To Specific Year Final Result PDF
+// =========================================================
 
 const goToYearPdf = (year) => {
   router.push({
@@ -548,41 +585,9 @@ const goToYearPdf = (year) => {
   })
 }
 
-/* =========================================================
-   Computed
-========================================================= */
-
-const totalPercentage = computed(() => {
-  return finalResults.value.reduce((total, item) => {
-    return total + Number(item.percentage || 0)
-  }, 0)
-})
-
-const remainingPercentage = computed(() => {
-  return Math.max(0, 100 - totalPercentage.value)
-})
-
-const isComplete = computed(() => {
-  return Math.abs(totalPercentage.value - 100) < 0.001
-})
-
-/*
-|--------------------------------------------------------------------------
-| Available Examinations
-|--------------------------------------------------------------------------
-*/
-
-const availableExaminations = computed(() => {
-  const addedIds = finalResults.value.map((item) => Number(item.examination_id))
-
-  return examinations.value.filter((exam) => !addedIds.includes(Number(exam.id)))
-})
-
-/*
-|--------------------------------------------------------------------------
-| Group Final Results By Year
-|--------------------------------------------------------------------------
-*/
+// =========================================================
+// Group Final Results By Year
+// =========================================================
 
 const groupedFinalResults = computed(() => {
   const groups = {}
@@ -611,11 +616,95 @@ const groupedFinalResults = computed(() => {
   })
 })
 
-/*
-|--------------------------------------------------------------------------
-| Edit Group Total
-|--------------------------------------------------------------------------
-*/
+// =========================================================
+// Selected Examination Year
+// =========================================================
+
+const selectedExamYear = computed(() => {
+  if (form.examination_id) {
+    const selectedExam = examinations.value.find(
+      (exam) => Number(exam.id) === Number(form.examination_id),
+    )
+
+    if (selectedExam?.examination_year) {
+      return selectedExam.examination_year
+    }
+  }
+
+  return activeYear.value
+})
+
+// =========================================================
+// Current Year
+// =========================================================
+
+const currentYear = computed(() => {
+  if (selectedExamYear.value) {
+    return selectedExamYear.value
+  }
+
+  return groupedFinalResults.value[0]?.year || null
+})
+
+// =========================================================
+// Current Year Total Percentage
+// =========================================================
+
+const totalPercentage = computed(() => {
+  if (!currentYear.value) {
+    return 0
+  }
+
+  const group = groupedFinalResults.value.find(
+    (group) => String(group.year) === String(currentYear.value),
+  )
+
+  return group ? Number(group.totalPercentage || 0) : 0
+})
+
+// =========================================================
+// Current Year Remaining Percentage
+// =========================================================
+
+const remainingPercentage = computed(() => {
+  return Math.max(0, 100 - totalPercentage.value)
+})
+
+// =========================================================
+// Current Year Completion
+// =========================================================
+
+const isComplete = computed(() => {
+  return Math.abs(totalPercentage.value - 100) < 0.001
+})
+
+// =========================================================
+// Current Year Examination Count
+// =========================================================
+
+const selectedYearExaminationCount = computed(() => {
+  if (!currentYear.value) {
+    return 0
+  }
+
+  return finalResults.value.filter(
+    (item) => String(item.examination?.examination_year) === String(currentYear.value),
+  ).length
+})
+
+// =========================================================
+// Available Examinations
+// =========================================================
+
+const availableExaminations = computed(() => {
+  const addedIds = finalResults.value.map((item) => Number(item.examination_id))
+
+  return examinations.value.filter((exam) => !addedIds.includes(Number(exam.id)))
+})
+
+// =========================================================
+// Edit Group Total
+// =========================================================
 
 const editGroupTotal = computed(() => {
   if (!editingGroup.value) {
@@ -627,11 +716,9 @@ const editGroupTotal = computed(() => {
   }, 0)
 })
 
-/*
-|--------------------------------------------------------------------------
-| Edit Maximum
-|--------------------------------------------------------------------------
-*/
+// =========================================================
+// Edit Maximum
+// =========================================================
 
 const editMaximum = computed(() => {
   if (!editingGroup.value) {
@@ -643,9 +730,9 @@ const editMaximum = computed(() => {
   }, 0)
 })
 
-/* =========================================================
-   Load Examinations
-========================================================= */
+// =========================================================
+// Load Examinations
+// =========================================================
 
 const loadExaminations = async () => {
   try {
@@ -657,9 +744,9 @@ const loadExaminations = async () => {
   }
 }
 
-/* =========================================================
-   Load Final Result Configuration
-========================================================= */
+// =========================================================
+// Load Final Result Configuration
+// =========================================================
 
 const loadFinalResults = async () => {
   loading.value = true
@@ -679,24 +766,23 @@ const loadFinalResults = async () => {
   }
 }
 
-/* =========================================================
-   Load All Data
-========================================================= */
+// =========================================================
+// Load All Data
+// =========================================================
 
 const loadData = async () => {
   await Promise.all([loadExaminations(), loadFinalResults()])
 }
 
-/* =========================================================
-   Add Final Result Examination
-========================================================= */
+// =========================================================
+// Add Final Result Examination
+// =========================================================
 
 const addFinalResult = async () => {
   errorMessage.value = ''
 
   if (!form.examination_id) {
     errorMessage.value = 'Please select an examination.'
-
     return
   }
 
@@ -704,12 +790,40 @@ const addFinalResult = async () => {
 
   if (!percentage || percentage <= 0) {
     errorMessage.value = 'Please enter a valid percentage.'
-
     return
   }
 
-  if (percentage > remainingPercentage.value) {
-    errorMessage.value = `Only ${remainingPercentage.value.toFixed(2)}% is remaining.`
+  // -------------------------------------------------------
+  // Find Selected Examination
+  // -------------------------------------------------------
+
+  const selectedExam = examinations.value.find(
+    (exam) => Number(exam.id) === Number(form.examination_id),
+  )
+
+  if (!selectedExam) {
+    errorMessage.value = 'The selected examination could not be found.'
+    return
+  }
+
+  const year = selectedExam.examination_year
+
+  // -------------------------------------------------------
+  // Calculate Percentage Only For Selected Year
+  // -------------------------------------------------------
+
+  const yearTotal = finalResults.value
+    .filter((item) => String(item.examination?.examination_year) === String(year))
+    .reduce((total, item) => total + Number(item.percentage || 0), 0)
+
+  const yearRemaining = Math.max(0, 100 - yearTotal)
+
+  // -------------------------------------------------------
+  // Check Selected Year's Remaining Percentage
+  // -------------------------------------------------------
+
+  if (percentage > yearRemaining) {
+    errorMessage.value = `Only ${yearRemaining.toFixed(2)}% is remaining for ${year}.`
 
     return
   }
@@ -723,11 +837,25 @@ const addFinalResult = async () => {
       percentage: percentage,
     })
 
+    // -----------------------------------------------------
+    // Set Active Year
+    // -----------------------------------------------------
+
+    activeYear.value = year
+
+    // -----------------------------------------------------
+    // Update Local Data
+    // -----------------------------------------------------
+
     if (response.data?.data) {
       finalResults.value.push(response.data.data)
     } else {
       await loadFinalResults()
     }
+
+    // -----------------------------------------------------
+    // Reset Form
+    // -----------------------------------------------------
 
     form.examination_id = ''
     form.percentage = ''
@@ -741,9 +869,9 @@ const addFinalResult = async () => {
   }
 }
 
-/* =========================================================
-   Open Edit Group
-========================================================= */
+// =========================================================
+// Open Edit Group
+// =========================================================
 
 const openEditGroup = (group) => {
   editingGroup.value = group
@@ -757,9 +885,9 @@ const openEditGroup = (group) => {
   })
 }
 
-/* =========================================================
-   Close Edit
-========================================================= */
+// =========================================================
+// Close Edit
+// =========================================================
 
 const closeEdit = () => {
   editingGroup.value = null
@@ -769,9 +897,9 @@ const closeEdit = () => {
   Object.keys(editPercentages).forEach((key) => delete editPercentages[key])
 }
 
-/* =========================================================
-   Update Final Result Group
-========================================================= */
+// =========================================================
+// Update Final Result Group
+// =========================================================
 
 const updateFinalResultGroup = async () => {
   editError.value = ''
@@ -782,23 +910,33 @@ const updateFinalResultGroup = async () => {
 
   const total = Number(editGroupTotal.value.toFixed(2))
 
+  // -------------------------------------------------------
+  // Total Must Be Exactly 100%
+  // -------------------------------------------------------
+
   if (Math.abs(total - 100) > 0.001) {
     editError.value = `Total percentage must be exactly 100%. Current total is ${total.toFixed(2)}%.`
 
     return
   }
 
+  // -------------------------------------------------------
+  // Validate Every Percentage
+  // -------------------------------------------------------
+
   for (const item of editingGroup.value.items) {
     const percentage = Number(editPercentages[item.id])
 
     if (!percentage || percentage <= 0) {
-      editError.value = `Please enter a valid percentage for ${item.examination?.examination_type || 'the examination'}.`
+      editError.value = `Please enter a valid percentage for ${
+        item.examination?.examination_type || 'the examination'
+      }.`
 
       return
     }
 
     if (percentage > 100) {
-      editError.value = `Percentage cannot be greater than 100%.`
+      editError.value = 'Percentage cannot be greater than 100%.'
 
       return
     }
@@ -807,6 +945,10 @@ const updateFinalResultGroup = async () => {
   updating.value = true
 
   try {
+    // -----------------------------------------------------
+    // Update Each Examination
+    // -----------------------------------------------------
+
     for (const item of editingGroup.value.items) {
       const percentage = Number(editPercentages[item.id])
 
@@ -814,6 +956,10 @@ const updateFinalResultGroup = async () => {
         percentage,
       })
     }
+
+    // -----------------------------------------------------
+    // Reload Configuration
+    // -----------------------------------------------------
 
     await loadFinalResults()
 
@@ -828,9 +974,9 @@ const updateFinalResultGroup = async () => {
   }
 }
 
-/* =========================================================
-   Delete From Edit Modal
-========================================================= */
+// =========================================================
+// Delete From Edit Modal
+// =========================================================
 
 const deleteFromEdit = async (item) => {
   const examName = item.examination?.examination_type || 'this examination'
@@ -848,13 +994,25 @@ const deleteFromEdit = async (item) => {
   try {
     await api.delete(`/final-results/${item.id}`)
 
+    // -----------------------------------------------------
+    // Remove From Main List
+    // -----------------------------------------------------
+
     finalResults.value = finalResults.value.filter((result) => result.id !== item.id)
+
+    // -----------------------------------------------------
+    // Remove From Edit Group
+    // -----------------------------------------------------
 
     if (editingGroup.value) {
       editingGroup.value.items = editingGroup.value.items.filter((result) => result.id !== item.id)
     }
 
     delete editPercentages[item.id]
+
+    // -----------------------------------------------------
+    // Close Modal If No Item Remains
+    // -----------------------------------------------------
 
     if (!editingGroup.value || editingGroup.value.items.length === 0) {
       closeEdit()
@@ -866,15 +1024,14 @@ const deleteFromEdit = async (item) => {
   }
 }
 
-/* =========================================================
-   Initial Load
-========================================================= */
+// =========================================================
+// Initial Load
+// =========================================================
 
 onMounted(() => {
   loadData()
 })
 </script>
-
 <style scoped>
 /* =========================================================
    Page

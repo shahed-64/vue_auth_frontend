@@ -69,6 +69,26 @@ const router = createRouter({
       meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
     },
     {
+      path: '/finalAvrageResult',
+      name: 'FinalAvrageResult',
+      component: () => import('../views/finalAvrageResultView.vue'),
+      meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
+    },
+
+    {
+      path: '/finalAvragePdfView',
+      name: 'FinalAvragePdf',
+      component: () => import('../views/finalAvragePdfView.vue'),
+      meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
+    },
+    {
+      path: '/SingularStudentFinalResultView',
+      name: ' SingularStudentFinalResul',
+      component: () => import('../views/SingularStudentFinalResultView.vue'),
+      meta: { requiresAuth: true, role: ['Admin', 'Manager'] },
+    },
+
+    {
       path: '/student',
       name: 'studentView',
       component: () => import('../views/studentView.vue'),
